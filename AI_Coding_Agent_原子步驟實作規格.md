@@ -28,11 +28,13 @@ status: action-item
 ```mermaid
 graph TB
     subgraph Slack["Slack 介面層"]
-        S1[使用者選擇情境] --> S2[傳送 workflow config]
+        S1[使用者輸入需求] --> S2[AI 建議情境 Preset]
+        S2 --> S3[使用者勾選微調步驟]
+        S3 --> S4[送出最終步驟陣列]
     end
 
     subgraph Orchestrator["編排器（Claude Agent SDK）"]
-        S2 --> O1[讀取步驟序列]
+        S4 --> O1[讀取步驟序列]
         O1 --> O2{下一步驟}
         O2 --> O3[呼叫對應 Tool]
         O3 --> O4{是 REVIEW 斷點？}
@@ -44,12 +46,11 @@ graph TB
     subgraph Tools["原子步驟 Tools"]
         T1[explore]
         T2[spec]
-        T3[ado_sync]
-        T4[tdd]
-        T5[codegen]
-        T6[verify]
-        T7[pr]
-        T8[archive]
+        T3[tdd]
+        T4[codegen]
+        T5[verify]
+        T6[pr]
+        T7[archive]
     end
 
     O3 --> Tools
@@ -58,6 +59,9 @@ graph TB
     style Orchestrator fill:#1a1a2e,color:#fff
     style Tools fill:#16213e,color:#fff
 ```
+
+> [!important] Preset 是建議，不是硬性約束
+> 使用者可以在 Slack 表單中自由勾選/取消任何步驟。Preset 只負責提供合理的預設勾選。編排器和 Tool 層只看最終送出的步驟陣列，不關心它來自哪個 Preset 或是否被微調過。
 
 ---
 
@@ -69,11 +73,10 @@ graph TB
 |---------|------|-----------------|------|
 | `explore` | OpenSpec + Superpowers | `/opsx:propose`（前半段探索）+ `superpowers:brainstorming`（需求釐清） | 兩者都有探索能力，我們抽出來作為獨立步驟 |
 | `spec` | OpenSpec + Superpowers | `/opsx:propose`（產出 proposal/specs/design/tasks）+ `superpowers:brainstorming`（蘇格拉底式設計問答）+ `superpowers:writing-plans`（任務拆解） | ==三個 skill 合併為一次 REVIEW 斷點== |
-| `ado_sync` | 自建 Tool | 無對應 skill（封裝 `az cli`） | — |
 | `tdd` | Superpowers | `superpowers:test-driven-development`；Hotfix 情境另加 `superpowers:systematic-debugging` | TDD 是 Superpowers 的核心紀律 |
 | `codegen` | Superpowers | `superpowers:executing-plans`（單一任務）+ `superpowers:subagent-driven-development`（並行執行多個子任務） | 大型任務用 subagent 並行 |
 | `verify` | Superpowers | `superpowers:verification-before-completion`（自我檢查）+ `superpowers:requesting-code-review`（品質審查） | 兩個 skill 合併為一次 REVIEW 斷點 |
-| `pr` | Superpowers + 自建 | `superpowers:finishing-a-development-branch`（決定 merge/PR 策略）+ `superpowers:using-git-worktrees`（分支隔離） | worktree 在流程最初就建立，PR 步驟收尾 |
+| `pr` | Superpowers + 自建 | `superpowers:finishing-a-development-branch`（決定 merge/PR 策略）+ `superpowers:using-git-worktrees`（分支隔離） | worktree 在流程最初就建立，PR 步驟收尾；目前僅保留 Git/GitHub 向整合 |
 | `archive` | OpenSpec | `/opsx:apply`（將 changes 合回主規格庫） | OpenSpec 的規格生命週期終點 |
 
 ---
@@ -86,7 +89,6 @@ graph TB
 | ---------- | ----------------------------------------------------------- | :--: | :------: | :----: | :---------: | :-: | :-------: |
 | `explore`  | `/opsx:propose` + `brainstorming`                           |  ✅   |    —     |   —    |      ✅      |  ✅  |     —     |
 | `spec`     | `/opsx:propose` + `brainstorming` + `writing-plans`         | ✅🔍  |   ✅🔍    |   —    |     ✅🔍     |  —  | 🔍 REVIEW |
-| `ado_sync` | 自建（`az cli`）                                                |  ✅   |    ✅     |   —    |      —      |  —  |     —     |
 | `tdd`      | `test-driven-development`                                   |  ✅   |    —     |   ✅    |      ✅      |  —  |     —     |
 | `codegen`  | `executing-plans` + `subagent-driven-development`           |  ✅   |    ✅     |   ✅    |      ✅      |  ✅  |     —     |
 | `verify`   | `verification-before-completion` + `requesting-code-review` | ✅🔍  |   ✅🔍    |  ✅🔍   |     ✅🔍     |  —  | 🔍 REVIEW |
@@ -191,50 +193,7 @@ interface SpecOutput {
 
 ---
 
-### Step 3：`ado_sync` — ADO 工單同步
-
-| 項目 | 內容 |
-|------|------|
-| **歸屬框架** | ==自建 Tool==（非 OpenSpec 也非 Superpowers） |
-| **對應概念** | 將 `tasks.md` 的 Checklist 轉為 ADO Work Items |
-| **觸發情境** | Epic、Standard |
-| **是否為斷點** | 否 |
-
-**職責：**
-解析 `spec` 步驟產出的 `tasks.md`，呼叫 `az cli` 在 Azure DevOps 建立對應的 Work Items，並將 ADO ID 回寫到 `tasks.md`。
-
-**Input Schema：**
-```typescript
-interface AdoSyncInput {
-  tasks_md_path: string;          // tasks.md 的路徑
-  ado_project: string;            // ADO 專案名稱
-  ado_area_path?: string;         // ADO Area Path
-  parent_work_item_id?: number;   // 父 Work Item（Epic 情境下的 Feature ID）
-}
-```
-
-**Output Schema：**
-```typescript
-interface AdoSyncOutput {
-  work_items_created: Array<{
-    title: string;
-    ado_id: number;
-    ado_url: string;
-    type: "Task" | "Bug" | "User Story";
-  }>;
-  tasks_md_updated: boolean;      // 是否已回寫 ADO ID 到 tasks.md
-}
-```
-
-**實作要點：**
-- 封裝 `az boards work-item create` 指令
-- 回寫格式範例：`- [ ] 建立 users 表 <!-- ADO #12345 -->`
-- 需處理 `az cli` 認證（建議用 Service Principal Token，存於環境變數）
-- 失敗時不應阻斷整個 workflow，改為標記警告繼續
-
----
-
-### Step 4：`tdd` — 測試驅動開發
+### Step 3：`tdd` — 測試驅動開發
 
 | 項目 | 內容 |
 |------|------|
@@ -283,7 +242,7 @@ interface TddOutput {
 
 ---
 
-### Step 5：`codegen` — 程式碼生成
+### Step 4：`codegen` — 程式碼生成
 
 | 項目 | 內容 |
 |------|------|
@@ -330,7 +289,7 @@ interface CodegenOutput {
 
 ---
 
-### Step 6：`verify` — 自我驗證 🔍 REVIEW
+### Step 5：`verify` — 自我驗證 🔍 REVIEW
 
 | 項目 | 內容 |
 |------|------|
@@ -390,12 +349,12 @@ interface VerifyOutput {
 
 ---
 
-### Step 7：`pr` — 建立 Pull Request
+### Step 6：`pr` — 建立 Pull Request
 
 | 項目 | 內容 |
 |------|------|
 | **歸屬框架** | ==Superpowers + 自建 Tool== |
-| **對應真實 Skill** | `superpowers:finishing-a-development-branch`（決定 merge / PR / cleanup 策略）+ 自建 Git CLI 封裝（`az repos pr create` 或 `gh pr create`） |
+| **對應真實 Skill** | `superpowers:finishing-a-development-branch`（決定 merge / PR / cleanup 策略）+ 自建 Git CLI 封裝（`gh pr create`） |
 | **觸發情境** | Epic、Standard、Hotfix、Refactoring |
 | **是否為斷點** | 否 |
 
@@ -409,7 +368,6 @@ interface PrInput {
   branch_name: string;             // 例如 "feature/add-user-login"
   spec_output?: SpecOutput;
   verify_output: VerifyOutput;
-  ado_sync_output?: AdoSyncOutput; // 如果有 ADO 工單，PR 描述需關聯
 }
 ```
 
@@ -425,14 +383,14 @@ interface PrOutput {
 ```
 
 **實作要點：**
-- 內部呼叫 `git checkout -b` → `git add` → `git commit` → `git push` → `gh pr create`（或 `az repos pr create`）
-- PR 描述自動包含：需求摘要、變更檔案清單、測試結果、關聯的 ADO Work Item
+- 內部呼叫 `git checkout -b` → `git add` → `git commit` → `git push` → `gh pr create`
+- PR 描述自動包含：需求摘要、變更檔案清單、測試結果
 - commit message 格式遵循 Repo 現有慣例（由 `explore` 偵測）
 - Hotfix 情境的 PR 預設 target branch 為 `main`/`master`，其餘為 `develop`
 
 ---
 
-### Step 8：`archive` — 規格歸檔
+### Step 7：`archive` — 規格歸檔
 
 | 項目 | 內容 |
 |------|------|
@@ -469,6 +427,124 @@ interface ArchiveOutput {
 
 ---
 
+## Slack 介面層：可微調 Preset 機制
+
+### 設計原則
+
+Preset 是**建議的起點**，不是不可變的流水線。使用者在 Slack 選完情境後，可以自由勾選/取消任何步驟再送出執行。
+
+### Webhook 程式碼範例
+
+```typescript
+// ===== 1. Preset 定義：只是預設勾選的步驟陣列 =====
+const WORKFLOW_PRESETS: Record<string, string[]> = {
+  epic:        ["explore", "spec", "tdd", "codegen", "verify", "pr", "archive"],
+  standard:    ["spec", "codegen", "verify", "pr", "archive"],
+  hotfix:      ["tdd", "codegen", "verify", "pr"],
+  refactoring: ["explore", "spec", "tdd", "codegen", "verify", "pr", "archive"],
+  poc:         ["explore", "codegen"],
+};
+
+// 所有可用的原子步驟（Slack 表單的 checkbox 選項）
+const ALL_STEPS = [
+  { id: "explore",  label: "掃描程式碼庫",        hasReview: false },
+  { id: "spec",     label: "撰寫規格 [REVIEW]",   hasReview: true  },
+  { id: "tdd",      label: "測試先行",            hasReview: false },
+  { id: "codegen",  label: "撰寫程式碼",          hasReview: false },
+  { id: "verify",   label: "自我驗證 [REVIEW]",   hasReview: true  },
+  { id: "pr",       label: "建立 PR",             hasReview: false },
+  { id: "archive",  label: "規格歸檔",            hasReview: false },
+];
+
+// ===== 2. Slack Interactive Message 生成 =====
+function buildWorkflowForm(suggestedPreset: string) {
+  const presetSteps = WORKFLOW_PRESETS[suggestedPreset];
+  return {
+    blocks: [
+      {
+        type: "section",
+        text: { type: "mrkdwn", text: `🔧 建議情境：*${suggestedPreset}*` },
+      },
+      {
+        type: "actions",
+        elements: ALL_STEPS.map(step => ({
+          type: "checkboxes",
+          action_id: `step_${step.id}`,
+          options: [{
+            text: { type: "mrkdwn", text: `\`${step.id}\` — ${step.label}` },
+            value: step.id,
+          }],
+          // Preset 中有的步驟預設打勾
+          initial_options: presetSteps.includes(step.id) ? [{
+            text: { type: "mrkdwn", text: `\`${step.id}\` — ${step.label}` },
+            value: step.id,
+          }] : undefined,
+        })),
+      },
+      {
+        type: "actions",
+        elements: [
+          { type: "button", text: { type: "plain_text", text: "▶ 開始執行" }, action_id: "start_workflow" },
+          { type: "static_select", placeholder: { type: "plain_text", text: "切換情境" },
+            action_id: "switch_preset",
+            options: Object.keys(WORKFLOW_PRESETS).map(k => ({
+              text: { type: "plain_text", text: k }, value: k,
+            })),
+          },
+        ],
+      },
+    ],
+  };
+}
+
+// ===== 3. 使用者按下「開始執行」後 =====
+function onStartWorkflow(userCheckedSteps: string[], userDescription: string) {
+  // 不管使用者選的是哪個 preset，最終只看這個陣列
+  const workflowConfig = {
+    steps: userCheckedSteps,       // e.g. ["spec", "tdd", "codegen", "verify", "pr"]
+    description: userDescription,
+    // ... repo_path, branch 等其他參數
+  };
+  
+  // 傳給 Claude Agent SDK 編排器
+  return invokeAgent(workflowConfig);
+}
+```
+
+### Slack 互動流程
+
+```mermaid
+sequenceDiagram
+    participant U as 使用者
+    participant S as Slack Bot
+    participant A as Claude Agent SDK
+
+    U->>S: 輸入需求描述
+    S->>S: AI 判斷建議情境（例如 Standard）
+    S->>U: 顯示可微調 Preset 表單（checkbox）
+    U->>U: 勾選/取消步驟
+    U->>S: 按下「開始執行」
+    S->>A: 傳送最終步驟陣列 + 需求描述
+    
+    loop 逐步執行
+        A->>A: 執行當前步驟 Tool
+        alt 是 REVIEW 斷點
+            A->>S: 回傳產出摘要
+            S->>U: 顯示 Approve / Reject 按鈕
+            U->>S: 點擊 Approve
+            S->>A: 繼續
+        end
+    end
+    
+    A->>S: 全部步驟完成
+    S->>U: 顯示最終結果（PR 連結等）
+```
+
+> [!tip] 為什麼情境判斷也讓 AI 做？
+> 使用者輸入「線上有 Bug 要修」，系統可以自動建議 Hotfix preset。使用者輸入「做一個新的報表模組」，建議 Epic preset。這一步用一個輕量的 Claude Haiku 呼叫就能完成，不需要寫 if-else 規則。
+
+---
+
 ## 編排器 System Prompt 範本
 
 以下是給 Claude Agent SDK 的編排器 prompt，供團隊作為起點：
@@ -490,7 +566,6 @@ interface ArchiveOutput {
 ## 錯誤處理
 - 步驟執行失敗：自動重試 1 次
 - 重試仍失敗：暫停並通知使用者，附上錯誤訊息
-- ado_sync 失敗：標記警告但不中斷流程
 
 ## 當前任務
 - 情境：{scenario_name}
@@ -507,30 +582,28 @@ graph LR
     subgraph OpenSpec["🧠 OpenSpec Skills"]
         E1["explore<br/><small>/opsx:propose 前段</small>"]
         E2["spec<br/><small>/opsx:propose</small>"]
-        E8["archive<br/><small>/opsx:apply</small>"]
+        E7["archive<br/><small>/opsx:apply</small>"]
     end
 
     subgraph Superpowers["💪 Superpowers Skills"]
         E1b["explore<br/><small>brainstorming</small>"]
         E2b["spec<br/><small>brainstorming +<br/>writing-plans</small>"]
-        E4["tdd<br/><small>test-driven-development</small>"]
-        E5["codegen<br/><small>executing-plans +<br/>subagent-driven-development</small>"]
-        E6["verify<br/><small>verification-before-completion +<br/>requesting-code-review</small>"]
-        E7["pr<br/><small>finishing-a-development-branch</small>"]
+        E3["tdd<br/><small>test-driven-development</small>"]
+        E4["codegen<br/><small>executing-plans +<br/>subagent-driven-development</small>"]
+        E5["verify<br/><small>verification-before-completion +<br/>requesting-code-review</small>"]
+        E6["pr<br/><small>finishing-a-development-branch</small>"]
     end
 
     subgraph Custom["🔧 自建 Tool"]
-        E3["ado_sync<br/><small>az cli 封裝</small>"]
-        E7b["pr<br/><small>az repos pr create</small>"]
+        E6b["pr<br/><small>gh pr create</small>"]
     end
 
     E1 & E1b --> E2 & E2b
     E2 & E2b --> E3
-    E2 & E2b --> E4
+    E3 --> E4
     E4 --> E5
-    E5 --> E6
-    E6 --> E7 & E7b
-    E7 & E7b --> E8
+    E5 --> E6 & E6b
+    E6 & E6b --> E7
 
     style OpenSpec fill:#2563EB,color:#fff
     style Superpowers fill:#059669,color:#fff
@@ -541,7 +614,7 @@ graph LR
 > 注意 `explore` 和 `spec` 步驟各自**橫跨** OpenSpec + Superpowers 兩個框架。這是刻意的設計——在 Slack 場景下，我們把原本需要使用者分別觸發的多個 skill 合併成一個原子步驟 + 一個 REVIEW 斷點，降低互動負擔。
 
 > [!summary] 一句話總結
-> OpenSpec 的 `/opsx:propose` + `/opsx:apply` 負責**規格的生與歸**，Superpowers 的 7 個 skill 負責**從設計到交付的全部工程紀律**，自建 Tool 負責**企業工具鏈整合**（ADO + Git）。
+> OpenSpec 的 `/opsx:propose` + `/opsx:apply` 負責**規格的生與歸**，Superpowers 的 skill 負責**從設計到交付的全部工程紀律**，自建 Tool 目前聚焦在 Git / PR 整合。
 
 ---
 
@@ -553,6 +626,7 @@ graph LR
 - [ ] 實作 `codegen` Tool（核心能力，所有情境都需要）
 - [ ] 實作 `pr` Tool（最直接的產出物）
 - [ ] 搭建 Slack ↔ Claude Agent SDK 的基本連接
+- [ ] 實作 Slack「可微調 Preset 表單」（Interactive Message + checkbox）
 - [ ] 用 PoC 情境（`explore` → `codegen`）跑通第一個 E2E
 
 **Phase 2 — 加入規格驅動（2~3 週）**
@@ -566,8 +640,7 @@ graph LR
 - [ ] 實作 `verify` Tool + Slack REVIEW 斷點 UI
 - [ ] 用 Epic 情境跑通完整流程（包含 TDD + 雙斷點）
 
-**Phase 4 — 整合 ADO + 特殊情境（1~2 週）**
-- [ ] 實作 `ado_sync` Tool
+**Phase 4 — 特殊情境與延伸整合（1~2 週）**
 - [ ] 驗證 Hotfix 與 Refactoring 情境
 - [ ] 壓力測試：並行 Sub-agent 的穩定性
 
