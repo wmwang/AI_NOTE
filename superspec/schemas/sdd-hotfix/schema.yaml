@@ -1,0 +1,62 @@
+name: sdd-hotfix
+version: 1
+description: >
+  Surgical strike for urgent bugs. 
+  bug-report → strict TDD tasks. No heavy documentation.
+
+artifacts:
+  - id: bug-report
+    generates: bug-report.md
+    description: Active root cause analysis using systematic-debugging
+    template: bug-report.md
+    instruction: |
+      Use the Skill tool to invoke **superpowers:systematic-debugging**.
+
+      Pass the user's prompt, error logs, or issue context to the skill.
+      
+      The systematic-debugging skill must actively:
+      1. Formulate hypotheses about the root cause.
+      2. Navigate the codebase to gather evidence.
+      3. Disprove invalid hypotheses and isolate the actual root cause.
+
+      IMPORTANT output redirection:
+      Instead of just outputting to the chat, write the final conclusion 
+      directly to this change's `bug-report.md`.
+
+      The final `bug-report.md` MUST clearly define:
+      - **Expected vs. Actual Behavior**
+      - **Verified Root Cause**: The exact file, function, and logic error discovered during debugging.
+      - **Proposed Fix Strategy**: A high-level description of what needs to change.
+    requires: []
+
+  - id: tasks
+    generates: tasks.md
+    description: Minimal strict TDD task list
+    template: tasks.md
+    instruction: |
+      Create a strict TDD task list based on bug-report.md.
+      
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+
+      You MUST format the tasks exactly as follows:
+      ## 1. Reproduction and Fix
+      - [ ] 1.1 Write a failing test case that perfectly reproduces the bug.
+      - [ ] 1.2 Execute the test to confirm it fails (Red).
+      - [ ] 1.3 Fix the implementation code.
+      - [ ] 1.4 Execute the test to confirm it passes (Green).
+      - [ ] 1.5 Run the full test suite to ensure no regressions.
+    requires:
+      - bug-report
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    **Executor**: Use the Skill tool to invoke
+    **superpowers:subagent-driven-development**.
+
+    CRITICAL: You are in Hotfix mode. You MUST execute the tasks strictly via TDD.
+    - Read tasks.md.
+    - Do NOT modify the implementation code until the failing test in Task 1.1 is written, executed, and confirmed to be failing.
+    - Update tasks.md checkboxes sequentially as you progress.

@@ -1,0 +1,27 @@
+name: sdd-poc
+version: 1
+description: >
+  Proof of Concept workflow. Minimal documentation, maximum prototyping speed.
+
+artifacts:
+  - id: idea
+    generates: idea.md
+    description: Rough sketch of the proof of concept goal
+    template: default.md
+    instruction: |
+      Briefly summarize the user's PoC goal.
+      Document:
+      - The core hypothesis or technology stack being tested.
+      - The exact **Success Criteria** (What proves this idea works?).
+      Do not over-engineer this document. Focus only on the experiment.
+    requires: []
+
+apply:
+  requires: [idea]
+  instruction: |
+    This is a Proof of Concept (PoC). Skip strict TDD and formal task tracking.
+    
+    Use the Skill tool to invoke **superpowers:subagent-driven-development** or directly use standard coding capabilities.
+    
+    Your only goal is to build a working prototype that satisfies the Success Criteria defined in idea.md as fast as possible.
+    When complete, output a quick summary in the chat of what worked, what failed, and any limitations discovered.

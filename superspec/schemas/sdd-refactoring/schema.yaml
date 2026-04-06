@@ -1,0 +1,76 @@
+name: sdd-refactoring
+version: 1
+description: >
+  Modernization workflow focusing on code auditing, regression testing, and structural changes.
+  audit → design → tasks → plan.
+
+artifacts:
+  - id: audit
+    generates: audit.md
+    description: Codebase scanning and legacy architecture mapping
+    template: default.md
+    instruction: |
+      Use the Skill tool to invoke **superpowers:brainstorming** or codebase search skills.
+      Goal: Scan the existing codebase for the target refactoring area.
+      Output mapping of:
+      - Current dependencies and file structures
+      - Code smells or tight coupling
+      - Existing behaviors that MUST be preserved
+    requires: []
+
+  - id: design
+    generates: design.md
+    description: The new architecture design and regression strategy
+    template: design.md
+    instruction: |
+      Read audit.md. Propose the new structural design.
+      
+      Sections MUST include:
+      - **Context**: Current state of the legacy code.
+      - **Decisions**: The new architectural pattern to be applied.
+      - **Regression Testing Strategy (CRITICAL)**: How existing behavior will be protected with tests *before* any logic is changed.
+    requires:
+      - audit
+
+  - id: tasks
+    generates: tasks.md
+    description: Refactoring steps prioritizing test coverage
+    template: tasks.md
+    instruction: |
+      Create the task list based on design.md.
+
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+
+      Guidelines:
+      - **## Phase 1: Safety Net**: Tasks MUST focus entirely on writing/fixing regression tests for the existing code.
+      - **## Phase 2: Refactoring**: Tasks for the actual structural changes.
+      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+    requires:
+      - design
+
+  - id: plan
+    generates: plan.md
+    description: Micro-task implementation plan using Superpowers writing-plans
+    template: plan.md
+    instruction: |
+      Use the Skill tool to invoke **superpowers:writing-plans**.
+      IMPORTANT output redirection: write the plan directly to this change's `plan.md`.
+
+      The writing-plans skill will:
+      1. Read tasks.md and design.md.
+      2. Break tasks into safe, incremental refactoring steps.
+      3. Include test execution commands after every single code change.
+    requires:
+      - tasks
+
+apply:
+  requires: [plan]
+  tracks: tasks.md
+  instruction: |
+    **Executor**: Use the Skill tool to invoke
+    **superpowers:subagent-driven-development** to execute the plan.md micro-tasks.
+
+    Tell the executor:
+    - Update tasks.md checkboxes as coarse tasks complete.
+    - Halt immediately if any regression test fails during Phase 2.
