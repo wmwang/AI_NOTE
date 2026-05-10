@@ -1,0 +1,73 @@
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/12.5   Vector Store Databases _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/2.3   Object-Oriented Programming _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/8.2   Example_ Converting a Python Script to PHP Code _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/11.3   Aider _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/5.4   Using Dependencies _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/5   Testing Software _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/7.3   Administration _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9.5   Continue _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/5.3   Test-Driven Development with AI _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9.8   Conclusion _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/10.4   Example_ Automated Commenting of Code _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/12.3   Loading Documents _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/2.5   Example_ Solving Sudoku _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/11   Level 3 Tools_ OpenHands and Aider _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/10.2   Ollama API _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/10.3   Groq API _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/\.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/12.4   Creating an Index _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/11.4   Using Aider _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9.2   GPT4All _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/12.6   RAG Queries _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/4.2   Refactoring Using AI Tools _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/2.4   Example_ Quiz _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/8.5   Example_ “wget” Script Plus “tmpfs” Configuration _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/8.3   Regular Expressions _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/8.4   System Administration _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9.6   Ollama API _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9.7   Tabby _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/13   Risks and Outlook _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/5.5   Optimizing Tests _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/3.4   Visual Studio and Visual Studio Code _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/6.5   Outdated Documentation _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/8.6   Calling GitHub Copilot and ChatGPT in the Terminal _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/13.2   Exemplary AI Failure _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/1.5   Basic Principles of Large Language Models _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/12   Retrieval-Augmented Generation and Text-to-SQL _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/2   Pair Programming _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/6.2   Inline Documentation _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/4.4   Conclusion _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/6.4   API Documentation _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9   Executing Language Models Locally _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9.4   Open WebUI for Ollama _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/Preface _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/13.3   Ethical Issues _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/7   Databases _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/5.7   Conclusion _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/3.3   Developing on Raspberry Pi _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/Table of Contents _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/9.3   Ollama _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/5.6   End-to-End Tests _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/1.3   Code Wizards _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/Notes on Usage _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/7.2   SQL Commands _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/7.4   Client Programming _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/6.6   Conclusion _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/1   Introduction _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/3.2   App Development _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/5.2   AI-Supported Test Automation _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/4   Refactoring _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/10.5   Example_ From Python 2 to Python 3 _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/2.2   Example_ IBAN Validation _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/3   Debugging _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/1.4   Chat or Wizard_ _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/3.5   Conclusion _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/13.4   Conclusions and Outlook _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/12.7   Text-to-SQL _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/11.2   Using OpenHands _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/1.2   The Art of Prompting _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/12.2   The Viel-Falter (Many Butterflies) Project _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/6.3   Function and Class Documentation _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/10   Automated Code Processing _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/4.3   Best Practices _ AI-Assisted Coding.pdf
+/Users/isosoman/Documents/repo/deepwiki_claude/AI_NOTE/AI-Assisted Coding/8   Scripting and System Administration _ AI-Assisted Coding.pdf

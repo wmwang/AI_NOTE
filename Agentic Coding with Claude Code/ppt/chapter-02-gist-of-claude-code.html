@@ -1,0 +1,858 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chapter 2: The Gist of Claude Code - Agentic Coding with Claude Code</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      oklch(99% 0.005 250);
+      --surface: oklch(100% 0 0);
+      --fg:      oklch(15% 0.02 230);
+      --muted:   oklch(45% 0.015 230);
+      --border:  oklch(88% 0.008 230);
+      --accent:   oklch(45% 0.18 250);
+
+      --font-display: 'Roboto', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body:    'Roboto', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono:    'Roboto Mono', ui-monospace, 'IBM Plex Mono', Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .deck-container {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .deck-wrapper {
+      width: 1920px;
+      height: 1080px;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    }
+
+    .slides {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 80px 100px;
+    }
+
+    .slide.active { opacity: 1; transform: translateX(0); }
+
+    .slide-title {
+      font-family: var(--font-display);
+      font-size: 56px;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 48px;
+      letter-spacing: -0.02em;
+    }
+
+    .slide-subtitle {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .content-row {
+      display: flex;
+      gap: 48px;
+      align-items: flex-start;
+    }
+
+    .content-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .bullet-list {
+      font-size: 28px;
+      line-height: 1.6;
+      color: var(--fg);
+    }
+
+    .bullet-list li {
+      padding-left: 24px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .bullet-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .highlight-box {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+    }
+
+    .highlight-box h3 {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+
+    .highlight-box p {
+      font-size: 24px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .code-block {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      overflow-x: auto;
+      color: var(--fg);
+    }
+
+    .diagram-box {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .diagram-item {
+      text-align: center;
+      padding: 24px 32px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .diagram-item h4 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+
+    .diagram-item p {
+      font-size: 20px;
+      color: var(--muted);
+    }
+
+    .arrow {
+      font-size: 48px;
+      color: var(--accent);
+    }
+
+    .key-point {
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--fg);
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .definition {
+      font-size: 28px;
+      line-height: 1.6;
+      color: var(--fg);
+      padding: 24px 0;
+      border-left: 4px solid var(--accent);
+      padding-left: 24px;
+    }
+
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .strategy-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px;
+    }
+
+    .strategy-card h4 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .strategy-card p {
+      font-size: 22px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: rgba(0,0,0,0.8);
+      padding: 16px 32px;
+      border-radius: 32px;
+    }
+
+    .control-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--accent);
+      color: var(--surface);
+      border-color: var(--accent);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .slide-counter {
+      position: absolute;
+      bottom: 32px;
+      right: 48px;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .slide-number {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    @media print {
+      body { overflow: visible; }
+      .deck-container { display: none; }
+      .slide { position: relative !important; opacity: 1 !important; transform: none !important; page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck-container">
+    <div class="deck-wrapper">
+      <div class="slides">
+        <!-- Slide 1: Title -->
+        <section class="slide active" data-screen-label="01 Title">
+          <h1 class="slide-title">Chapter 2</h1>
+          <h2 class="slide-subtitle">The Gist of Claude Code</h2>
+          <div class="slide-content" style="justify-content: center; align-items: center; gap: 48px;">
+            <div style="font-size: 42px; color: var(--muted); max-width: 800px; line-height: 1.6;">
+              了解 Claude Code 的實際運作方式<br>
+              <span style="color: var(--accent);">從設定到實踐的完整流程</span>
+            </div>
+            <div style="display: flex; gap: 32px; margin-top: 40px;">
+              <div class="diagram-item">
+                <h4>專案設置</h4>
+                <p>CLAUDE.md 檔案</p>
+              </div>
+              <div class="arrow">→</div>
+              <div class="diagram-item">
+                <h4>權限系統</h4>
+                <p>安全控制</p>
+              </div>
+              <div class="arrow">→</div>
+              <div class="diagram-item">
+                <h4>MCP 擴展</h4>
+                <p>外部工具整合</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 2: Chapter Introduction -->
+        <section class="slide" data-screen-label="02 Introduction">
+          <h1 class="slide-title">本章簡介</h1>
+          <div class="slide-content">
+            <div class="definition">
+              本章將幫助您熟悉 Claude Code 的實際運作方式。我們將透過建立 Next.js 專案來探索概念，包括 CLAUDE.md 檔案、權限系統，以及為什麼有意地管理環境很重要。
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">學習重點</h3>
+                <ul class="bullet-list">
+                  <li>設定 Next.js 專案</li>
+                  <li>連接 Playwright MCP 到 Claude Code</li>
+                  <li>使用規格驅動設計</li>
+                  <li>實作主頁面</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <div class="highlight-box">
+                  <h3>HookHub 專案</h3>
+                  <p>本章建立的 HookHub 專案將作為整本書的參考點，讓我們在後續進入更進階的代理工作流程時有一個共享的基礎。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 3: Installing Claude Code -->
+        <section class="slide" data-screen-label="03 Installation">
+          <h1 class="slide-title">安裝 Claude Code</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>原生安裝程式</h3>
+              <p>Claude Code 提供原生安裝程式，可自動偵測作業系統並安裝適當版本。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">安裝步驟</h3>
+                <ul class="bullet-list">
+                  <li>前往官方安裝指南：<br><span style="font-family: var(--font-mono); font-size: 22px; color: var(--accent);">https://code.claude.com/docs/en/setup#native-install-recommended</span></li>
+                  <li>安裝程式會處理設定和更新</li>
+                  <li>支援多種作業系統</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">驗證安裝</h3>
+                <div class="code-block">
+                  claude --version
+                </div>
+                <p style="margin-top: 16px; color: var(--muted); font-size: 22px;">確認安裝成功後即可繼續設定 Next.js。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 4: Setting up Next.js -->
+        <section class="slide" data-screen-label="04 Next.js Setup">
+          <h1 class="slide-title">設定 Next.js 專案</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>手動設定原因</h3>
+              <p>雖然 Claude 可以建立 Next.js 專案，但為了處理本地權限問題和預先配置，我們採用手動設定方式。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">建立指令</h3>
+                <div class="code-block">
+                  npx create-next-app@latest
+                </div>
+                <ul class="bullet-list" style="margin-top: 16px;">
+                  <li>選擇預設選項繼續</li>
+                  <li>安裝相依套件</li>
+                  <li>生成標準程式碼範本</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">權限處理</h3>
+                <ul class="bullet-list">
+                  <li>可能遇到權限錯誤</li>
+                  <li>使用 sudo 解決或調整 npm 權限</li>
+                  <li>確保有足夠權限安裝套件</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 5: Project Structure -->
+        <section class="slide" data-screen-label="05 Project Structure">
+          <h1 class="slide-title">專案結構與分支</h1>
+          <div class="slide-content">
+            <div class="diagram-box">
+              <div style="display: flex; flex-direction: column; gap: 24px; text-align: left;">
+                <div class="diagram-item">
+                  <h4>project/hookhub</h4>
+                  <p>專案分支</p>
+                </div>
+                <div class="arrow" style="transform: rotate(90deg);">→</div>
+                <div class="diagram-item">
+                  <h4>npm install</h4>
+                  <p>安裝相依套件</p>
+                </div>
+                <div class="arrow" style="transform: rotate(90deg);">→</div>
+                <div class="diagram-item" style="border-color: var(--accent);">
+                  <h4 style="color: var(--accent);">npm run dev</h4>
+                  <p style="color: var(--muted);">啟動開發伺服器</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 32px;">
+              <h3 class="key-point">專案目錄</h3>
+              <ul class="bullet-list">
+                <li>完成安裝後，進入新建立的專案目錄</li>
+                <li>HookHub 專案將在本章持續發展</li>
+                <li>所有設定和程式碼將在此專案中建立</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 6: How Claude Code Observes -->
+        <section class="slide" data-screen-label="06 Observation">
+          <h1 class="slide-title">Claude Code 如何觀察專案</h1>
+          <div class="slide-content">
+            <div class="content-row">
+              <div class="content-col">
+                <h3 class="key-point">觀察機制</h3>
+                <ul class="bullet-list">
+                  <li><strong>掃描檔案系統</strong>：了解專案結構</li>
+                  <li><strong>讀取程式碼</strong>：理解實作細節</li>
+                  <li><strong>分析相依性</strong>：追蹤模組關係</li>
+                  <li><strong>識別模式</strong>：發現程式碼慣例</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <div class="highlight-box">
+                  <h3>環境建構</h3>
+                  <p>Claude Code 透過觀察專案自動建構環境，這個環境包含專案知識、架構決策和任何與特定專案相關的資訊。</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 24px;">
+              <h3 class="key-point">環境的重要性</h3>
+              <div class="definition">
+                有意地管理環境對於獲得高品質且一致的結果至關重要。良好的環境讓 Claude 能夠：
+                <ul style="margin-top: 12px; padding-left: 24px;">
+                  <li>理解專案上下文</li>
+                  <li>遵循現有慣例</li>
+                  <li>做出一致的決策</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 7: MCP Integration -->
+        <section class="slide" data-screen-label="07 MCP Integration">
+          <h1 class="slide-title">Model Context Protocol (MCP)</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>什麼是 MCP？</h3>
+              <p>MCP 提供標準化的方式，讓 AI 應用程式透過共同介面連接到工具、資料來源和服務。這是一個抽象層，啟用互通性、可移植性和生態系統成長。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">MCP 的優勢</h3>
+                <ul class="bullet-list">
+                  <li><strong>一次實作，多次使用</strong>：在不同客戶端重複使用</li>
+                  <li><strong>標準化介面</strong>：跨平台相容性</li>
+                  <li><strong>生態系統成長</strong>：社群持續貢獻新伺服器</li>
+                  <li><strong>可擴展性</strong>：輕鬆添加新功能</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">實際應用</h3>
+                <ul class="bullet-list">
+                  <li>連接 Playwright MCP 進行測試</li>
+                  <li>存取外部 API 和服務</li>
+                  <li>擴充 Claude Code 的原生能力</li>
+                  <li>整合工作流程到日常開發</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 8: Spec-Driven Design -->
+        <section class="slide" data-screen-label="08 Spec-Driven Design">
+          <h1 class="slide-title">規格驅動設計</h1>
+          <div class="slide-content">
+            <div class="definition">
+              <strong>規格驅動設計</strong>是一種在撰寫任何程式碼之前引導 Claude 行為的方法。透過建立和參考規格，我們可以影響所獲得結果的品質和一致性。
+            </div>
+            <div class="diagram-box" style="margin-top: 32px;">
+              <div style="display: flex; gap: 32px; align-items: center;">
+                <div class="diagram-item">
+                  <h4>建立規格</h4>
+                  <p>定義需求</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>Claude 分析</h4>
+                  <p>理解需求</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item" style="border-color: var(--accent);">
+                  <h4 style="color: var(--accent);">實作程式碼</h4>
+                  <p style="color: var(--muted);">遵循規格</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 32px;">
+              <h3 class="key-point">規格驅動的好處</h3>
+              <ul class="bullet-list">
+                <li><strong>品質控制</strong>：在開發前定義期望</li>
+                <li><strong>一致性</strong>：標準化輸出格式</li>
+                <li><strong>可預測性</strong>：減少意外變更</li>
+                <li><strong>可追蹤性</strong>：規格成為參考文件</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 9: HookHub Project -->
+        <section class="slide" data-screen-label="09 HookHub">
+          <h1 class="slide-title">HookHub 專案</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>專案概述</h3>
+              <p>HookHub 是本章建立的實作專案，將作為本書的共享參考點。我們將在此專案上實作各種功能，並在後續章節中擴展它。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">專案特色</h3>
+                <ul class="bullet-list">
+                  <li>Next.js 架構</li>
+                  <li>現代前端設計</li>
+                  <li>整合 Claude Code 工作流程</li>
+                  <li>持續演進的程式碼庫</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">學習價值</h3>
+                <ul class="bullet-list">
+                  <li><strong>實際應用</strong>：真實專案情境</li>
+                  <li><strong>連續性</strong>：跨章節參考</li>
+                  <li><strong>深度整合</strong>：展示實際整合案例</li>
+                  <li><strong>漸進學習</strong>：逐步增加複雜度</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 10: Permission System -->
+        <section class="slide" data-screen-label="10 Permissions">
+          <h1 class="slide-title">權限系統</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>為什麼需要權限？</h3>
+              <p>Claude Code 需要明確的權限來執行各種操作。權限系統確保安全性，讓使用者可以精確控制 Claude 可以執行的動作。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">權限類型</h3>
+                <ul class="bullet-list">
+                  <li><strong>檔案讀取</strong>：存取專案檔案</li>
+                  <li><strong>檔案寫入</strong>：建立和修改檔案</li>
+                  <li><strong>指令執行</strong>：執行終端機指令</li>
+                  <li><strong>網路存取</strong>：調用外部 API</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">權限控制</h3>
+                <ul class="bullet-list">
+                  <li>明確批准每個動作</li>
+                  <li>全域和專案層級設定</li>
+                  <li>敏感操作需要額外確認</li>
+                  <li>可追蹤和審計權限使用</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 11: CLAUDE.md File -->
+        <section class="slide" data-screen-label="11 CLAUDE.md">
+          <h1 class="slide-title">CLAUDE.md 檔案</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>專案記憶檔案</h3>
+              <p>CLAUDE.md 是專案的記憶檔案，包含團隊共享的專案環境，如架構、標準或任何與特定專案相關的資訊。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">CLAUDE.md 的用途</h3>
+                <ul class="bullet-list">
+                  <li>定義專案架構</li>
+                  <li>記錄編碼標準</li>
+                  <li>說明技術決策</li>
+                  <li>提供專案特定指引</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <div class="code-block" style="font-size: 18px;">
+                  # Project Context
+
+                  ## Architecture
+                  This is a Next.js 16 application
+                  with React 19 and TypeScript.
+
+                  ## Coding Standards
+                  - Use functional components
+                  - Follow Tailwind CSS v4
+                  - Type all props and state
+
+                  ## Notes
+                  All API calls go through
+                  lib/api/ directory.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 12: Workflow Integration -->
+        <section class="slide" data-screen-label="12 Workflow">
+          <h1 class="slide-title">工作流程整合</h1>
+          <div class="slide-content">
+            <div class="diagram-box">
+              <div style="display: flex; gap: 32px; align-items: center; flex-wrap: wrap;">
+                <div class="diagram-item">
+                  <h4>設定</h4>
+                  <p>CLAUDE.md</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>觀察</h4>
+                  <p>掃描專案</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>規劃</h4>
+                  <p>建立計畫</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item" style="border-color: var(--accent);">
+                  <h4 style="color: var(--accent);">執行</h4>
+                  <p style="color: var(--muted);">撰寫程式碼</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 32px;">
+              <h3 class="key-point">工作流程循環</h3>
+              <ul class="bullet-list">
+                <li><strong>持續優化</strong>：根據反饋調整環境</li>
+                <li><strong>規格驅動</strong>：定義清晰的期望</li>
+                <li><strong>工具擴充</strong>：透過 MCP 添加能力</li>
+                <li><strong>權限管理</strong>：安全地控制存取</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 13: Best Practices -->
+        <section class="slide" data-screen-label="13 Best Practices">
+          <h1 class="slide-title">最佳實踐</h1>
+          <div class="slide-content">
+            <div class="strategy-grid">
+              <div class="strategy-card">
+                <h4>有意地管理環境</h4>
+                <p>花時間編寫清晰的 CLAUDE.md，並在專案發展時持續更新它。</p>
+              </div>
+              <div class="strategy-card">
+                <h4>使用規格驅動設計</h4>
+                <p>在撰寫程式碼前建立規格，以確保品質和一致性。</p>
+              </div>
+              <div class="strategy-card">
+                <h4>善用 MCP 擴充</h4>
+                <p>透過 MCP 伺服器擴充 Claude Code 的能力，整合外部工具。</p>
+              </div>
+              <div class="strategy-card">
+                <h4>審慎控制權限</h4>
+                <p>了解權限系統，只在需要時授權，保持安全性。</p>
+              </div>
+            </div>
+            <div style="margin-top: 24px;">
+              <div class="highlight-box">
+                <h3>關鍵原則</h3>
+                <p>Claude Code 的力量來自其對專案環境的理解。投資時間在設定和環境管理上，將在所有後續工作中獲得回報。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 14: Summary -->
+        <section class="slide" data-screen-label="14 Summary">
+          <h1 class="slide-title">本章總結</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>核心概念</h3>
+              <p>本章涵蓋了 Claude Code 的基本設定和使用方法，從安裝到實際專案工作，包括環境管理、權限系統和 MCP 整合。</p>
+            </div>
+            <div class="strategy-grid" style="margin-top: 24px;">
+              <div class="strategy-card">
+                <h4>學習成果</h4>
+                <p>了解 Claude Code 如何觀察專案、建構環境並輔助程式碼工作。</p>
+              </div>
+              <div class="strategy-card">
+                <h4>實作技能</h4>
+                <p>能夠設定 Next.js 專案、使用規格驅動設計和整合 MCP 伺服器。</p>
+              </div>
+            </div>
+            <div style="margin-top: 24px;">
+              <h3 class="key-point">你應該理解...</h3>
+              <ul class="bullet-list">
+                <li>Claude Code 的安裝和設定流程</li>
+                <li>CLAUDE.md 檔案的作用和價值</li>
+                <li>權限系統的重要性</li>
+                <li>如何透過 MCP 擴充能力</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 15: Next Chapter -->
+        <section class="slide" data-screen-label="15 Next">
+          <h1 class="slide-title">下一章預告</h1>
+          <div class="slide-content" style="justify-content: center; align-items: center;">
+            <div style="text-align: center;">
+              <div style="font-size: 48px; color: var(--accent); margin-bottom: 32px;">Chapter 3</div>
+              <div style="font-size: 36px; color: var(--fg); margin-bottom: 24px;">Getting Started with Claude Code</div>
+              <div style="font-size: 28px; color: var(--muted); max-width: 800px; margin: 0 auto; line-height: 1.6;">
+                接下來我們將深入探討 Claude Code 的設定和配置，包括定價方案、斜線指令、hooks、記憶系統和自訂技能。
+              </div>
+              <div style="margin-top: 48px; display: flex; justify-content: center; gap: 24px;">
+                <div class="diagram-item">
+                  <h4>Config</h4>
+                  <p>設定與配置</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>Commands</h4>
+                  <p>斜線指令</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>Skills</h4>
+                  <p>自訂技能</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="controls">
+        <button class="control-btn" id="prevBtn">← 上一張</button>
+        <button class="control-btn" id="nextBtn">下一張 →</button>
+      </div>
+
+      <div class="slide-counter">
+        <span class="slide-number" id="currentSlide">1</span> / <span id="totalSlides">15</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const currentSlideEl = document.getElementById('currentSlide');
+      const totalSlidesEl = document.getElementById('totalSlides');
+
+      let currentIndex = 0;
+      const savedIndex = localStorage.getItem('slideIndex2');
+
+      if (savedIndex !== null && !isNaN(parseInt(savedIndex))) {
+        currentIndex = Math.min(Math.max(0, parseInt(savedIndex)), slides.length - 1);
+      }
+
+      totalSlidesEl.textContent = slides.length;
+
+      function updateSlide() {
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === currentIndex);
+        });
+        currentSlideEl.textContent = currentIndex + 1;
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex === slides.length - 1;
+        localStorage.setItem('slideIndex2', currentIndex);
+      }
+
+      function goToSlide(index) {
+        if (index >= 0 && index < slides.length) {
+          currentIndex = index;
+          updateSlide();
+        }
+      }
+
+      prevBtn.addEventListener('click', () => goToSlide(currentIndex - 1));
+      nextBtn.addEventListener('click', () => goToSlide(currentIndex + 1));
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          goToSlide(currentIndex - 1);
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+          goToSlide(currentIndex + 1);
+        } else if (e.key === 'Home') {
+          goToSlide(0);
+        } else if (e.key === 'End') {
+          goToSlide(slides.length - 1);
+        }
+      });
+
+      document.addEventListener('wheel', (e) => {
+        if (e.deltaY > 0) {
+          goToSlide(currentIndex + 1);
+        } else if (e.deltaY < 0) {
+          goToSlide(currentIndex - 1);
+        }
+      }, { passive: true });
+
+      updateSlide();
+    })();
+  </script>
+</body>
+</html>

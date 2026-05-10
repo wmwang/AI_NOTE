@@ -1,0 +1,871 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chapter 1: Context Engineering - Agentic Coding with Claude Code</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      oklch(99% 0.005 250);
+      --surface: oklch(100% 0 0);
+      --fg:      oklch(15% 0.02 230);
+      --muted:   oklch(45% 0.015 230);
+      --border:  oklch(88% 0.008 230);
+      --accent:   oklch(45% 0.18 250);
+
+      --font-display: 'Roboto', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body:    'Roboto', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono:    'Roboto Mono', ui-monospace, 'IBM Plex Mono', Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .deck-container {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .deck-wrapper {
+      width: 1920px;
+      height: 1080px;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    }
+
+    .slides {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 80px 100px;
+    }
+
+    .slide.active { opacity: 1; transform: translateX(0); }
+
+    .slide-title {
+      font-family: var(--font-display);
+      font-size: 56px;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 48px;
+      letter-spacing: -0.02em;
+    }
+
+    .slide-subtitle {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .content-row {
+      display: flex;
+      gap: 48px;
+      align-items: flex-start;
+    }
+
+    .content-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .bullet-list {
+      font-size: 28px;
+      line-height: 1.6;
+      color: var(--fg);
+    }
+
+    .bullet-list li {
+      padding-left: 24px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .bullet-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .highlight-box {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+    }
+
+    .highlight-box h3 {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+
+    .highlight-box p {
+      font-size: 24px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .code-block {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      overflow-x: auto;
+      color: var(--fg);
+    }
+
+    .diagram-box {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .diagram-item {
+      text-align: center;
+      padding: 24px 32px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .diagram-item h4 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+
+    .diagram-item p {
+      font-size: 20px;
+      color: var(--muted);
+    }
+
+    .arrow {
+      font-size: 48px;
+      color: var(--accent);
+    }
+
+    .key-point {
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--fg);
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .definition {
+      font-size: 28px;
+      line-height: 1.6;
+      color: var(--fg);
+      padding: 24px 0;
+      border-left: 4px solid var(--accent);
+      padding-left: 24px;
+    }
+
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .strategy-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px;
+    }
+
+    .strategy-card h4 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .strategy-card p {
+      font-size: 22px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .memory-tiers {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .memory-tier {
+      padding: 20px 28px;
+      background: var(--bg);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .memory-tier h4 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 8px;
+    }
+
+    .memory-tier p {
+      font-size: 22px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: rgba(0,0,0,0.8);
+      padding: 16px 32px;
+      border-radius: 32px;
+    }
+
+    .control-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--accent);
+      color: var(--surface);
+      border-color: var(--accent);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .slide-counter {
+      position: absolute;
+      bottom: 32px;
+      right: 48px;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .slide-number {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    @media print {
+      body { overflow: visible; }
+      .deck-container { display: none; }
+      .slide { position: relative !important; opacity: 1 !important; transform: none !important; page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck-container">
+    <div class="deck-wrapper">
+      <div class="slides">
+        <!-- Slide 1: Title -->
+        <section class="slide active" data-screen-label="01 Title">
+          <h1 class="slide-title">Chapter 1</h1>
+          <h2 class="slide-subtitle">Context Engineering</h2>
+          <div class="slide-content" style="justify-content: center; align-items: center; gap: 48px;">
+            <div style="font-size: 42px; color: var(--muted); max-width: 800px; line-height: 1.6;">
+              從提示工程到環境工程的演進<br>
+              <span style="color: var(--accent);">掌握 AI 編排器的核心技術</span>
+            </div>
+            <div style="display: flex; gap: 32px; margin-top: 40px;">
+              <div class="diagram-item">
+                <h4>CLAUDE.md</h4>
+                <p>專案記憶</p>
+              </div>
+              <div class="arrow">→</div>
+              <div class="diagram-item">
+                <h4>/memory</h4>
+                <p>使用者記憶</p>
+              </div>
+              <div class="arrow">→</div>
+              <div class="diagram-item">
+                <h4>Agent</h4>
+                <p>智能代理</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 2: What is Context Engineering -->
+        <section class="slide" data-screen-label="02 What is Context Engineering">
+          <h1 class="slide-title">什麼是環境工程？</h1>
+          <div class="slide-content">
+            <div class="definition">
+              <strong>環境工程（Context Engineering）</strong>是指圍繞 LLM 的系統，負責管理工具調用、控制代理迴圈、處理錯誤、執行防護措施，以及決定每一步要發送什麼環境給模型的<span style="color: var(--accent);">編排層（Agent Harness）</span>。
+            </div>
+            <div class="content-row">
+              <div class="content-col">
+                <h3 class="key-point">提示工程 vs. 環境工程</h3>
+                <ul class="bullet-list">
+                  <li><strong>提示工程</strong>：靜態的，一次性提示詞設計</li>
+                  <li><strong>環境工程</strong>：動態的，持續的環境管理系統</li>
+                  <li>環境來自多個來源且不斷增長</li>
+                  <li>需要動態系統來構建正確的環境</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <div class="highlight-box">
+                  <h3>核心概念</h3>
+                  <p>"Garbage in, garbage out" —— 這是導致代理系統無法正常運作的最常見原因之一。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 3: From Prompt Engineering to Context Engineering -->
+        <section class="slide" data-screen-label="03 Evolution">
+          <h1 class="slide-title">從提示工程到環境工程</h1>
+          <div class="slide-content">
+            <div class="diagram-box">
+              <div class="diagram-item" style="min-width: 300px;">
+                <h4>早期：提示工程</h4>
+                <p>靜態提示詞<br>假設一次寫好就能解決問題</p>
+              </div>
+              <div class="arrow">→</div>
+              <div class="diagram-item" style="min-width: 300px;">
+                <h4>現在：環境工程</h4>
+                <p>動態環境系統<br>適應不斷變化的資訊需求</p>
+              </div>
+            </div>
+            <div style="margin-top: 40px;">
+              <h3 class="key-point">為什麼需要環境工程？</h3>
+              <ul class="bullet-list">
+                <li>環境來自多個來源：開發者、使用者、先前互動、工具調用結果</li>
+                <li>提示詞是靜態的，環境是高度動態的</li>
+                <li>構建正確的環境需要動態系統，而不只是靜態提示詞</li>
+                <li>這是提示工程的自然演進，但是一個更深入的概念</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 4: The Agent Harness -->
+        <section class="slide" data-screen-label="04 Agent Harness">
+          <h1 class="slide-title">代理編排器（Agent Harness）</h1>
+          <div class="slide-content">
+            <div class="content-row">
+              <div class="content-col">
+                <h3 class="key-point">什麼是 Agent Harness？</h3>
+                <div class="definition">
+                  Agent Harness 是圍繞 LLM 的編排層，它不僅是對 LLM 的「包裝器」，而是一個需要深度知識和大量工程工作的複雜系統。
+                </div>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">Harness 的職責</h3>
+                <ul class="bullet-list">
+                  <li>管理工具調用（Tool Calls）</li>
+                  <li>控制代理迴圈（Agent Loop）</li>
+                  <li>處理錯誤與重試</li>
+                  <li>執行防護措施（Guardrails）</li>
+                  <li><strong>決定每一步要發送什麼環境給模型</strong></li>
+                </ul>
+              </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 32px;">
+              <h3>關鍵洞察</h3>
+              <p>大多數實際工程不在 LLM 調用本身，而在其周圍的系統。決定代理是否能可靠運作的關鍵在於周圍系統如何管理狀態、工具、記憶和環境。</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 5: LLM Context Window -->
+        <section class="slide" data-screen-label="05 Context Window">
+          <h1 class="slide-title">LLM 環境視窗（Context Window）</h1>
+          <div class="slide-content">
+            <div class="diagram-box">
+              <div style="display: flex; gap: 40px; align-items: stretch;">
+                <div class="diagram-item" style="flex: 1;">
+                  <h4 style="color: var(--fg);">Instructions</h4>
+                  <p>系統提示詞<br>角色定義</p>
+                </div>
+                <div class="diagram-item" style="flex: 1;">
+                  <h4 style="color: var(--fg);">Knowledge</h4>
+                  <p>專案文件<br>技術規格</p>
+                </div>
+                <div class="diagram-item" style="flex: 1;">
+                  <h4 style="color: var(--accent);">Tools</h4>
+                  <p>可調用工具<br>外部 API</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 40px;">
+              <h3 class="key-point">環境來源</h3>
+              <ul class="bullet-list">
+                <li>開發者提供的專案環境和規格</li>
+                <li>使用者提供的偏好和需求</li>
+                <li>先前的互動、工具調用或其他外部資料</li>
+                <li>每一天都有新的環境來源被加入，環境量持續增長</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 6: Tool Calling Loop -->
+        <section class="slide" data-screen-label="06 Tool Calling">
+          <h1 class="slide-title">工具調用迴圈（Tool Calling Loop）</h1>
+          <div class="slide-content">
+            <div class="diagram-box">
+              <div style="display: flex; gap: 32px; align-items: center;">
+                <div class="diagram-item">
+                  <h4>Human</h4>
+                  <p>提出請求</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item" style="border-color: var(--accent);">
+                  <h4 style="color: var(--accent);">LLM</h4>
+                  <p>分析並決定</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>Tool</h4>
+                  <p>執行操作</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>Feedback</h4>
+                  <p>返回結果</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 32px;">
+              <h3 class="key-point">長時間任務的挑戰</h3>
+              <div class="highlight-box">
+                <h3>環境視窗持續增長</h3>
+                <p>在長時間和複雜任務中，我們會累積來自工具調用的回饋，導致環境視窗持續增長，充滿工具調用結果和中間輸出。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 7: Four Strategies Overview -->
+        <section class="slide" data-screen-label="07 Four Strategies">
+          <h1 class="slide-title">Claude Code 的四種環境工程策略</h1>
+          <div class="slide-content">
+            <div class="strategy-grid">
+              <div class="strategy-card">
+                <h4>1. Write Context</h4>
+                <p>持久記憶系統 —— 專案記憶、使用者記憶、動態記憶匯入</p>
+              </div>
+              <div class="strategy-card">
+                <h4>2. Select Context</h4>
+                <p>智慧環境檢索與注入 —— 根據情境動態選擇相關環境</p>
+              </div>
+              <div class="strategy-card">
+                <h4>3. Compress Context</h4>
+                <p>高效環境表示 —— 壓縮和摘要以保持環境可管理</p>
+              </div>
+              <div class="strategy-card">
+                <h4>4. Isolate Context</h4>
+                <p>多代理和範圍環境管理 —— 使用專門的子代理處理不同任務</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 8: Strategy 1 - Write Context -->
+        <section class="slide" data-screen-label="08 Strategy 1">
+          <h1 class="slide-title">策略 1：撰寫環境 —— 持久記憶</h1>
+          <div class="slide-content">
+            <h3 class="key-point">三層記憶階層</h3>
+            <div class="memory-tiers">
+              <div class="memory-tier">
+                <h4>專案記憶（./CLAUDE.md）</h4>
+                <p>團隊共享的專案環境，包含架構、標準或任何與特定專案相關的資訊。版本控制，所有成員皆可存取。</p>
+              </div>
+              <div class="memory-tier">
+                <h4>使用者記憶（~/.claude/CLAUDE.md）</h4>
+                <p>儲存在使用者家目錄，包含跨越所有專案的使用者偏好和捷徑。不提交到 GitHub，每個使用者有不同值。</p>
+              </div>
+              <div class="memory-tier">
+                <h4>動態記憶匯入（@ 語法）</h4>
+                <p>允許使用 @ 符號從其他記憶檔案匯入專門資訊，類似於載入一般環境，但可以有專門的記憶檔案。</p>
+              </div>
+            </div>
+            <div style="margin-top: 24px;">
+              <div class="code-block">
+                @path/to/memory/file.md<br>
+                @./relative/path/context.md<br>
+                @~/global/user/context.md
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 9: Strategy 2 - Select Context -->
+        <section class="slide" data-screen-label="09 Strategy 2">
+          <h1 class="slide-title">策略 2：選擇環境 —— 智慧檢索</h1>
+          <div class="slide-content">
+            <div class="content-row">
+              <div class="content-col">
+                <h3 class="key-point">動態環境發現</h3>
+                <ul class="bullet-list">
+                  <li>Claude 自動掃描資料夾尋找有用的環境檔案</li>
+                  <li>在子資料夾中時，也會從父資料夾提取環境</li>
+                  <li>優先使用最近使用和頻繁存取的資訊</li>
+                  <li>當有更詳細的資訊可用時，使用更詳細的資訊</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">環境切換</h3>
+                <div class="code-block" style="font-size: 18px;">
+                  # 根據 Git 分支動態更新環境<br>
+                  <br>
+                  branch=$(git branch --show-current)<br>
+                  <br>
+                  case $branch in<br>
+                    "feature/auth-"*)<br>
+                      add_context "@./context/auth-system.md"<br>
+                    ;;<br>
+                    "feature/payment-"*)<br>
+                      add_context "@./context/payment-flow.md"<br>
+                    ;;<br>
+                  esac
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 10: Strategy 3 - Compress Context -->
+        <section class="slide" data-screen-label="10 Strategy 3">
+          <h1 class="slide-title">策略 3：壓縮環境 —— 高效表示</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>為什麼需要壓縮？</h3>
+              <p>環境視窗有限，且環境持續增長。壓縮環境可以保持其可管理性，確保最相關的資訊保持在視窗內。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">壓縮技術</h3>
+                <ul class="bullet-list">
+                  <li><strong>摘要</strong>：將長文件濃縮為關鍵點</li>
+                  <li><strong>分層</strong>：先提供高層次概述，再提供細節</li>
+                  <li><strong>優先級</strong>：優先傳送最相關的環境</li>
+                  <li><strong>清理</strong>：移除不再相關的舊環境</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">原則</h3>
+                <div class="definition">
+                  使用最少的文字傳達最多的資訊。避免重複，使用結構化的格式（標題、項目符號）讓資訊易於掃描。
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 11: Strategy 4 - Isolate Context -->
+        <section class="slide" data-screen-label="11 Strategy 4">
+          <h1 class="slide-title">策略 4：隔離環境 —— 多代理管理</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>為什麼隔離？</h3>
+              <p>複雜任務需要不同類型的專業知識。使用專門的子代理可以隔離環境，防止干擾並提高效率。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">隔離的好處</h3>
+                <ul class="bullet-list">
+                  <li><strong>專業化</strong>：每個代理專注於特定任務類型</li>
+                  <li><strong>效率</strong>：避免單一代理處理所有事情</li>
+                  <li><strong>穩定性</strong>：一個代理的錯誤不會影響其他代理</li>
+                  <li><strong>可維護性</strong>：更容易除錯和更新特定功能</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">子代理範例</h3>
+                <ul class="bullet-list">
+                  <li>代碼審查代理</li>
+                  <li>測試代理</li>
+                  <li>文件代理</li>
+                  <li>部署代理</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 12: System Prompts -->
+        <section class="slide" data-screen-label="12 System Prompts">
+          <h1 class="slide-title">系統提示詞 —— Goldilocks 區域</h1>
+          <div class="slide-content">
+            <div class="diagram-box">
+              <div style="display: flex; gap: 40px; align-items: center; width: 100%;">
+                <div class="diagram-item" style="border-color: var(--muted);">
+                  <h4 style="color: var(--muted);">太具體</h4>
+                  <p>硬編碼邏輯<br>缺乏彈性</p>
+                </div>
+                <div class="diagram-item" style="border: 3px solid var(--accent);">
+                  <h4 style="color: var(--accent);">剛剛好</h4>
+                  <p>清晰且具體<br>足夠的引導</p>
+                </div>
+                <div class="diagram-item" style="border-color: var(--muted);">
+                  <h4 style="color: var(--muted);">太模糊</h4>
+                  <p>缺乏具體指引<br>行為不一致</p>
+                </div>
+              </div>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">太具體的問題</h3>
+                <ul class="bullet-list">
+                  <li>將 LLM 視為確定性狀態機</li>
+                  <li>硬編碼特定邏輯（如：必須問三個後續問題）</li>
+                  <li>變成維護噩夢，每個新邊緣案例都需要修改</li>
+                  <li>可能不適合實際輸入的預定義路徑</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <h3 class="key-point">太模糊的問題</h3>
+                <ul class="bullet-list">
+                  <li>缺乏可操作的指引</li>
+                  <li>假設模型知道公司、品牌和規範（實際上不知道）</li>
+                  <li>未定義的邊界（如：「如有需要則升級到人工」）</li>
+                  <li>導致不一致的行為，不同執行產生不同方法</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 13: Best Practices -->
+        <section class="slide" data-screen-label="13 Best Practices">
+          <h1 class="slide-title">系統提示詞最佳實踐</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>給予指示就像指路</h3>
+              <p>如果只說「去那邊」，他們會困惑。但如果給他們 50 頁的手冊說明每個可能的轉彎和街道，又會讓他們不知所措。我們要<span style="color: var(--accent);">清晰、具體、給予剛好足夠的資訊</span>。</p>
+            </div>
+            <div class="content-row" style="margin-top: 32px;">
+              <div class="content-col">
+                <h3 class="key-point">良好系統提示詞特徵</h3>
+                <ul class="bullet-list">
+                  <li><strong>清晰的角色定義</strong>：明確說明代理是什麼</li>
+                  <li><strong>可用的工具</strong>：列出代理可以使用的工具</li>
+                  <li><strong>行為準則</strong>：提供如何處理問題的框架</li>
+                  <li><strong>明確的邊界</strong>：定義何時升級到人工</li>
+                  <li><strong>迭代演進</strong>：系統提示詞隨時間演進</li>
+                </ul>
+              </div>
+              <div class="content-col">
+                <div class="code-block" style="font-size: 18px;">
+                  You are a customer support<br>
+                  agent for Claude's Bakery.<br>
+                  <br>
+                  You specialize in assisting<br>
+                  customers with orders and<br>
+                  questions. Use tools available<br>
+                  to resolve issues efficiently<br>
+                  and professionally.<br>
+                  <br>
+                  Start by understanding<br>
+                  complete situation before<br>
+                  proposing solutions.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 14: Summary -->
+        <section class="slide" data-screen-label="14 Summary">
+          <h1 class="slide-title">本章總結</h1>
+          <div class="slide-content">
+            <div class="highlight-box">
+              <h3>核心概念</h3>
+              <p>環境工程對於構建可靠且可擴展的 AI 代理至關重要。環境不同於靜態提示詞，它來自多個來源且動態變化。</p>
+            </div>
+            <div class="strategy-grid" style="margin-top: 24px;">
+              <div class="strategy-card">
+                <h4>四種策略</h4>
+                <p>透過持久記憶撰寫環境、動態選擇環境、壓縮環境表示、隔離環境使用專門的子代理。</p>
+              </div>
+              <div class="strategy-card">
+                <h4>系統提示詞</h4>
+                <p>尋找 Goldilocks 區域 —— 不太具體，不太模糊，剛剛好。有效提示詞會隨時間演進。</p>
+              </div>
+            </div>
+            <div style="margin-top: 24px;">
+              <h3 class="key-point">你應該理解...</h3>
+              <ul class="bullet-list">
+                <li>現代 AI 代理如何管理環境</li>
+                <li>開發者和使用者如何影響代理行為</li>
+                <li>CLAUDE.md 和記憶系統的使用</li>
+                <li>如何撰寫有效的系統提示詞</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 15: Next Chapter -->
+        <section class="slide" data-screen-label="15 Next">
+          <h1 class="slide-title">下一章預告</h1>
+          <div class="slide-content" style="justify-content: center; align-items: center;">
+            <div style="text-align: center;">
+              <div style="font-size: 48px; color: var(--accent); margin-bottom: 32px;">Chapter 2</div>
+              <div style="font-size: 36px; color: var(--fg); margin-bottom: 24px;">The Gist of Claude Code</div>
+              <div style="font-size: 28px; color: var(--muted); max-width: 800px; margin: 0 auto; line-height: 1.6;">
+                接下來我們將深入了解 Claude Code 及其與程式碼庫的互動方式，掌握實際操作中的關鍵指令與工作流程。
+              </div>
+              <div style="margin-top: 48px; display: flex; justify-content: center; gap: 24px;">
+                <div class="diagram-item">
+                  <h4>Codebase</h4>
+                  <p>程式碼庫互動</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>Commands</h4>
+                  <p>關鍵指令</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="diagram-item">
+                  <h4>Workflow</h4>
+                  <p>工作流程</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="controls">
+        <button class="control-btn" id="prevBtn">← 上一張</button>
+        <button class="control-btn" id="nextBtn">下一張 →</button>
+      </div>
+
+      <div class="slide-counter">
+        <span class="slide-number" id="currentSlide">1</span> / <span id="totalSlides">15</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const currentSlideEl = document.getElementById('currentSlide');
+      const totalSlidesEl = document.getElementById('totalSlides');
+
+      let currentIndex = 0;
+      const savedIndex = localStorage.getItem('slideIndex');
+
+      if (savedIndex !== null && !isNaN(parseInt(savedIndex))) {
+        currentIndex = Math.min(Math.max(0, parseInt(savedIndex)), slides.length - 1);
+      }
+
+      totalSlidesEl.textContent = slides.length;
+
+      function updateSlide() {
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === currentIndex);
+        });
+        currentSlideEl.textContent = currentIndex + 1;
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex === slides.length - 1;
+        localStorage.setItem('slideIndex', currentIndex);
+      }
+
+      function goToSlide(index) {
+        if (index >= 0 && index < slides.length) {
+          currentIndex = index;
+          updateSlide();
+        }
+      }
+
+      prevBtn.addEventListener('click', () => goToSlide(currentIndex - 1));
+      nextBtn.addEventListener('click', () => goToSlide(currentIndex + 1));
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          goToSlide(currentIndex - 1);
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+          goToSlide(currentIndex + 1);
+        } else if (e.key === 'Home') {
+          goToSlide(0);
+        } else if (e.key === 'End') {
+          goToSlide(slides.length - 1);
+        }
+      });
+
+      document.addEventListener('wheel', (e) => {
+        if (e.deltaY > 0) {
+          goToSlide(currentIndex + 1);
+        } else if (e.deltaY < 0) {
+          goToSlide(currentIndex - 1);
+        }
+      }, { passive: true });
+
+      updateSlide();
+    })();
+  </script>
+</body>
+</html>

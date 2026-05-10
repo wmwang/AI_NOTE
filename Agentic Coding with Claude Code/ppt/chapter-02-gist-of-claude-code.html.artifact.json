@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Chapter 2: The Gist of Claude Code",
+  "entry": "chapter-02-gist-of-claude-code.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-05-10T02:22:46.794Z",
+  "updatedAt": "2026-05-10T02:22:46.799Z",
+  "metadata": {
+    "identifier": "chapter-02-gist-of-claude-code",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}
