@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Claude Code Training Slides - Final Delivery",
+  "entry": "claude-code-training-complete.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-05-10T04:06:49.361Z",
+  "updatedAt": "2026-05-10T04:06:49.372Z",
+  "metadata": {
+    "identifier": "claude-code-training-complete",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

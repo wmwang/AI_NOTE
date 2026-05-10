@@ -1,0 +1,415 @@
+1
+Context Engineering
+This chapter introduces context engineering and explains wh y it has become a critical
+concept when building and using modern AI agents.  While man y AI systems are often
+described as "just prompts wr apped around an LLM," this chapter shows wh y that view
+breaks down as agents become more complex, long-running, and tool-driven.  You will
+learn where context comes from, wh y it k eeps growing, and how poor context handling
+leads to degr aded performance, higher costs, hallucinations, and inconsistent behavior.
+The goal of this chapter is to give you a clear mental model for context engineering and
+show how it is applied in pr actice.  We start b y explaining how context engineering
+evolved from prompt engineering, then use Claude Code as a concrete example of how
+modern agents write, select, compress, and isolate context.  Towards the end, we will ex -
+amine system prompts, wh y they still matter, and how to design them effectively .
+The following topics will be covered in this chapter:
+Introduction to context engineering
+Claude Code and its context engineering philosoph y
+System prompts and wh y they matter
+Introduction to context engineering
+In this section, we will go into what context engineering is.  Now , if you've been working
+with AI agents and probably coding agents such as Cursor and Claude Code, or ma ybe
+you have even developed AI agents for your companies or for your own use, you proba -Your purchase includes a free PDF cop y + code bundle
+Your purchase includes a DRM-free PDF cop y of this book, the code bundle, and
+additional exclusive extr as. See the Free benefits with your book section in the
+Preface  to unlock them instantly and maximize your learning.NOTE
+This discussion is based on publicly available information, including Anthropic's
+engineering blog posts and community analysis.  It does not represent an official
+statement from Anthropic.NOTE
+bly know that it basically all boils down to a prompt being sent to an LLM and a lot of
+engineering around it.
+There is some truth in calling applications such as Cursor and Claude Code just wr ap-
+pers around LLMs.  However, building really good wr appers requires a lot of deep
+knowledge and a lot of engineering work.  Another term often used for this surrounding
+system is an agent harness . The harness is the orchestr ation la yer around the LLM.  It is
+responsible for managing tool calls, controlling the agent loop, handling errors, enforc -
+ing guardr ails, and, most importantly , deciding what context is sent to the model at each
+step.
+In pr actice, most of the real engineering does not live inside the LLM call itself, but
+around it.  The model invocation is often str aightforward.  What determines whether an
+agent works reliably is how the surrounding system manages state, tools, memory , and
+context.  This is because calls to LLMs alwa ys come with context, and this context comes
+from various sources and ongoing processes.
+For instance, context can come from multiple places:
+It can come from the developer of the application
+It can come from the user
+It can come from previous inter actions of the user, tool calls, or other external data
+Every da y, new sources of context are added, and the amount of context k eeps increas -
+ing. Sending the correct and relevant context to the LLM is not as simple as we thought
+it was in the early da ys.
+From prompt engineering to context engineering
+In the early da ys, we believed that prompt engineering was enough.  We thought that
+writing some fancy prompts could fix the problem and give us what we want.  The issue,
+however, is that prompts are static, while context is extremely dynamic.
+If context is dynamic, then constructing the correct context requires a dynamic system
+as well.  It is no longer just about writing a static prompt.  This is wh y we are entering the
+realm of context engineering . It is the natur al evolution of prompt engineering, but it
+is a much deeper concept.
+Why context matters for agents
+We all know the sa ying " garbage in, garbage out ." This is one of the most common rea -
+sons wh y agentic systems do not perform the wa y they should.  They are simply not pro -
+vided with the right context.
+LLMs cannot read our minds.  We need to give them the right information.  And b y the
+way, it is not alwa ys just information or data.  Sometimes we need to give them the cor -
+rect tools so they can fetch other information, tak e actions, and perform tasks for us.
+Figure 1.1 – LLM Context Window (A dapted from concepts discussed b y LangChain,
+www .langchain.com)
+LLMs are becoming better and better at reasoning.  We have tool calling, and we can
+build AI agents that run tools, invok e them, get outputs, and loop until tasks are
+completed.
+Figure 1.2 – LLM T ool Calling Loop (A dapted from concepts discussed b y LangChain,
+www .langchain.com)
+However, when it comes to long-running and complex tasks, we often accumulate feed -
+back from tool calls.
+This causes the  context window to k eep growing, filled with tool call results and inter -
+mediate outputs.
+Figure 1.3 – Context Growth A cross Multiple Turns (adapted from concepts discussed b y
+LangChain, www .langchain.com)
+This leads to sever al problems:
+The context window can exceed its size limit
+Cost and latency increase
+Agent performance starts to degr ade
+If nothing is done, this degr adation becomes unavoidable.  Recent discussions have ex -
+plored wh y long contexts fail in pr actice and how degr adation appears gr adually as ir -
+relevant or conflicting information accumulates.  For a deeper discussion, see this great
+blog " How Long Contexts " by Dan Breunig ( https://www.dbreunig.com/2025/06/22/how-contexts-
+fail-and-how-to-fix-them.html ). If context is allowed to grow without structure, selection, or
+control, then various problems will start to appear in agentic systems, such as the
+following:
+Context poisoning : When a hallucination from a tool call or LLM call enters the con -
+text and starts affecting future outputs
+Context confusion : When  unnecessary context influences the response, even
+though it is not relevant to the task
+Context clash : When  different parts of the context contr adict each other
+In the next section, we will discuss techniques for better context engineering.  Some of
+these techniques are implemented b y application developers, for example, in tools such
+as Claude Code.  Other techniques are on the user side.
+As users of Claude Code, we have a lot of influence over the context that is eventually
+sent to the LLM and the answers we receive.  This means that even non-developers need
+to understand context engineering if they want better responses from AI systems and AI
+agents.
+Coding agents such as Claude Code are an excellent example of how context engineering
+techniques are applied on both the developer side and the user side.  This is exactly what
+we will explore in the next section, as well as how to better engineer our context.
+Claude Code and its context engineering
+strategies
+In this section, we will talk about Claude Code, its context  engineering philosoph y, and
+how Claude Code addresses these challenges.  Claude Code applies these  context engi -
+neering str ategies b y implementing all four approaches, which are as follows:
+Write Context : Persistent memory systems
+Select Context : Intelligent context retrieval and injection
+Compress Context : Efficient context representation and summarization
+Isolate Context : Multi-agent and scoped context management
+Figure 1.4 – Categories of context engineering (adapted from concepts discussed b y
+LangChain, www .langchain.com)
+Let's start with the first one.
+Strategy 1: Writing context and persistent memory
+The first strategy is writing context and its persistent memory architecture . Claude
+has a multila yered memory system, and Claude Code implements a three-tier memory
+hierarch y that persists context across sessions while coding with Claude Code.
+We first have the project memory  (./CLAUDE.md ). This is a team-shared context
+for project architecture, standards, or an ything related to a specific project.  This kind
+of memory is version-controlled, and it is available to all team members.
+# Project Context
+## Architecture Overview
+This is a microservices application using:
+- Node.js with Express for API services
+- React with TypeScript for frontend
+- PostgreSQL with Prisma ORM
+- Redis for caching
+## Coding Standards
+- Use functional components with hooks
+- Implement error boundaries for all route components
+- Follow RESTful API conventions
+- Write unit tests for all business logic
+Then we  have the user memory  (~/.claude/CLAUDE.md ). This is stored in the
+home directory of the user, in the claude  directory , in the CLAUDE.md  file.  This
+contains personal preferences and shortcuts across all projects for that user.  It is not
+committed to GitHub and is user-specific.  Every user will have different values here
+and it persists across all Claude Code sessions.
+# Personal Development Preferences
+## Code Style
+- Always use explicit return types in TypeScript
+- Prefer const assertions over type annotations
+- Use descriptive variable names, avoid abbreviations
+## Workflow Shortcuts
+- When writing tests, use Jest with React Testing Library
+- Always run 
+`
+npm
+ run lint`
+ before commits
+- Prefer composition over inheritance
+Lastly , we have dynamic memory imports . These allow us to import from other
+memory files using the @ symbol and syntax.  This is similar to loading regular con -
+text into Claude Code, but this time we can have dedicated memory files with specific
+information that we can reference inside our memory files.
+# In any CLAUDE.md  file
+@path/to/memory/file.md
+@./relative/path/context.md
+@~/global/user/context.md
+We can also customize behavior b y writing scripts that dynamically update the context
+based on the Git br anch.  We can then connect this script to a context-switching hook
+and build more adaptive workflows.
+One important detail to k eep in mind is that we should avoid repeatedly appending the
+same context references to CLAUDE.md . If the script simply uses >&gt; on every run,
+the file will grow indefinitely with duplicate entries.  To prevent this, we add a small
+safeguard that checks whether a context reference already exists before appending it.
+Below is an improved version of the script that avoids duplicate imports:
+#  Script to dynamically update context based on git branch
+#!/bin/bash
+#  context-switcher.sh
+#  Dynamically load relevant context based on user query
+#  Safe against duplicate imports
+CLAUDE_MD="CLAUDE.md"
+#  Create CLAUDE.md if it doesn 't exist
+touch "$CLAUDE_MD"
+add_context() {
+  local context_ref="$1"
+  grep -qxF "$context_ref" "$CLAUDE_MD" || echo "$context_ref" >> "$CLAUDE_MD"
+}
+#  --- Branch-based context ---
+branch=$(git branch --show-current 2>/dev/null)
+case $branch in
+  "feature/auth-"*)
+    add_context "@./context/auth-system.md"
+    ;;
+  "feature/payment-"*)
+    add_context "@./context/payment-flow.md"
+    ;;
+  "hotfix/"*)
+    add_context "@./context/production-hotfix.md"
+    ;;
+esac
+#  --- Query-based context ---
+user_input="$1"
+if [[ -n "$user_input" ]]; then
+  if [[ $user_input == *"database"* || $user_input == *"migration"* ]]; then
+    add_context "@./context/database-context.md"
+  elif [[ $user_input == *"API"* || $user_input == *"endpoint"* ]]; then
+    add_context "@./context/api-context.md"
+  elif [[ $user_input == *"frontend"* || $user_input == *"component"* ]]; then
+    add_context "@./context/frontend-context.md"
+  fi
+fi
+The k ey change is the add_context  helper function.  It uses grep -qxF to check
+whether a context reference already exists in CLAUDE.md . If it does, nothing is append -
+ed. This mak es the script idempotent and safe to run on every prompt submission.
+We then connect this script to a hook
+{
+  "hooks": {
+    "UserPromptSubmit": {
+      "command": "./scripts/context-switcher.sh \"$PROMPT\""
+      "description": "Dynamically load relevant context based on
+        branch and user query"
+    }
+  }
+}
+With this setup, context switching becomes dynamic but remains stable over time.
+Strategy 2: Intelligent context retrieval
+The second  strategy is intelligent context retrieval , usually implemented through dy -
+namic context discovery .
+Claude automatically looks through folders to find helpful context files.  If we are in a
+subfolder, it also pulls context from parent folders, but it uses more specific information
+when it is available.  It also prioritizes recently used and frequently accessed
+information.
+This is context engineering at the application level, and Claude Code developers imple -
+ment this logic.  However, users can also add persistent context themselves using the
+/memory  command.  For example:
+/memory add Always use descriptive variable names
+Claude will prompt whether this memory should be stored at the project level or the
+user level, and it will update the appropriate CLAUDE.md  file automatically . This allows
+users to influence future behavior without manually editing context files.
+Based on the tool being used, different contexts are propagated to the LLM.  For exam -
+ple, when Claude Code is about to edit a file, it automatically remembers things such as
+checking the existing code style first and looking for existing functions before creating
+new ones.  This is the context that is relevant to the edit tool.
+Another example is when Claude Code is about to run a terminal command, it remem -
+bers different things, such as checking if there is an existing npm script before running
+commands or making sure the file path exists before executing it.
+Strategy 3: Compression of context
+The third strategy is compression of context , which is about efficient context represen -
+tation.  Claude Code includes built-in compression commands.
+The /clear  command resets the conversation history for the current context win -
+dow while k eeping the underlying project memory and user memory . It is useful
+when the running conversation has gone in an unhelpful direction or when you
+want to start a fresh inter action without losing what the system has already learned
+about the project.
+The /compact  command summarizes the existing conversation into a shorter form.
+Instead of throwing everything awa y, it k eeps the k ey decisions and important infor -
+mation while dropping minor details.  This compressed history uses less of the con -
+text window , which reduces cost and latency , and gives the model more room for
+new inputs.
+Strategy 4: Context isolation with subagents
+The fourth str ategy  is context isolation.  For this, Claude Code uses sub-agents.  Each sub-
+agent runs in its own isolated context window and does not inherit the full conversation
+history of the main agent.  This str ategy is about having different specialist versions of
+Claude Code for different tasks, each with its own focused knowledge.
+Instead of Claude Code trying to do everything at once with all the information, we cre -
+ate specialized sub-agents that act as experts in different areas.  We can have the main
+Claude agent, which acts as a manager and delegates tasks.  We can have a code review
+agent that focuses on code  quality and security , a testing agent that focuses on writing
+and running tests, and a research agent that focuses on finding information and best
+practices.  Here is an example:
+// Code review agent – focused context
+Task(
+  description:  "Code review",
+  prompt: "Review this PR focusing only on security and performance",
+  subagent_type : "code-reviewer"
+)
+// Research agent – broad context
+Task(
+  description:  "Research implementation",
+  prompt: "Find best practices for OAuth2 implementation",
+  subagent_type : "general-purpose"
+)
+This helps because, without isolation, Claude Code gets confused trying to do everything
+at once with all the possible information.  With isolation, each specialist has a specific
+knowledge scope and uses it to do their job effectively .
+System prompts and wh y they matter
+In this section, we will discuss system prompts  and their importance in context engi -
+neering.  You have probably read a thousand times on X and Link edIn that system
+prompts are important, and that you should work on them, iter ate on them, and mak e
+them really good.  Saying "have a good system prompt" is probably the most generic ad -
+vice in AI engineering.
+There are sever al public repositories that collect examples of system prompts used b y
+well-known AI agents.  These repositories typically aggregate prompts that have been
+publicly shared or discussed in public sources.  Man y of the examples focus on coding
+agents such as Claude Code, Cursor, and Devin, but they ma y also include prompts from
+other agent-style systems.
+The purpose of referencing these repositories is not to verify the authenticity of every
+prompt, but to illustr ate how large, structured, and carefully engineered system
+prompts tend to be in pr actice.The preceding syntax is illustr ative and simplified for demonstr ation purposes
+only . Claude Code does not currently use this exact format.  In pr actice, defining
+subagents requires a Y AML configur ation with a frontmatter section, which we
+will cover later in the book.NOTE
+The goal of this section is not to analyze each prompt in detail or explain every tech -
+nique used.  We could have an entire book or course dedicated just to system prompts.
+My point here is to show you that system prompts are important.  System prompts k eep
+evolving.  As LLMs evolve, system prompts evolve with them.  A lot of engineering effort
+goes into cur ating these prompts and making them better and better.  This is an iter ative
+process.
+Best pr actices for cr afting system prompts
+Let us talk about some best pr actices when cur ating and cr afting system prompts.  It is
+like giving someone directions.
+If we sa y something such as " go over there," they'll be confused.  They won 't know where
+to go.  But if we give them a 50-page manual with every possible turn and street, we
+overwhelm them with information, and they still won 't get where they need to go.
+So, we want to be clear, we want to be specific, and we want to give just enough infor -
+mation to get them where they need to go.  The hard part is finding that sweet spot.
+The Goldilocks zone for system prompts
+When  we write system prompts, we are looking for what Anthropic refers to as the
+Goldilocks zone . Not too vague, not too detailed, but just right.
+You can imagine this as a scale.  On the far left, we have prompts that are too specific.  On
+the far right, we have prompts that are too vague.  What we want is right in the middle.
+Figure 1.5 – Goldilocks Zone for S ystem Prompts (Source: Anthropic, "Effective Context
+Engineering for AI A gents," https://www .anthropic.com/engineering/effective-context-engi -
+neering-for-ai-agents)
+Let's break this down.
+Problem with overly specific prompts
+On the far left, we have very specific prompts.  The core problem here is that we treat
+the LLM as a deterministic state machine instead of an intelligent agent.  We hardcode
+logic.
+For example, we might sa y: if the user's intent is incident resolution, ask three follow-up
+questions.  Why exactly three? What if two are enough? What if we need five?
+We also see exhaustive enumer ation, where we try to list every possible escalation sce -
+nario.  This is impossible to complete and forces the model down predetermined paths
+that might not match the actual input.  It also becomes a maintenance nightmare, be -
+cause every new edge case requires  prompt changes.
+At that point, if everything is predetermined, ma ybe we don 't even need an autonomous
+agent.  Maybe a deterministic workflow would be enough.
+Problem with overly vague prompts
+On the opposite end of the spectrum, we have very vague prompts.  The core problem
+here is that they provide insufficient signal for consistent behavior.
+In these prompts, we often see no actionable guidance.  For example, consider the fol -
+lowing prompt:
+You are a bak ery assistant . You should attempt to solve customers ' issues in a manner
+consistent with the principles and essence of the compan y brand.  Escalate to a human if
+needed.
+What are those principles?
+There is also a false assumption of shared context.  The prompt assumes the model
+knows the compan y, the br and, and customer service norms, which it does not.
+We also see undefined boundaries, such as "escalate to a human if needed." When is it
+needed? The model has no wa y to know .
+There is no fr amework or structure for approaching problems systematically . This leads
+to inconsistent behavior, where different runs produce very different approaches to the
+same problem.  Essentially , the prompt is sa ying "do the right thing" without defining
+what "right" actually means.
+What a good middle-ground prompt looks lik e
+Now let's look  at the middle ground.  Consider the following example:
+You are a customer support agent for Claude 's Bak ery.
+You specialize in assisting customers with their orders and basic questions about the bak -
+ery. Use the tools available to you to resolve issues  efficiently and professionally .
+You have access to order management systems, product catalogs, and store policies.  Your
+goal is to resolve issues quickly when possible.  Start b y understanding the complete situa -
+tion before proposing solutions, and ask follow-up questions if you do not understand.
+Response Fr amework:
+1. Identify the core issue – Look beyond surface complaints to understand what the cus -
+tomer actually needs
+2. Gather necessary context – Use available tools to verify order details, check inventory ,
+or review policies before responding
+3. Provide clear resolution – Offer concrete next steps with realistic timelines
+4. Confirm satisfaction – Ensure the customer understands the resolution and knows how
+to follow up if needed
+Guidelines:
+When multiple solutions exist, choose the simplest one that fully addresses the issue
+Check the status of an order if  a user mentions it before suggesting next steps
+Call the human assistance tool
+For legal issues, health/allergy emergencies, or situations requiring financial adjust -
+ments beyond standard policies, call the human assistance tool
+Acknowledge frustr ation or urgency in the user 's tone and respond with appropriate
+empath y
+You can see the following:
+Here, we  start b y providing a clear identity and scope.  This immediately establishes
+boundaries.  It's customer support, not mark eting or sales.  It covers orders and basic
+questions, not complex business oper ations.
+We also empower r ather than constr ain. Instead of prescribing exactly which tool to
+use in every situation, we define a goal, such as efficient and professional resolution.
+The heuristic here is that we trust the agent to select appropriate tools when needed.
+We also provide a reasoning fr amework instead of a flowchart.  A four-step response
+framework is being followed here: identify the core issue, gather necessary context,
+provide a clear resolution, and confirm customer satisfaction.  This kind of fr ame -
+work should work across various scenarios, not rigid br anching logic.
+Lastly , we have also established clear boundaries and principles.  For example, if
+there are multiple solutions, choose the simplest one.  This is a heuristic, not a rule,
+and it's similar to a greedy approach in computer science.
+The overly specific prompt tries to do the LLM's thinking for it and breaks down when
+situations don 't match the script.  The vague prompt doesn 't give the LLM enough to
+work with.
+The middle prompt tak es advantage of what modern LLMs are really good at: recogniz -
+ing patterns and applying gener al principles to specific situations.  It handles new situa -
+tions well because it teaches principles instead of rules.  It is efficient because it doesn 't
+waste words.  Each guideline covers man y scenarios.  The principles are compressed, and
+there are no overlapping or contr adictory instructions.
+Summary
+In this chapter, we introduced context engineering and explained wh y it is essential for
+building reliable and scalable AI agents.  We examined how context differs from static
+prompts, where it comes from, and wh y unmanaged context leads to problems such as
+performance degr adation, hallucinations, and inconsistent behavior.  Using Claude Code
+as a pr actical example, we explored four core context engineering str ategies: writing
+context through persistent memory , selecting relevant context dynamically , compress -
+ing context to k eep it manageable, and isolating context using specialized sub-agents.
+We also discussed the role of system prompts, showing how effective prompts strik e a
+balance between being too rigid and too vague.  By now , you should have an idea of how
+modern AI agents manage context and how both developers and users can influence
+their behavior.  In the next chapter, we will build on this foundation and begin working
+with more advanced agentic workflows, using the HookHub project to explore how
+Claude Code coordinates tasks, manages context, and oper ates beyond simple single-
+step inter actions.
+In the next chapter, we will look into Claude Code and how it inter acts with a codebase.
+Get this book's PDF cop y, code bundle, and
+more
+Scan the QR code (or go to packtpub.com/unlock ). Search for this book b y name, confirm the
+edition, and then follow the steps on the page.
+Note: Have your invoice handy . Purchases made directly from the Packt website don 't re-
+quire an invoice.
+

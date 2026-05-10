@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 8: Creating and Customizing Output Styles | Claude Code Training</title>
+    <style>
+        :root {
+            --bg:      oklch(98% 0.005 250);
+            --surface: oklch(100% 0 0);
+            --fg:      oklch(22% 0.02 240);
+            --muted:   oklch(50% 0.018 240);
+            --border:  oklch(90% 0.008 240);
+            --accent:  oklch(58% 0.16 145);
+
+            --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+            --slide-width: 1920px;
+            --slide-height: 1080px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #111; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: var(--font-body); color: var(--fg); }
+        #canvas { width: var(--slide-width); height: var(--slide-height); background: var(--bg); position: relative; transform-origin: center center; flex-shrink: 0; box-shadow: 0 40px 100px rgba(0,0,0,0.5); display: grid; grid-template-areas: "content"; }
+        .slide { grid-area: content; width: 100%; height: 100%; padding: 80px 120px; display: none; flex-direction: column; position: relative; border: 1px solid var(--border); }
+        .slide.active { display: flex; }
+        .mono { font-family: var(--font-mono); }
+        .accent { color: var(--accent); }
+        .muted { color: var(--muted); }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8em; }
+        h1 { font-size: 84px; font-weight: 800; line-height: 1.1; margin-bottom: 40px; }
+        h2 { font-size: 56px; font-weight: 700; line-height: 1.2; margin-bottom: 30px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 8px; }
+        p, li { font-size: 32px; line-height: 1.5; margin-bottom: 20px; }
+        ul { list-style: none; }
+        li { position: relative; padding-left: 40px; margin-bottom: 24px; }
+        li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 40px; border-radius: 4px; }
+        .code-block { background: #0d1117; color: #c9d1d9; padding: 30px; border-radius: 6px; font-family: var(--font-mono); font-size: 24px; border: 1px solid #30363d; position: relative; line-height: 1.4; }
+        .grid-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; pointer-events: none; }
+        .slide > * { z-index: 1; }
+        .footer { position: absolute; bottom: 40px; left: 80px; right: 80px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 18px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div id="canvas">
+        <div class="grid-bg"></div>
+
+        <!-- 01: Title -->
+        <section class="slide" data-screen-label="01 Title">
+            <div class="uppercase mono accent" style="margin-bottom: 20px;">Chapter 08 // 建立與自定義輸出風格</div>
+            <h1>Creating and Customizing<br>Output Styles</h1>
+            <div style="font-size: 40px; color: var(--muted); margin-bottom: 60px;">Defining how Claude Code communicates and remembers.</div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase muted">Focus</div>
+                    <div style="font-size: 32px; font-weight: bold;">Instruction Hierarchy</div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Goal</div>
+                    <div style="font-size: 32px; font-weight: bold;">Personalization</div>
+                </div>
+            </div>
+            <div class="footer"><div>CLAUDE-CODE-TRAINING-2026</div><div class="mono">01 / 18</div></div>
+        </section>
+
+        <!-- 02: Objectives -->
+        <section class="slide" data-screen-label="02 Objectives">
+            <div class="uppercase mono accent">Chapter Goals // 本章目標</div>
+            <h2>The Four Tiers of Memory</h2>
+            <div class="grid-2">
+                <ul>
+                    <li>The 4-tier instruction model.<br><span class="muted">四層指令模型</span></li>
+                    <li>Best practices for <span class="mono">GEMINI.md</span>.<br><span class="muted">GEMINI.md 的最佳實踐</span></li>
+                    <li>Managing private project memory.<br><span class="muted">管理私有專案記憶</span></li>
+                </ul>
+                <ul>
+                    <li>Global personal preferences.<br><span class="muted">全局個人偏好</span></li>
+                    <li>Fact routing: where to save what.<br><span class="muted">事實路由：將資訊儲存在何處</span></li>
+                    <li>Maintaining lean and durable memory.<br><span class="muted">保持精簡且持久的記憶</span></li>
+                </ul>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">02 / 18</div></div>
+        </section>
+
+        <!-- 03: Why Customization? -->
+        <section class="slide" data-screen-label="03 Why Customize">
+            <div class="uppercase mono accent">Motivation // 為什麼需要自定義？</div>
+            <h2>Why Output Styles Matter</h2>
+            <p>Generic AI is good. **Tailored AI** is an extension of yourself.</p>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <b style="font-size: 28px;">Team Standards</b>
+                    <p class="muted">Ensure Claude follows your company's linting, testing, and PR rules.</p>
+                </div>
+                <div class="card">
+                    <b style="font-size: 28px;">Personal Flow</b>
+                    <p class="muted">Set your preferred coding style, terminal verbosity, and language.</p>
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">03 / 18</div></div>
+        </section>
+
+        <!-- 04: The 4-Tier Model -->
+        <section class="slide" data-screen-label="04 4-Tier Model">
+            <div class="uppercase mono accent">Architecture // 指令階層</div>
+            <h2>The 4-Tier Instruction Model</h2>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                <div class="card" style="padding: 15px 40px; border-left: 10px solid #0969da;">
+                    <b style="font-size: 24px;">1. Project Instructions (GEMINI.md)</b><br>
+                    <span class="muted">Team-shared, committed to repo. (團隊共享，提交至倉庫)</span>
+                </div>
+                <div class="card" style="padding: 15px 40px; border-left: 10px solid #1a7f37;">
+                    <b style="font-size: 24px;">2. Subdirectory Instructions (src/GEMINI.md)</b><br>
+                    <span class="muted">Scoped rules for specific modules. (特定模組的局部規則)</span>
+                </div>
+                <div class="card" style="padding: 15px 40px; border-left: 10px solid #bf3989;">
+                    <b style="font-size: 24px;">3. Private Project Memory (MEMORY.md)</b><br>
+                    <span class="muted">Local setup, machine-specific notes (NOT committed). (本地設置，私有筆記)</span>
+                </div>
+                <div class="card" style="padding: 15px 40px; border-left: 10px solid #cf222e;">
+                    <b style="font-size: 24px;">4. Global Personal Memory (Global GEMINI.md)</b><br>
+                    <span class="muted">Personal preferences across all projects. (跨專案的全局偏好)</span>
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">04 / 18</div></div>
+        </section>
+
+        <!-- 05: Project Instructions (GEMINI.md) -->
+        <section class="slide" data-screen-label="05 Project GEMINI.md">
+            <div class="uppercase mono accent">Tier 1 // 專案層級</div>
+            <h2>GEMINI.md: The Team Contract</h2>
+            <p>This file lives in the root and is visible to <b>Everyone</b> on the team.</p>
+            <div class="grid-2">
+                <div class="code-block" style="font-size: 18px;">
+                    <div class="mono accent"># Project Rules</div>
+                    - Use `pnpm` only.<br>
+                    - Always use TypeScript strict mode.<br>
+                    - Commit messages must follow Conventional Commits.<br>
+                    - Pre-requisite for PR: Run `npm run lint`.
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Best Practice</div>
+                    <p style="font-size: 24px;">Treat GEMINI.md as the <b>Living Documentation</b> of your project's engineering culture.</p>
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">05 / 18</div></div>
+        </section>
+
+        <!-- 06: Subdirectory Instructions -->
+        <section class="slide" data-screen-label="06 Subdir GEMINI.md">
+            <div class="uppercase mono accent">Tier 2 // 目錄層級</div>
+            <h2>Subdirectory GEMINI.md</h2>
+            <p>Specialized rules for specialized code. (針對專業代碼的專業規則。)</p>
+            <div class="grid-2">
+                <div class="card">
+                    <b class="mono accent">/src/ui/GEMINI.md</b>
+                    <p style="font-size: 20px;">- Use Tailwind CSS.<br>- Prefer functional components.<br>- No heavy logic in UI layer.</p>
+                </div>
+                <div class="card">
+                    <b class="mono accent">/src/api/GEMINI.md</b>
+                    <p style="font-size: 20px;">- Use Zod for validation.<br>- Follow RESTful naming.<br>- Handle errors with custom exceptions.</p>
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">06 / 18</div></div>
+        </section>
+
+        <!-- 07: Private Project Memory (MEMORY.md) -->
+        <section class="slide" data-screen-label="07 Private Memory">
+            <div class="uppercase mono accent">Tier 3 // 私有層級</div>
+            <h2>MEMORY.md: Your Local Secret</h2>
+            <p>Stored in <span class="mono">~/.gemini/tmp/ppt-gemini/memory/</span>. <b>Never committed.</b></p>
+            <div class="grid-2">
+                <div>
+                    <ul>
+                        <li>Local environment variables.<br><span class="muted">本地環境變數</span></li>
+                        <li>Experimental workflow notes.<br><span class="muted">實驗性工作流筆記</span></li>
+                        <li>"Don't touch this specific file" notes.<br><span class="muted">「不要碰這個特定文件」的筆記</span></li>
+                    </ul>
+                </div>
+                <div class="code-block" style="font-size: 18px;">
+                    <div class="mono accent"># Private Notes</div>
+                    - My local DB is on port 5433.<br>
+                    - Using a specific dev-version of lib X.<br>
+                    - Remind me to clear the cache before build.
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">07 / 18</div></div>
+        </section>
+
+        <!-- 08: Global Personal Memory -->
+        <section class="slide" data-screen-label="08 Global Memory">
+            <div class="uppercase mono accent">Tier 4 // 全局層級</div>
+            <h2>Global Personal Memory</h2>
+            <p>Facts that follow you to <b>Every Workspace</b>. (跟隨你到每一個工作區的事實。)</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono accent">Style Preferences</div>
+                    <p style="font-size: 20px;">"I prefer concise code with minimal comments."</p>
+                    <p style="font-size: 20px;">"Always use arrow functions."</p>
+                </div>
+                <div class="card">
+                    <div class="mono accent">Communication</div>
+                    <p style="font-size: 20px;">"Answer in Traditional Chinese."</p>
+                    <p style="font-size: 20px;">"Be direct and professional."</p>
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">08 / 18</div></div>
+        </section>
+
+        <!-- 09: Fact Routing Rules -->
+        <section class="slide" data-screen-label="09 Fact Routing">
+            <div class="uppercase mono accent">Strategy // 路由規則</div>
+            <h2>Fact Routing: Where to save?</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <div class="card" style="padding: 20px;">
+                    <b class="accent">Team convention?</b>
+                    <p style="font-size: 20px;">➡️ GEMINI.md</p>
+                </div>
+                <div class="card" style="padding: 20px;">
+                    <b class="accent">Machine-specific setup?</b>
+                    <p style="font-size: 20px;">➡️ MEMORY.md</p>
+                </div>
+                <div class="card" style="padding: 20px;">
+                    <b class="accent">Personal coding style?</b>
+                    <p style="font-size: 20px;">➡️ Global GEMINI.md</p>
+                </div>
+                <div class="card" style="padding: 20px;">
+                    <b class="accent">Narrow module rule?</b>
+                    <p style="font-size: 20px;">➡️ Subdir GEMINI.md</p>
+                </div>
+            </div>
+            <p style="margin-top: 20px; text-align: center;" class="muted">"Never duplicate facts across tiers. One fact, one home."</p>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">09 / 18</div></div>
+        </section>
+
+        <!-- 10: Updating Memory -->
+        <section class="slide" data-screen-label="10 Updating Memory">
+            <div class="uppercase mono accent">Workflow // 更新記憶</div>
+            <h2>Updating Your Memory</h2>
+            <p>You can update these files manually or <b>Ask Claude</b> to do it.</p>
+            <div class="code-block" style="margin-top: 20px;">
+                <span class="accent">➜</span> <span class="mono">"Remember that in this project, we always use vitest instead of jest. Update GEMINI.md."</span><br><br>
+                <span class="muted">Claude Code will:</span><br>
+                1. Read GEMINI.md.<br>
+                2. Apply the change surgically.<br>
+                3. Confirm the update.
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">10 / 18</div></div>
+        </section>
+
+        <!-- 11: Style: Tone & Brevity -->
+        <section class="slide" data-screen-label="11 Tone & Brevity">
+            <div class="uppercase mono accent">Customization // 語氣與簡潔</div>
+            <h2>Customizing Communication</h2>
+            <p>Control the "Personality" of your CLI agent.</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono accent">The Expert</div>
+                    <p style="font-size: 18px;">"Concise, high-signal, zero conversational filler. Focus on technical rationale."</p>
+                </div>
+                <div class="card">
+                    <div class="mono accent">The Mentor</div>
+                    <p style="font-size: 18px;">"Explain the 'Why' behind every change. Suggest better patterns and link to docs."</p>
+                </div>
+            </div>
+            <p style="margin-top: 40px;" class="muted">Add these to your **Global GEMINI.md** to set the default behavior.</p>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">11 / 18</div></div>
+        </section>
+
+        <!-- 12: Terminal Formatting -->
+        <section class="slide" data-screen-label="12 Formatting">
+            <div class="uppercase mono accent">UI/UX // 終端格式</div>
+            <h2>Terminal Formatting</h2>
+            <p>Claude Code uses Markdown for its outputs. You can influence how it renders.</p>
+            <ul>
+                <li>Request specific table formats for data.<br><span class="muted">要求特定的表格格式</span></li>
+                <li>Ask for mermaid diagrams to visualize logic.<br><span class="muted">要求 mermaid 圖表</span></li>
+                <li>Set preferences for code block syntax highlighting.<br><span class="muted">設定程式碼塊語法高亮偏好</span></li>
+            </ul>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">12 / 18</div></div>
+        </section>
+
+        <!-- 13: Case Study: Enterprise Standard -->
+        <section class="slide" data-screen-label="13 Case Study">
+            <div class="uppercase mono accent">Case Study // 企業案例</div>
+            <h2>Project X: Enterprise Standards</h2>
+            <div class="grid-2">
+                <div>
+                    <p><b>Goal:</b> Onboard 50 developers to a new mono-repo.</p>
+                    <p><b>Solution:</b> A master <span class="mono">GEMINI.md</span> + 10 scoped <span class="mono">GEMINI.md</span> files.</p>
+                </div>
+                <div class="card">
+                    <b class="accent">Outcome:</b>
+                    <ul style="font-size: 20px;">
+                        <li>Zero "wrong library" errors in 1 month.</li>
+                        <li>PR reviews became 40% faster.</li>
+                        <li>AI-generated code was 95% idiomatic from day 1.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">13 / 18</div></div>
+        </section>
+
+        <!-- 14: Maintenance -->
+        <section class="slide" data-screen-label="14 Maintenance">
+            <div class="uppercase mono accent">Hygiene // 記憶維護</div>
+            <h2>Memory Hygiene</h2>
+            <p>Don't let your memory files become a "Dumpster". (不要讓記憶文件變成垃圾堆。)</p>
+            <div class="grid-2">
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <div class="mono" style="color: #f85149;">BAD ❌</div>
+                    <p style="font-size: 20px;">Saving transient session state or temporary bug fixes in GEMINI.md.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--accent);">
+                    <div class="mono accent">GOOD ✅</div>
+                    <p style="font-size: 20px;">Saving long-lived project context and architectural principles.</p>
+                </div>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">14 / 18</div></div>
+        </section>
+
+        <!-- 15: Conflict Resolution -->
+        <section class="slide" data-screen-label="15 Conflict">
+            <div class="uppercase mono accent">Priority // 優先順序</div>
+            <h2>Resolving Conflicts</h2>
+            <p>What if Tier 1 contradicts Tier 4?</p>
+            <div style="text-align: center; margin-top: 40px;">
+                <div class="mono" style="font-size: 48px;">
+                    Local Scope <span class="accent">></span> Global Scope
+                </div>
+                <p style="font-size: 32px; margin-top: 20px;">Project Rules always override Personal Preferences.</p>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">15 / 18</div></div>
+        </section>
+
+        <!-- 16: Interactive Toggling -->
+        <section class="slide" data-screen-label="16 Toggling">
+            <div class="uppercase mono accent">Runtime // 動態切換</div>
+            <h2>Interactive Toggling</h2>
+            <p>You can change styles "On the Fly". (動態切換風格。)</p>
+            <div class="code-block">
+                <span class="accent">➜</span> <span class="mono">"Switch to 'Mentor Mode' for the next hour while I learn this module."</span><br>
+                <span class="accent">➜</span> <span class="mono">"Switch back to 'Expert Mode'. Let's ship."</span>
+            </div>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">16 / 18</div></div>
+        </section>
+
+        <!-- 17: Summary -->
+        <section class="slide" data-screen-label="17 Summary">
+            <div class="uppercase mono accent">Conclusion // 總結</div>
+            <h2>Chapter 08 Key Takeaways</h2>
+            <ul>
+                <li>Use the 4-tier model to organize knowledge logically.</li>
+                <li>GEMINI.md is for teams; MEMORY.md is for you.</li>
+                <li>Route facts carefully: One fact, one home.</li>
+                <li>Keep memory lean, durable, and architecture-focused.</li>
+            </ul>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">17 / 18</div></div>
+        </section>
+
+        <!-- 18: Next Preview -->
+        <section class="slide" style="justify-content: center; align-items: center; text-align: center;" data-screen-label="18 Next">
+            <div class="uppercase mono accent" style="margin-bottom: 40px;">Coming up next...</div>
+            <h1 class="accent" style="font-size: 100px;">Agent Skills</h1>
+            <p style="font-size: 40px; margin-top: 40px;">Activating specialized procedural knowledge.</p>
+            <div class="footer"><div>OUTPUT-STYLES // CHAPTER-08</div><div class="mono">18 / 18</div></div>
+        </section>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        function showSlide(index) {
+            slides.forEach((s, i) => s.classList.toggle('active', i === index));
+            localStorage.setItem('chapter8_slide', index);
+            updateScale();
+        }
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; showSlide(currentSlide); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; showSlide(currentSlide); } }
+        function updateScale() {
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            canvas.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+        window.addEventListener('resize', updateScale);
+        const saved = localStorage.getItem('chapter8_slide');
+        if (saved) currentSlide = parseInt(saved);
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>

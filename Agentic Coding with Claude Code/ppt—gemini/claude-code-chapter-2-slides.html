@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 2: The Gist of Claude Code | Agentic Coding with Claude Code</title>
+    <style>
+        :root {
+            /* tech-utility palette */
+            --bg:      oklch(98% 0.005 250);
+            --surface: oklch(100% 0 0);
+            --fg:      oklch(22% 0.02 240);
+            --muted:   oklch(50% 0.018 240);
+            --border:  oklch(90% 0.008 240);
+            --accent:  oklch(58% 0.16 145); /* GitHub-style green */
+
+            --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+            --slide-width: 1920px;
+            --slide-height: 1080px;
+            --scale: 1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--fg);
+        }
+
+        #canvas {
+            width: var(--slide-width);
+            height: var(--slide-height);
+            background: var(--bg);
+            position: relative;
+            transform-origin: center center;
+            flex-shrink: 0;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            display: grid;
+            grid-template-areas: "content";
+        }
+
+        .slide {
+            grid-area: content;
+            width: 100%;
+            height: 100%;
+            padding: 80px 120px;
+            display: none;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .slide.active { display: flex; }
+
+        /* Utility classes */
+        .mono { font-family: var(--font-mono); }
+        .accent { color: var(--accent); }
+        .muted { color: var(--muted); }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8em; }
+
+        /* Typography */
+        h1 { font-size: 84px; font-weight: 800; line-height: 1.1; margin-bottom: 40px; letter-spacing: -0.02em; }
+        h2 { font-size: 56px; font-weight: 700; line-height: 1.2; margin-bottom: 30px; letter-spacing: -0.01em; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 8px; margin-right: auto; }
+        p, li { font-size: 32px; line-height: 1.5; margin-bottom: 20px; color: var(--fg); }
+        ul { list-style: none; }
+        li { position: relative; padding-left: 40px; margin-bottom: 24px; }
+        li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+
+        /* Layout Blocks */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 40px; border-radius: 4px; }
+        .code-block { background: #0d1117; color: #c9d1d9; padding: 30px; border-radius: 6px; font-family: var(--font-mono); font-size: 24px; line-height: 1.4; overflow: hidden; border: 1px solid #30363d; position: relative; }
+        .code-header { font-size: 14px; color: #8b949e; margin-bottom: 15px; border-bottom: 1px solid #30363d; padding-bottom: 10px; display: flex; justify-content: space-between; }
+
+        /* Decorations */
+        .grid-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .slide > * { z-index: 1; }
+
+        /* Header / Footer */
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            left: 80px;
+            right: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 18px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        /* Specific slide styles */
+        .title-slide { justify-content: center; align-items: flex-start; }
+        .title-slide h1 { font-size: 120px; margin-bottom: 20px; }
+        .title-slide .subtitle { font-size: 40px; font-weight: 400; color: var(--muted); margin-bottom: 60px; }
+
+    </style>
+</head>
+<body>
+    <div id="canvas">
+        <div class="grid-bg"></div>
+
+        <!-- Slide 1: Title -->
+        <section class="slide title-slide" data-screen-label="01 Title">
+            <div class="uppercase mono accent" style="margin-bottom: 20px;">Chapter 02 // Claude Code 的精要</div>
+            <h1>The Gist of<br>Claude Code</h1>
+            <div class="subtitle">Agentic Coding with Claude Code // 核心架構與哲學</div>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <div class="mono uppercase muted">Speaker</div>
+                    <div style="font-size: 32px; font-weight: bold;">AI Education Team</div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Focus</div>
+                    <div style="font-size: 32px; font-weight: bold;">The Agentic Mindset</div>
+                </div>
+            </div>
+            <div class="footer">
+                <div>CLAUDE-CODE-TRAINING-2026</div>
+                <div class="mono">01 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 2: Objectives -->
+        <section class="slide" data-screen-label="02 Objectives">
+            <div class="uppercase mono accent">Learning Goals // 學習目標</div>
+            <h2>What we will cover in Chapter 02</h2>
+            <div class="grid-2">
+                <ul>
+                    <li>Master the Plan-Act-Verify Loop<br><span class="muted">掌握「計畫-執行-驗證」循環</span></li>
+                    <li>The Three-Tier Memory System<br><span class="muted">三層式記憶系統 (CLAUDE.md)</span></li>
+                    <li>Expanding with MCP Servers<br><span class="muted">使用 MCP 伺服器擴展功能</span></li>
+                </ul>
+                <ul>
+                    <li>Setting up "HookHub" (Practice Project)<br><span class="muted">建立練習項目 "HookHub"</span></li>
+                    <li>Spec-Driven Design Patterns<br><span class="muted">以規格驅動的設計模式</span></li>
+                    <li>Context Window Management<br><span class="muted">上下文視窗的管理技巧</span></li>
+                </ul>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">02 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Chat vs. Agent -->
+        <section class="slide" data-screen-label="03 Chat vs Agent">
+            <div class="uppercase mono accent">Paradigm Shift // 典範轉移</div>
+            <h2>Chat AI vs. Agentic AI</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase muted">Chat (e.g. ChatGPT)</div>
+                    <p><b>Micro-Optimization</b></p>
+                    <p style="font-size: 24px;">"Write a function to sort this array."</p>
+                    <p class="muted" style="font-size: 20px;">AI outputs text; user copy-pastes.</p>
+                </div>
+                <div class="card" style="border-left: 8px solid var(--accent);">
+                    <div class="mono uppercase accent">Agent (Claude Code)</div>
+                    <p><b>Macro-Optimization</b></p>
+                    <p style="font-size: 24px;">"Add a login page with JWT auth."</p>
+                    <p class="muted" style="font-size: 20px;">AI plans, creates files, installs packages, and runs tests.</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">03 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Plan-Act-Verify -->
+        <section class="slide" data-screen-label="04 Plan Act Verify">
+            <div class="uppercase mono accent">Workflow // 工作流</div>
+            <h2>The Plan-Act-Verify Loop</h2>
+            <div style="display: flex; gap: 40px; margin-top: 40px;">
+                <div class="card" style="flex: 1; border-top: 4px solid #58a6ff;">
+                    <div class="mono uppercase" style="color: #58a6ff;">1. Plan</div>
+                    <p style="font-size: 24px;">Analyze requirements and existing code.</p>
+                    <p class="muted" style="font-size: 18px;">分析需求與現有代碼。</p>
+                </div>
+                <div class="card" style="flex: 1; border-top: 4px solid var(--accent);">
+                    <div class="mono uppercase accent">2. Act</div>
+                    <p style="font-size: 24px;">Execute changes and write files.</p>
+                    <p class="muted" style="font-size: 18px;">執行變更並編寫文件。</p>
+                </div>
+                <div class="card" style="flex: 1; border-top: 4px solid #f2cc60;">
+                    <div class="mono uppercase" style="color: #f2cc60;">3. Verify</div>
+                    <p style="font-size: 24px;">Run tests and linting to confirm.</p>
+                    <p class="muted" style="font-size: 18px;">運行測試與代碼檢查以確認。</p>
+                </div>
+            </div>
+            <p style="margin-top: 40px; text-align: center;" class="accent">"Autonomy requires a feedback loop."</p>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">04 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 5: CLAUDE.md -->
+        <section class="slide" data-screen-label="05 CLAUDE.md">
+            <div class="uppercase mono accent">Memory Tier 1 // 第一層記憶</div>
+            <h2>Project Memory: CLAUDE.md</h2>
+            <div class="grid-2">
+                <div>
+                    <p>The <b>Single Source of Truth</b> for the project's rules. (項目規則的唯一真實來源。)</p>
+                    <ul>
+                        <li>Architecture guidelines.<br><span class="muted">架構指引。</span></li>
+                        <li>Coding standards (naming, styles).<br><span class="muted">編碼標準（命名、風格）。</span></li>
+                        <li>Build & Test commands.<br><span class="muted">構建與測試指令。</span></li>
+                    </ul>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span>CLAUDE.md</span></div>
+                    # Tech Stack<br>
+                    - Next.js + TailwindCSS<br>
+                    - TypeScript strict mode<br><br>
+                    # Commands<br>
+                    - Build: `npm run build`<br>
+                    - Test: `npm test`
+                </div>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">05 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 6: User Memory -->
+        <section class="slide" data-screen-label="06 User Memory">
+            <div class="uppercase mono accent">Memory Tier 2 // 第二層記憶</div>
+            <h2>User Memory (Global)</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <p>Personal preferences that follow you across all projects. (跨項目跟隨你的個人偏好。)</p>
+                    <p class="muted">Stored in <span class="mono">~/.claude/CLAUDE.md</span> or similar global config.</p>
+                </div>
+                <ul>
+                    <li>Favorite shortcuts/aliases.<br><span class="muted">最愛的快捷鍵/別名。</span></li>
+                    <li>UI preferences (e.g., emojis vs text).<br><span class="muted">UI 偏好。</span></li>
+                    <li>Typical commit message style.<br><span class="muted">典型的提交消息風格。</span></li>
+                </ul>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">06 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 7: @ Syntax -->
+        <section class="slide" data-screen-label="07 @ Syntax">
+            <div class="uppercase mono accent">Context Control // 上下文控制</div>
+            <h2>Dynamic Context: The @ Syntax</h2>
+            <div class="grid-2">
+                <div>
+                    <p>Explicitly point the agent to specific context. (明確地將代理指向特定的上下文。)</p>
+                    <div class="code-block" style="font-size: 20px;">
+                        <span class="accent">➜</span> Refactor this according to <span class="accent">@docs/API.md</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Why it matters</div>
+                    <p style="font-size: 24px;">Reduces noise and saves tokens by only loading what is requested.</p>
+                    <p class="muted" style="font-size: 18px;">僅加載所需內容，減少噪點並節省標記。</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">07 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 8: What is MCP? -->
+        <section class="slide" data-screen-label="08 What is MCP">
+            <div class="uppercase mono accent">Extensibility // 擴展性</div>
+            <h2>What is MCP?</h2>
+            <p><b>Model Context Protocol</b>: A bridge to the outside world. (模型上下文協議：通往外界的橋樑。)</p>
+            <div style="display: flex; justify-content: space-around; margin-top: 40px;">
+                <div class="card" style="text-align: center; width: 300px;">
+                    <div style="font-size: 60px;">🤖</div>
+                    <div class="mono uppercase">Claude</div>
+                </div>
+                <div style="font-size: 60px; align-self: center;">↔️</div>
+                <div class="card" style="text-align: center; width: 300px; border-style: dashed;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🔌 MCP</div>
+                    <div class="mono uppercase">Protocol</div>
+                </div>
+                <div style="font-size: 60px; align-self: center;">↔️</div>
+                <div class="card" style="text-align: center; width: 300px;">
+                    <div style="font-size: 60px;">🌐</div>
+                    <div class="mono uppercase">Tools/Data</div>
+                </div>
+            </div>
+            <p style="margin-top: 40px; text-align: center;" class="muted">Search browsers, read Gists, query databases, or call APIs.</p>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">08 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Playwright MCP -->
+        <section class="slide" data-screen-label="09 Playwright MCP">
+            <div class="uppercase mono accent">Practical Tooling // 實用工具</div>
+            <h2>Playwright MCP Server</h2>
+            <div class="grid-2">
+                <div>
+                    <p>Gives Claude "Eyes" on the web. (讓 Claude 在網路上擁有「眼睛」。)</p>
+                    <ul>
+                        <li>Navigate to URLs.<br><span class="muted">導航到 URL。</span></li>
+                        <li>Click buttons & Fill forms.<br><span class="muted">點擊按鈕與填寫表單。</span></li>
+                        <li>Take screenshots for visual verification.<br><span class="muted">截圖以進行視覺驗證。</span></li>
+                    </ul>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span>terminal</span></div>
+                    <span class="accent">$</span> claude mcp add playwright<br><br>
+                    <span class="muted">➜ Using Playwright to check<br>  localhost:3000...</span>
+                </div>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">09 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 10: HookHub Project -->
+        <section class="slide" data-screen-label="10 HookHub">
+            <div class="uppercase mono accent">Hands-on // 動手實踐</div>
+            <h2>Project: HookHub</h2>
+            <div class="grid-2" style="align-items: center;">
+                <div class="card">
+                    <p><b>Goal:</b> A centralized hub for custom React hooks.</p>
+                    <p class="muted">We will use this to practice the full agentic lifecycle.</p>
+                </div>
+                <ul style="font-size: 28px;">
+                    <li>Next.js App Router</li>
+                    <li>Lucide Icons</li>
+                    <li>Framer Motion</li>
+                    <li>Vitest for Testing</li>
+                </ul>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">10 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Spec-Driven Design -->
+        <section class="slide" data-screen-label="11 Spec Driven">
+            <div class="uppercase mono accent">Patterns // 設計模式</div>
+            <h2>Spec-Driven Design</h2>
+            <div class="grid-2">
+                <div>
+                    <p><b>"Think before you code."</b></p>
+                    <p>Create a <span class="mono">SPEC.md</span> to define exactly what needs to be built before the agent touches any code.</p>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span>SPEC.md</span></div>
+                    # Feature: Navbar<br>
+                    - Must be sticky.<br>
+                    - Show 'Login' if !user.<br>
+                    - Mobile responsive burger menu.
+                </div>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">11 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 12: Clear & Compact -->
+        <section class="slide" data-screen-label="12 Clear Compact">
+            <div class="uppercase mono accent">Optimization // 優化技巧</div>
+            <h2>Managing the Window</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase accent">/clear</div>
+                    <p>Wipe the current conversation history to start fresh.</p>
+                    <p class="muted">Use when switching to a completely new task.</p>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase accent">/compact</div>
+                    <p>Summarize the previous context to save tokens.</p>
+                    <p class="muted">Use during long sessions to keep the agent focused.</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">12 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 13: Local Security -->
+        <section class="slide" data-screen-label="13 Local Security">
+            <div class="uppercase mono accent">Safety // 安全性</div>
+            <h2>Local-First & Safety</h2>
+            <div class="grid-2">
+                <div>
+                    <p>Claude Code runs in your environment, not in a cloud sandbox.</p>
+                    <ul>
+                        <li><b>Full Control</b>: You see every command before it runs.<br><span class="muted">完全控制：執行前看到每個指令。</span></li>
+                        <li><b>Privacy</b>: Code stays local; only context sent to API.<br><span class="muted">隱私：代碼保留在本地。</span></li>
+                    </ul>
+                </div>
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <div class="mono uppercase" style="color: #f85149;">Warning</div>
+                    <p style="font-size: 24px;">Always review tool calls that delete or modify large amounts of data.</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">13 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Shifting Mindset -->
+        <section class="slide" data-screen-label="14 Shifting Mindset">
+            <div class="uppercase mono accent">Conclusion // 總結</div>
+            <h2>Shifting Your Mindset</h2>
+            <div style="display: flex; flex-direction: column; gap: 30px; margin-top: 20px;">
+                <div class="card" style="display: flex; align-items: center; gap: 40px;">
+                    <div style="font-size: 60px;">FROM</div>
+                    <div style="font-size: 40px;">"How do I do X?"</div>
+                    <div style="font-size: 40px; color: var(--accent);">→</div>
+                    <div style="font-size: 60px;">TO</div>
+                    <div style="font-size: 40px;">"Agent, do X and verify it."</div>
+                </div>
+                <p style="font-size: 28px;" class="muted">You are no longer just a coder; you are an <b>Orchestrator</b> of AI agents.</p>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">14 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 15: Summary & Homework -->
+        <section class="slide" data-screen-label="15 Summary">
+            <div class="uppercase mono accent">Wrapping Up // 總結</div>
+            <h2>Chapter 02 Summary</h2>
+            <div class="grid-2">
+                <div>
+                    <ul>
+                        <li>The Loop: Plan → Act → Verify.</li>
+                        <li>CLAUDE.md is your team's policy manual.</li>
+                        <li>MCP connects Claude to browsers and more.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase accent">Homework</div>
+                    <p style="font-size: 24px;">Initialize HookHub and write a <span class="mono">SPEC.md</span> for a simple "Hello Agent" page.</p>
+                </div>
+            </div>
+            <div style="margin-top: auto; text-align: center;">
+                <h1 class="accent" style="font-size: 64px;">Next: Essential Commands</h1>
+            </div>
+            <div class="footer">
+                <div>THE-GIST-OF-CLAUDE-CODE // CHAPTER-02</div>
+                <div class="mono">15 / 15</div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach((s, i) => s.classList.toggle('active', i === index));
+            localStorage.setItem('currentSlide_ch2', index);
+            updateScale();
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function updateScale() {
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const scale = Math.min(winW / 1920, winH / 1080);
+            canvas.style.transform = `scale(${scale})`;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        window.addEventListener('resize', updateScale);
+
+        const savedSlide = localStorage.getItem('currentSlide_ch2');
+        if (savedSlide !== null) {
+            currentSlide = parseInt(savedSlide);
+            if (currentSlide >= slides.length) currentSlide = 0;
+        }
+
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>

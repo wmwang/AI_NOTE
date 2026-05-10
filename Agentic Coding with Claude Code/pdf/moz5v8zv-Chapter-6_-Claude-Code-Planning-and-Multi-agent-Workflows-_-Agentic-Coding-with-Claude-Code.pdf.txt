@@ -1,0 +1,269 @@
+6
+Claude Code Planning and Multi-agent
+Workflows
+Agentic coding workflows benefit from structure, planning, and controlled execu -
+tion.  As systems grow more complex and incorpor ate more tools and automation,
+relying on ad hoc prompting increases the risk of unintended changes and unpre -
+dictable behavior.
+This chapter examines how Claude Code supports structured agentic workflows
+through planning and multi-agent execution.  It shows how moving from explor ato-
+ry prompting toward spec-driven development improves safety and predictability ,
+and how multiple agents can be coordinated to work on the same codebase effi -
+ciently . Although the examples use Claude Code, the principles discussed apply
+broadly to agentic systems.
+In this chapter, we cover the following topics:
+Claude Code planning mode
+Using multiple Claude Code agents in par allel
+Claude Code planning mode
+Claude Code provides a planning mode that enables a tr ansition from explor atory
+coding to spec-driven development.  This mode is a foundational principle in agentic
+coding workflows.  In planning mode, Claude Code is restricted to read-only oper a-
+tions and is responsible for producing a specification or implementation plan be -
+fore an y code changes are made.Claude Code planning mode is covered in the official documentation.  For a
+concise overview of how planning mode works and when to use it, refer to
+the following:
+https://code.claude.com/docs/en/common-workflows#how-to-use-plan-modeNOTE
+Planning mode  allows Claude Code to research, analyze, and reason about a prob -
+lem space, then produce a detailed plan for implementation.  Code changes are not
+permitted until the plan has been explicitly reviewed and approved.
+Char acteristics of planning mode
+Planning mode is a read-only phase.  Claude Code can read files, analyze the code
+base, mak e MCP calls, search documentation, and design solutions.  It cannot edit,
+create, or delete files, mak e Git commits, install packages, or perform an y execu -
+tion-level actions.
+This mode mirrors senior software engineering workflows.  The process begins with
+gathering context and understanding requirements and business constr aints.
+Planning occurs next, followed b y execution only after review and approval.
+Planning workflow
+The planning workflow  follows a structured sequence:
+1. Claude Code researches and analyzes the existing codebase or the provided
+requirements.
+2. A comprehensive implementation plan or specification is formulated
+3. The plan is presented for review
+4. Upon approval, Claude Code exits planning mode and proceeds with
+implementation.
+This separ ation between str ategy and execution provides consistency and safety ,
+particularly when working with large or complex codebases.
+By establishing a read-only planning phase, this workflow creates a structured
+foundation for making implementation decisions safely and deliber ately . This foun -
+dation mak es it possible to understand wh y planning artifacts, such as specifica -
+tions, pla y a centr al role in more reliable development workflows, which are ex -
+plored next.
+Benefits of spec-driven development
+Planning mode is especially useful when designing complex systems or understand -
+ing large projects.  The primary benefit is the clear separ ation between planning and
+execution, which reduces risk and improves reliability .
+A common pr actice is to export the gener ated plan or specification into a
+Mark down file.  This file can be shared, reviewed collabor atively , and reused across
+the project lifecycle.  This approach enhances the over all value of Claude Code b y
+making planning artifacts explicit and persistent.
+This workflow is an example of spec-driven development.  Instead of immediately
+implementing features, time is spent defining the business problem, clarifying what
+is being solved, and determining how it will be solved.  This approach leads to better
+outcomes and can reduce over all implementation time, particularly when com -
+bined with subagents.
+A well-defined  specification scopes the problem space for the language model, es -
+tablishes clear boundaries, and reduces hallucinations.  It prevents unintended side
+effects, such as unnecessary file changes or regressions in unrelated functionality .
+The following example demonstr ates how these principles are applied in pr actice
+through an end-to-end planning and refinement workflow .
+Example: Iter ating on the hook mark etplace specification
+In this exercise, we will use Claude  Code's planning mode to dr aft a specification for
+a new Next.js project called HookHub.  Instead of writing the implementation direct -
+ly, we first define the structure and requirements of the project as a planning arti -
+fact.  This approach allows us to iter atively refine the design before gener ating code.
+### Hands-On: Using Planning Mode
+Open Claude Code in your project directory:
+claude
+Enter planning mode:
+/plan
+The following example shows Claude Code running in planning mode after you en -
+ter the /plan  command.
+Figure 6.1 – Claude Code running in planning mode after executing the /plan command
+While in planning mode, the following prompt is entered
+Create a detailed specification for a web application called HookHub
+The application should:
+Displa y available Claude Code  hooks
+Render them as cards
+Link each card to its GitHub repository
+Support filtering b y hook event type
+Claude Code is instructed to gener ate a specification for a web application that
+serves as a mark etplace for available Claude Code hooks.  The application displa ys
+hooks as a collection of cards, with each card linking to a GitHub repository that
+contains a Claude Code hook intended to support developer workflows.
+In planning mode, Claude Code gener ates an initial task list, gathers relevant infor -
+mation, and produces a specification document.  During this phase, no code is writ -
+ten. Claude Code performs research, defines concepts, and outputs a structured
+specification intended for later implementation.
+Figure 6.2 – Initial HookHub application specification gener ated in planning mode
+The initial specification includes design and feature decisions that require refine -
+ment.  In particular, hooks in this example use case are featured in a carousel la y-
+out, and only a subset of available hook event types is included.
+The specification is refined through feedback.  The carousel-based presentation is
+removed in favor of displa ying all hook cards on the home page.  Additional hook
+event types, including events triggered after code gener ation, are added to the
+specification.
+Persisting the hook mark etplace specification
+After refinement is  complete, the finalized specification for the hook mark etplace
+application is exported to a Mark down file.
+Figure 6.3 – Exporting and saving the HookHub specification as a Mark down file
+The .md file can be committed to the repository or stored in a designated location,
+such as a .claude  directory . The specification is retained as persistent project
+memory and reused as context for subsequent Claude Code requests.
+This persisted specification constr ains Claude Code's behavior during implementa -
+tion and ensures consistent guidance when working with subagents.
+This example showed how a concrete application specification is gener ated, refined,
+and persisted using planning mode and deep thinking.  By iter ating on real design
+decisions and retaining the resulting specification as project memory , the workflow
+establishes stable context for execution.  With a specification in place, more ad -
+vanced execution patterns, including par allel development, can be applied
+effectively .
+Using multiple Claude Code agents in
+parallel
+Claude Code supports running multiple AI agents simultaneously to acceler ate de -
+velopment workflows.  The core idea is to par allelize independent tasks so that more
+work can be completed in less time.  This approach involves running multiple in -
+stances of Claude Code within the same project.
+This workflow can be understood as an introductory example of multi-agent coding
+systems.  While more complex agentic workflows involving sub-agents are possible,
+this setup demonstr ates two independent Claude Code instances oper ating in
+parallel.
+Figure 6.4 – Par allel Claude Code agents working on the same shared codebase
+Multiple agents can be compared to multiple developers working on the same
+project and the same GitHub br anch.  Each agent has read and write access to the
+entire code base.  This shared access enables collabor ation but also requires careful
+consider ation of task assignment to avoid conflicts.  The effectiveness of this ap -
+proach depends on the nature of the tasks assigned to each agent.
+Identifying suitable tasks for par allel execution
+Parallel execution is effective when tasks are independent.  Examples of suitable
+tasks include fixing unrelated bugs, building separ ate UI pages, or creating indepen -
+dent components within a component libr ary. These tasks can be executed concur -
+rently without interfering with one another.
+Tasks that depend on each other should not be executed in par allel.  A common ex -
+ample is a full stack feature where a back end API endpoint is implemented and
+then consumed b y a frontend.  If separ ate agents work on the frontend and back end
+simultaneously , the frontend agent ma y attempt to consume an API that does not
+yet exist.  This often results in mock implementations or assumptions that do not
+match the final API, leading to interface discrepancies.
+A key skill in  multi-agent workflows is identifying which tasks are truly indepen -
+dent and which are sequential.  Independent tasks can be executed in par allel, while
+sequential tasks must be completed in order.  In this workflow , the role of the engi -
+neer shifts from direct implementation to coordination and oversight of the work of
+AI agents.
+Example: Par allel development in the HookHub project
+This example shows how multiple Claude Code agents can work in par allel using
+the HookHub specification created earlier in the chapter.  The specification defines
+the structure of the application and provides a shared reference for the
+implementation.
+The project is based on the project/ hookhub  branch, starting from a specific com -
+mit that contains the state of the application built previously . This commit repre -
+sents the baseline from which the agents oper ate and defines the scope of the
+changes to be implemented.
+### Establishing the Starting Point
+This demo begins from the 
+`project/
+hookhub
+`
+ branch at commit:
+<insert commit hash here>
+To reproduce the starting state:
+git checkout project/hookhub
+git reset --hard <commit-hash >
+npm install
+npm run dev
+At this point, the application displa ys:
+A basic hero section
+Hook cards rendered in a simple la yout
+No visual refinements
+The application displa ys hook cards and serves as the context for assigning par allel
+tasks to multiple agents.
+Figure 6.5 – HookHub interface used to identify independent tasks for par allel agent
+execution
+To use multiple agents effectively , we first need to identify tasks that are truly inde -
+pendent.  Independent tasks can be executed in par allel, which allows us to speed up
+development.
+Assigning independent tasks to agents
+In the current HookHub interface, two  parts of the page can be improved separ ate-
+ly, making them good candidates for par allel work.  Two independent tasks are
+identified:
+Updating the hook card component to improve its visual design
+Updating the hero section of the main page
+Figure 6.6 – Two Claude Code instances running in par allel to update different parts of
+the HookHub interface
+Each task is assigned to a separ ate Claude Code instance.  One agent is instructed to
+modify the hook card component file, while the other agent is instructed to modify
+the hero section.
+### Running Multiple Claude Code Instances
+Open two separate terminal windows.
+Terminal 1 – Update Hook Card Component
+claude
+Prompt:
+Improve the visual design of the HookCard component.
+Modify only:
+src/components/HookCard.tsx
+Do not modify other files.
+Terminal 2 – Update Hero Section
+claude
+Prompt:
+Redesign the hero section.
+Modify only:
+src/components/Hero.tsx
+Do not modify HookCard.tsx.
+Both agents now oper ate independently in par allel.
+This setup works effectively because the hook card component and the hero section
+are implemented in separ ate files.  If both components were defined in the same
+file, concurrent modifications would  introduce conflicts.
+Separ ating components into individual files improves maintainability , readability ,
+and testability . This is a gener al best pr actice in software development and is espe -
+cially important when using agentic workflows.
+Executing tasks concurrently
+Both Claude Code instances oper ate independently and execute their assigned tasks
+in par allel.  Each agent modifies only the files relevant to its task.  Because the com -
+ponents are isolated, no file conflicts occur during execution.
+After execution completes, the updated hook card component and the updated hero
+section reflect their assigned changes.
+Figure 6.7 – HookHub interface after concurrent updates to the hook cards and the
+hero section
+Reviewing and committing changes
+Once both agents complete their work, the  changes are reviewed and committed to
+the repository . The commit captures the improvements made to the hook card  com -
+ponent and the hero section as a result of the multi-agent workflow .
+After both agents complete their work, review changes:
+git status
+git diff
+If the changes look correct:
+git add .
+git commit -m "Refine HookCard and Hero using parallel Claude Code agents"
+This example demonstr ates how multiple Claude Code instances can be used con -
+currently to acceler ate development when tasks are independent and properly
+scoped.
+Summary
+In this chapter, we explored how Claude Code supports agentic development work -
+flows through planning mode and multi-agent execution.  We examined how plan -
+ning mode enables spec-driven development b y separ ating analysis from imple -
+mentation, and how specifications can be refined using deep thinking and persistedThe example in this chapter intentionally demonstr ates the simplest form of
+multi-agent execution: multiple Claude Code instances oper ating on the
+same br anch with shared file access, modifying separ ate files to avoid
+conflicts.
+This setup is useful for understanding the core idea of par allel execution.
+However, running multiple agents on the same br anch is inherently fr agile.
+If agents modify overlapping files or introduce incompatible changes, con -
+flicts can occur.
+In professional development environments, the industry-standard approach
+to par allel work is to isolate changes using Git br anches or Git worktrees.
+With Git worktrees, each agent oper ates in its own working directory on its
+own br anch, with an independent cop y of the codebase.  Changes are later
+reviewed and merged in a controlled manner.
+This chapter focuses on conceptual clarity and the simplest reproducible
+setup.  More robust par allelization str ategies, including br anch isolation and
+structured merge workflows, are covered later in this book.NOTE
+as project memory . We also demonstr ated how multiple Claude Code agents can
+work in par allel on independent tasks within a shared codebase.
+In the next chapter, we'll explore Claude Code subagents and how they enable struc -
+tured, isolated, and concurrent workflows within complex development tasks.
+Get this book's PDF cop y, code bundle, and
+more
+Scan the QR code (or go to packtpub.com/unlock ), search for this book b y name, confirm
+the edition, and then follow the steps on the page.
+Note: Have your invoice handy . Purchases made directly from the Packt website do
+not require an invoice.

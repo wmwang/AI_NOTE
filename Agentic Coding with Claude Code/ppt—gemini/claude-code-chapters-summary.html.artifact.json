@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Claude Code Course Slides Summary",
+  "entry": "claude-code-chapters-summary.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-05-10T02:45:58.100Z",
+  "updatedAt": "2026-05-10T02:45:58.111Z",
+  "metadata": {
+    "identifier": "claude-code-chapters-summary",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

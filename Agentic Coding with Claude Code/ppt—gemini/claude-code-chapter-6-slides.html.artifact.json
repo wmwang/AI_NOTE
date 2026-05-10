@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Chapter 6: Planning & Multi-agent Slides",
+  "entry": "claude-code-chapter-6-slides.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-05-10T04:00:58.471Z",
+  "updatedAt": "2026-05-10T04:00:58.479Z",
+  "metadata": {
+    "identifier": "claude-code-chapter-6-slides",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

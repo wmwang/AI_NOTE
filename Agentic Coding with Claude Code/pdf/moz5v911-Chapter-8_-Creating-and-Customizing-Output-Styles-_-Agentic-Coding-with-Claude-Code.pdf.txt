@@ -1,0 +1,662 @@
+8
+Creating and Customizing Output Styles
+Output styles  are one of the most powerful and underr ated features in Claude Code.  They de -
+fine how responses are structured and delivered, effectively shaping the communication pro -
+tocol between the user and the model.
+In this chapter, we will examine how output styles shape the wa y Claude Code communicates.
+You will learn how to create custom output styles, scope them at the user or project level, and
+modify how responses are structured.  We will also explore how output styles inter act with the
+system prompt, how structured formats such as Y AML change reasoning patterns, and how to
+automate workflows directly within a style definition.
+By the end of this chapter, you will understand how to engineer Claude Code's inter action
+model r ather than simply consume its output.  You will be able to design specialized configur a-
+tions, run par allel sessions with different roles, version your setup, and extend the interface
+using custom status lines.
+In this chapter, we will cover the following topics:
+Creating a custom output style with Claude Code
+Creating an advanced project-level output style
+Customizing the status line in Claude Code
+Advanced status line: displa ying the last user prompt
+The future of AI coding: A team of specialized agents
+Creating a custom output style with Claude Code
+When listing  available output styles using /output-style , Claude Code displa ys the currently
+active style along with an y built-in styles.
+By default, the system includes the following:
+Default
+Explanatory
+Learning
+The following figure shows the output style selection interface in the Claude Code CLI.  The cur -
+rently active style is highlighted and the built-in styles are listed beneath it.The built-in output styles available in Claude Code ma y evolve over time.  Depending on
+your installed version, you ma y see additional styles beyond those shown in this
+chapter.NOTE
+Figure 8.1 – Claude Code CLI output style selection interface
+As shown in the figure, the CLI presents the available styles and indicates which one is active.
+The Explanatory and Learning styles are prebuilt b y the Anthropic team.  Instead of using these
+predefined styles, you can create custom output styles.
+Creating and reviewing a new output style
+To create a user-scoped output style, create a Mark down file in:
+~/.claude/output-styles/
+For a project-scoped output style, create it in:
+.claude/output-styles/
+The file uses Y AML front matter followed b y Mark down content, similar to how subagents are
+defined.  The following  example shows a file located at ~/.claude/output-styles/minimal-
+bullets.md :
+  ---
+  description: Concise bullet-point responses with direct communication
+  ---
+  # Communication Style
+  - Use bullet points for all responses
+  - Be direct and to the point
+  - No unnecessary language or filler
+  # Response Format
+  - Lead with the answer
+  - Use nested bullets for hierarchy
+  - Skip preamble and transitions
+  # Tone
+  - Professional and concise
+  - No hedging or qualifications
+The file includes the following:
+A description defining it as a concise bullet-point response with direct communication and
+no unnecessary language
+Expanded sections elabor ating on communication style
+Response format guidelines
+Tone guidelines
+Once the style is gener ated, Claude Code writes this definition to disk.  The following figure
+shows the gener ated minimal-bullets definition as it is written to disk.  After selecting the min-
+imal-bullets  style, it becomes the currently active output style.  When viewing the list of
+available output styles, the selected style is indicated accordingly .
+Figure 8.2 – Minimal-bullets style selected
+An example output style produces responses formatted with bullet points, with a direct, con -
+cise structure and no filler.
+Figure 8.3 – Claude responding using the minimal-bullets output style
+Once a style is selected, Claude Code applies its instructions to subsequent requests.
+How output styles work
+Selecting an  output style replaces parts of Claude Code's system prompt with style-specific cus -
+tom instructions.  Claude Code removes its default software engineering instructions and sub -
+stitutes them with the selected style's instructions.
+The core capabilities of Claude Code, including file oper ations and script execution for tr ack-
+ing, remain available regardless of the output style selected.
+The modified system prompt is sent directly to the LLM with each request made through
+Claude Code.  It is therefore the same underlying model oper ating under a different system
+prompt.
+When switching styles using the /command  for output styles, Claude Code updates its internal
+system prompt template and applies the updated template to subsequent LLM calls.
+A project-scoped output style applies only within a specific project.
+Let's create a new output style that can be defined to format responses as Y AML.
+Why YAML
+Using  YAML as an output style tr ansforms communication from explicit instructions to implicit
+semantic structure, where the format itself conveys meaning.
+In a YAML output, the format itself becomes a rich communication protocol in which indenta -
+tion, k ey selection, ordering, and structur al decisions carry meaning.  Because Y AML supports
+hierarch y, it maps natur ally to complex coding tasks.
+Dependencies are expressed as parent–child relationships.  Priority can be inferred from order -
+ing. Scope is represented through nesting levels.  Instead of listing sequential steps, a nested
+YAML structure encodes the logical architecture of the problem space.  To mak e this more con -
+crete, consider how a real task might be structured.
+The following example is the actual output returned b y Claude Code when the Y AML output
+style is active.
+Task: "Fix authentication bug"
+Priority:  "Urgent high"
+Complexity:  "Medium"
+approach:
+  investigate:
+    auth_flow:  &flow
+      - login_endpoint
+      - token_validation
+      - session_middleware
+    debugging:
+      logs: "./auth.log"
+      reproduce:  "invalid_token_scenario"
+fix:
+  dependencies:  [*flow]
+  files_to_modify:
+    auth.js:
+      scope: "token refresh logic"
+      risk: "low"
+    middleware.js:
+      scope: "validation checks"
+      risk: "urgent"
+verify:
+  tests: ["auth_integration" , "token_expiry" ]
+  manual_check:  "login flow end-to-end"
+metadata:
+  estimated_time:  "2 hours"
+  rollback_plan:  "revert commits"
+  monitoring:  "error_rate_dashboard"
+Let's break down  this structure:
+The task  definition establishes context
+The approach  section captures investigative paths and debugging artifacts
+The fix section encodes dependencies and file-level scope
+The verify  section defines validation mechanisms
+The metadata  section captures oper ational consider ations
+Figure 8.4 – Claude gener ating a structured task plan in Y AML format
+YAML encour ages thinking in terms of relationships and dependencies r ather than sequential
+steps.  Its hier archical structure shifts the focus from ordered instructions to interconnected
+components.
+When Claude Code outputs a task as a nested Y AML structure, it does not produce a simple to-
+do list.  Instead, it encodes the logical architecture of the problem space within the structure it -
+self. Relationships, scope, and dependencies are expressed through nesting and k ey
+organization.
+Figure 8.5 – Human–AI collabor ation enabled through customizable output styles
+Output styles remove  the constr aint of a single, fixed inter action model.  They allow the com -
+munication protocol itself to be designed and adjusted.  This reflects the essence of agentic cod -
+ing: actively shaping how the AI expresses information and collabor ates within a development
+workflow .
+Control over inter action is therefore not limited to model providers improving model capabili -
+ties. Developers, as users of large language models, define and control the communication pro -
+tocol through output styles.
+Creating Y AML as an output style
+A project-level output style can be configured to produce concise Y AML responses without ad -
+ditional verbosity . When defined at the project scope, the configur ation applies only within
+that project.
+To create this style, create a file at .claude/output-styles/yaml-concise.md  in the project
+directory:
+   ---
+  description: Concise YAML-formatted responses for structured communication
+  ---
+  # Response Format
+  - All responses must be formatted as valid YAML
+  - Use hierarchy and nesting to express relationships
+  - Keep values concise — no full sentences unless necessary
+  # Structure
+  - Use top-level keys to represent major sections
+  - Nest subconcepts under their parent context
+  - Use lists for enumerations and sequences
+  - Use key-value pairs for properties and attributes
+  # Tone
+  - No prose, no filler, no transitional language
+  - Let the YAML structure carry the meaning
+  - Prefer short string values over paragraphs
+After creating the file, the yaml-concise  style appears in the list of available output styles
+when running /output-style . A new directory is also created under the project's .claude
+folder.  Inside it, a Y AML configur ation file is gener ated that represents the newly defined
+project-scoped output style.  Select it to activate the style for the current session.
+With the Y AML style active, issue a query such as:
+What are Claude Code output styles? Give me an elaborate answer.
+The response is returned as structured Y AML r ather than par agraphs or bullet points.  The hier -
+arch y, keys, and indentation encode the structure of the explanation.
+The response is returned as structured Y AML r ather than par agraphs or bullet points.  The hier -
+arch y, keys, and indentation encode the structure of the explanation.
+Here's a representative example:
+definition:
+  what: "Custom response formats for Claude Code CLI"
+  purpose:
+    - "Control communication style and structure"
+    - "Support global or project-level configuration"
+location:
+  global: "~/.claude/output-styles/"
+  project:  "./.claude/output-styles/"
+  precedence:  "Project overrides global"
+file_structure:
+  format: "Markdown with YAML frontmatter"
+  frontmatter:
+    description:  "Brief style explanation"
+    content:  "System prompt modifications"
+functionality:
+  controls:
+    - "Response formatting (bullets, YAML, prose)"
+    - "Communication tone (formal, casual, technical)"
+    - "Information density (concise, detailed)"
+    - "Task approach (speed vs thoroughness)"
+    - "Workflow behaviors"
+The output structure reflects conceptual grouping r ather than a linear explanation.
+The response format emphasizes the following relationships:
+Sections become top-level k eys
+Subconcepts are nested under their parent context
+Configur ation scope and precedence are structur ally encoded
+Behavior al controls are grouped under a shared functional category
+This  approach mirrors how Y AML is used in configur ation systems such as K ubernetes and
+Dock er Compose.  The structure remains readable while preserving the semantic hier arch y.
+By activating the project-level Y AML concise style, responses are consistently returned in this
+structured format, reinforcing architectur al thinking r ather than sequential narr ation.
+Figure 8.6 – Y AML-concise output style applied in Claude Code
+In this section, you learned how to define and gener ate a custom output style, how the out-
+put-style-setup  sub-agent augments your prompt, and how styles are stored at either the
+user or project scope.  This establishes that output styles are not superficial formatting options
+but structured configur ation files that directly shape Claude Code's behavior.  Understanding
+how to create and scope output styles provides the foundation for extending them further.  In
+the next section, we build on this b y creating a more advanced project-level output style and
+embedding more structured behavior into it.
+Creating an advanced project-level output style
+This section defines a new output style at the project level and extends it with automated file-
+gener ation behavior.  The objective is to gener ate HTML-formatted responses structured as an
+ASCII-styled blog page and to integr ate that behavior directly into the output style definition.
+Defining a custom HTML output style
+Let's create and review the output style configur ation file.  A complete example of this configu -
+ration is available in the repository . To access the repository link, follow the steps in the
+Download the example code files  section in the Preface .
+Create a new project-level output style file under:
+.claude/output-styles/retro-ASCII_blog.md
+The intention of this style is to gener ate HTML output formatted as an ASCII-style blog page.
+The output style controls how responses are formatted and can also embed workflow rules.
+The content of the output style is:
+---
+description: Format responses as retro HTML pages with ASCII art styling like a vintage blog
+---
+Format all responses as complete HTML pages with retro ASCII art blog styling.  Follow these guideli
+HTML Structure
+Always provide complete HTML5 documents with proper DOCTYPE, head, and body tags
+Use semantic HTML elements (header, main, section, article, aside, footer)
+Include a proper HTML title that reflects the content
+ASCII Art Styling
+Use ASCII art for headers, dividers, and decorative elements
+Create borders using characters like ═ , ║ , ╔ , ╗ , ╚ , ╝ , -, |, +, *, #
+Add ASCII art banners for section headers
+Use monospace fonts throughout for consistent ASCII alignment
+Include decorative ASCII elements like stars, lines, and boxes
+CSS Requirements
+Embed CSS in <style> tags in the HTML head
+Use monospace fonts (Courier New, Monaco, Consolas, monospace)
+Set background to dark colors (#1a1a1a, #2d2d2d) with light text
+Use retro color schemes (green on black, amber on black, etc.)
+Style ASCII art elements with appropriate spacing and alignment
+Add subtle glow effects or text shadows for retro terminal feel
+Content Structure
+Format content like a blog post with clear sections
+Use ASCII art dividers between sections
+Create ASCII art headers for major topics
+Include a decorative ASCII footer
+Structure technical information in readable blocks
+Add ASCII navigation or menu elements when appropriate
+Example Elements to Include:
+ASCII art title banners
+Decorative borders around code blocks
+ASCII bullet points and lists
+Retro-style ASCII progress bars or indicators
+Terminal-style prompts and outputs
+ASCII art logos or emblems
+Remember to maintain readability while embracing the retro ASCII aesthetic.  The content should feel
+This output style  goes beyond simple terminal formatting.  Rather than producing bullet points
+or YAML, Claude Code gener ates complete HTML documents styled as retro ASCII art blog
+pages.
+The instructions are organized into the following sections:
+The HTML structure defines complete HTML5 documents with semantic elements
+ASCII art styling establishes visual identity through box dr awing char acters and mono -
+spaced fonts to maintain consistent alignment
+CSS requirements define the retro terminal aesthetic with dark back grounds, green-on-
+black or amber-on-black color schemes, and subtle glow effects
+Content is organized as blog posts with ASCII art dividers, banners, and decor ative footers.
+The entire behavior is defined in a single Mark down file with no code or plugins required.
+Once the style is selected and a prompt is issued, Claude Code gener ates the HTML page, writes
+it to disk, and opens it in the browser.
+Using the HTML output style
+With retro-ASCII_blog.md  selected as the active output style, the following prompt is issued.
+What are output styles? Provide an elabor ate answer.
+Show me which output styles I have right now .
+The response is gener ated as HTML.  The content is valid HTML markup and is rendered direct -
+ly in the terminal.  Because it is emitted as markup, it is not easily readable in this context.
+At this stage, the HTML has not been written to a file that can be opened in a browser.  The out -
+put exists only as gener ated markup.
+To mak e the result usable, Claude Code is instructed to dump the gener ated HTML into a file.  A
+file named output-styles-guide.HTML  is created.
+When opened in a browser, it renders as a blog-style page displa ying an explanation of output
+styles.
+Figure 8.7 – Gener ated HTML page documenting Claude Code output styles
+The rendered page displa ys the configured output styles and demonstr ates that the structure
+and formatting are fully customizable.  The HTML is not intended to be visually refined; its pur -
+pose is to illustr ate that there is complete freedom over what can be gener ated.
+The output style is not limited to static pages.  It could be extended to write pages into a larger
+application, such as a Next.js project, with each Claude-gener ated response producing a new
+page within that application.  The structure and behavior of the output are defined entirely b y
+the configur ation, and there are no inherent limitations imposed b y predefined templates.
+Automating file gener ation
+We now  embed workflow logic directly into the output style definition.  Prompting Claude Code
+to write HTML into a file each time is repetitive.  Instead of issuing this instruction with every
+prompt, the behavior is embedded directly into the output style definition.
+The retro-ASCII_blog.md  file is updated to include workflow instructions with the following
+snippet:
+Workflow
+Save the HTML file after writing it, it should have a descriptive name ending with .html
+OPEN the generated file in the deault web browser.
+The output style can also encode workflow behavior, allowing Claude Code to automatically
+save gener ated HTML files and open them in the browser.
+Figure 8.8 – Output style workflow instructions
+No complex logic  is introduced.  The prompt remains minimal.  Claude Code performs the re -
+quired file gener ation steps based on these instructions.
+After saving the updated output style, issue a prompt such as the following:
+What are output styles?
+This results in the automatic creation of a file named output-styles-quick-guide.html . The
+system requests confirmation to open the file in the default browser, and once approved, the
+rendered HTML is visible immediately .
+The workflow is now embedded in the output style itself.  Each response gener ated under this
+style is automatically written to a browser-ready HTML file.
+Working with multiple output styles
+Running a single output style demonstr ates how formatting can be customized for a specific
+purpose.  This configur ation can be extended b y running multiple Claude Code instances simul -
+taneously , each configured with a different output style.  The following sections illustr ate how
+separ ate sessions can oper ate in par allel and how this enables task-specific formatting within
+the same repository .
+Launching a new Claude Code instance
+A new  terminal instance is opened within the repository , and Claude Code is started.  This cre -
+ates a fresh session with no output style yet selected.
+Figure 8.9 – Launching a new Claude Code session
+An output style is then selected from the available options.  In this instance, the minimal bullet
+output style is chosen.
+The session is now configured to gener ate responses using the minimal bullet format.
+Opening a second instance with a different output
+style
+A second terminal instance is opened within the same repository . Claude Code is started again
+in this new session.
+In this instance, a different output style is selected—the Y AML concise output style.
+At this point, two Claude Code instances are running simultaneously:
+One configured with minimal bullets
+One configured with Y AML concise output
+Each instance maintains its own active output style.
+Figure 8.10 – Selecting the Y AML-concise output style
+Parallel output styles in pr actice
+With both instances running side b y side, responses gener ated in each terminal reflect the se -
+lected configur ation.  The formatting differs according to the active output style.
+This establishes a workflow in which multiple Claude Code sessions oper ate in par allel, each
+optimized for a specific output format.
+Figure 8.11 – Two Claude Code sessions using different output styles
+Specialized output style workflows
+With both  instances visible, each session clearly maintains its own formatting behavior.
+Instead of using a single monolithic environment, each Claude Code session becomes a dedicat -
+ed AI assistant configured for a specific task.
+A review-focused session can emphasize code differences, security vulner abilities, and archi -
+tectur al concerns.  An explain-focused session can optimize for educational insights or docu -
+mentation gener ation.  A debug-focused session can concentr ate on error analysis and trou -
+bleshooting, with its output aligned accordingly .
+Each output style tailors the AI's cognitive focus to the task at hand.
+When switching between terminal windows, it is not immediately clear which output style is
+currently active.  The interface does not prominently displa y this information.
+This limitation becomes noticeable when working across multiple sessions.  It can be addressed
+using custom status lines, which allow clearer identification of the active configur ation.
+With the configur ation validated and working as intended, the changes are committed to ver -
+sion control.
+Here, you extended the basic output style mechanism b y defining a project-scoped configur a-
+tion and integr ating more advanced formatting and behavior al logic.  You saw how output
+styles can move beyond simple response formatting into structured outputs such as HTML and
+automated workflow behaviors.  This demonstr ates that output styles can influence not only
+how responses look but also how they are oper ationalized.  With this foundation in place, the
+next section shifts from output formatting to runtime interface customization b y modifying the
+Claude Code status line.
+Customizing the status line in Claude Code
+Status lines let you run an y scripts that receive Claude Code's session data (model, context us -
+age, costs, git info) as JSON via stdin  and print whatever you want persistently at the bottom
+of the terminal.  You configure them in ~/.claude/settings.json  by pointing the status-
+Line  key to your script — or use the /statusline  slash command with a natur al-language de -
+scription to have one gener ated automatically .
+This section reviews how to configure and implement a custom status line in Claude Code us -
+ing a dedicated command and a Python-based implementation.
+Defining a custom status line command
+A new slash command, /statusline , is defined.  The command includes a description specify -
+ing that the status line should displa y the current active output style.  The following prompt is
+provided to define the command:
+/statusline I want you to create a statusline that displays the current used output-style.
+You should implement it in python and run it through uv
+Two implementation requirements are specified:
+The status line must be implemented in Python
+It must be executed using the UV package manager
+Status lines in Claude Code can execute shell commands, shell scripts, Python files, and Node.js
+files.  They can run arbitr ary executable logic.  Python is selected for the implementation based
+on familiarity and preference.
+Initializing the status line setup
+When the /statusline  command is executed, Claude Code initializes and spawns a sub-agent,
+which is responsible for assisting with the creation of the status line.
+The first action performed b y the sub-agent is to search for an existing status line configur a-
+tion in the home directory:
+~/.claude/settings.json
+The file is inspected for an existing statusline  entry . Since no such entry is present, the con -
+figur ation file is updated.
+Figure 8.12 – Implementing a custom statusline script
+Updating the configur ation
+The settings.json  file defines the default model, which in this case is set to sonnet . The
+configur ation is then extended with a new statusline  entry .
+A representative configur ation appears as follows:
+{
+  "model": "sonnet" ,
+  "statusline" : {
+    "type": "command" ,
+    "command" : "uv run ~/.claude/statusline.py"
+  }
+}
+The type is set to command , and the configured command runs the statusline.py  script using
+the uv package manager.
+By default, the script is created in the home directory .
+~/.claude/statusline.py
+The script can  be stored in an y location, provided that the configur ation specifies the correct
+execution path.
+Implementing the status line logic
+The statusline.py  file contains the logic that determines what is displa yed in the custom sta -
+tus line.
+Claude Code provides runtime information to the script via standard input ( stdin ). The script
+reads this input and processes it as JSON.  The data is loaded into a dictionary using
+json.load , giving access to all information provided b y Claude Code.
+Figure 8.13 – Statusline script reading JSON input from Claude Code
+A minimal implementation appears as follows:
+import json
+import sys
+input_data = json.load(sys.stdin)
+style = input_data.get( "output_style" , "default" )
+print(style)
+Among the available k eys is output_style . The script extr acts the name of the currently ac -
+tive output style from this k ey. If no output style is defined, the script defaults to displa ying
+"default"  as the output style.
+The script writes its result to standard output ( stdout ). Claude Code reads whatever the script
+prints to stdout  and displa ys it in the status line.
+When the output style is changed, the value passed through stdin  changes accordingly and
+the status line reflects the new style.
+ANSI color support and formatting
+The status line supports ANSI color formatting.  Modifying the Python script allows changes to
+the visual appear ance of the output, including color and text styling, such as bold formatting.
+For example, the print  statement can include ANSI escape sequences:
+print(f"\033[1;32m{style}\033[0m")
+The numeric sequences represent ANSI escape codes used to control formatting in the termi -
+nal. In this example, the status line appears in green and bold text.
+When the active output style is changed, the status line updates accordingly . Because the logic
+is implemented in a script, the status line dynamically reflects the current configur ation and
+any formatting adjustments applied b y the script.
+Figure 8.14 – Status line displa ying the active output style
+Extending status line functionality
+Since the status line logic is driven b y an executable script, it can displa y an y information
+available to the runtime environment.  This includes data from external systems, stock prices,
+news feeds, or other dynamically retrieved information.
+More advanced features of output styles can be implemented b y extending the script logic
+further.
+In this section, you implemented a custom status line using a Python script and integr ated it
+into Claude Code's configur ation.  You learned how runtime information is passed through
+standard input, how to extr act structured data such as the active output style, and how to dis -
+play dynamic values in the interface.  This shows that Claude Code is extensible beyond output
+formatting and allows executable logic to shape the development environment itself.  Building
+on this capability , the next section enhances the status line further b y reading tr anscript data
+and extr acting the last user prompt.
+Advanced status line: displa ying the last user
+prompt
+Within the  home directory , the .claude  directory contains a projects  subdirectory . Each
+subdirectory inside projects corresponds to a project and holds its conversation history and
+session data.  The directory name reflects the project path, where path separ ators, such as /,
+are replaced with -.
+Figure 8.15 – Claude projects directory storing session data
+Inside each project directory , JSONL files store the conversation logs.  Each file is identified b y a
+UUID.  These JSONL files contain the full sequence of messages exchanged during a session.
+Examining one such JSONL file reveals that each line represents a JSON object corresponding
+to a message entry . When a new user message is submitted, a new JSON object is appended to
+the file.  For example, if the user sends "hello" , a new entry appears with the following:
+"role": "user"
+"content": "hello"
+This entry is followed b y the assistant's response.
+Figure 8.16 – JSONL tr anscript storing user prompts
+Claude stores all user prompts in these JSONL files.  The objective is to extend the status line so
+that it displa ys the last prompt sent b y the user in the current session.  This prompt must be re -
+trieved from the tr anscript file referenced in the transcript_path  key provided as input to
+the status line script.
+Only user prompts should be displa yed.  Commands such as status line invocations and as -
+sistant responses must be excluded.
+All implementation is contained within the existing statusline.py  file.
+Defining the status line requirement
+A /statusline  instruction  is defined to extend the status line with an additional field: the last
+prompt from the user in the current session.
+When Claude Code executes a status line command, it passes structured runtime data to the
+status line script through standard input.  This JSON pa yload includes fields such as tran-
+script_path , which point to the current session 's JSONL tr anscript file.
+The script reads the transcript_path  value from its input, loads the referenced JSONL file,
+and searches for the most recent user message.  That message becomes the displa yed prompt.
+Only genuine user prompts are considered.  Assistant responses and command invocations are
+excluded.
+The following /statusline  instruction extends the status line so that it displa ys the most re -
+cent user prompt from the session tr anscript.
+/statusline I want you to display also the last prompt from the user in the current session.
+You should get the prompt from the file example in the transcript_path.  /path/to/transcript.jsonl
+Remember the user prompt will be a message with role="user".
+Remember no commands at all responses, just user prompts in this example.
+In the demonstr ated case, the most recent user prompt in the tr anscript file is hello, which is
+displa yed in the status line.  Only genuine user prompts should be displa yed; that is, status line
+commands and assistant responses that are logged must be excluded.  The script, therefore, fil -
+ters entries so that only valid user prompts are considered.
+The instruction explicitly states that all logic must be implemented inside the existing sta-
+tusline.py  file.  This prevents the creation of an additional script or shell utility and ensures
+that the functionality remains contained within the status line implementation.
+Accessing the tr anscript path
+Inside statusline.py , the structured input is loaded as a dictionary . The script accesses the
+transcript_path  key, which is known to exist.  That path is passed to a function responsible
+for retrieving the last user prompt.  The status line script retrieves the tr anscript path and ex -
+tracts the most recent user prompt from the session log.
+Figure 8.17 – Reading the tr anscript path to fetch the last user prompt
+After the function returns the prompt, it is printed as part of the status line output.
+Implementing retrieval of the last user prompt
+The retrieval function performs  the following oper ations:
+Confirming that the tr anscript file path exists
+Opening and reading the JSONL file at that path
+Iterating through each line of the file
+Parsing each line as JSON into a dictionary object
+Inspecting the message k ey within each entry
+Checking the role  field inside message
+If the role is user , extr acting the content  field
+The following Python function reads the tr anscript file, parses the JSONL entries, and retrieves
+the most recent valid user prompt.
+import json
+import sys
+import os
+def get_last_user_prompt (transcript_path ):
+"""
+Extract the last user prompt from the transcript file.
+"""
+try:
+if not os.path.exists(transcript_path):
+return "No transcript found"
+with open(transcript_path, "r") as f:
+content = f.read().strip()
+if not content:
+return "Empty transcript"
+# Split by lines and process each JSON object
+lines = content.split( "\n")
+for line in reversed (lines):
+try:
+entry = json.loads(line)
+# Entry has 'message' and not a command
+if entry.get( "type") == "message"  and entry.get( "role") == "user":
+message_content = entry.get( "message" , {}).get( "content" , "")
+# Skip command messages starting with /
+if message_content.startswith( "/"):
+continue
+return message_content
+except json.JSONDecodeError:
+continue
+return "No user prompt found"
+except Exception as e:
+return f"Error reading transcript: {e}"
+Command-style placeholders and assistant responses are skipped.  Only valid user prompts are
+retained.  The most recent valid user prompt found during iter ation is returned as the result.
+At this point, the statusline.py  file performs three distinct steps.  First, it reads structured
+runtime input from standard input.  Second, it extr acts the transcript_path  value from that
+input.  Third, it opens the referenced JSONL tr anscript file, scans for the most recent valid user
+prompt, and prints that value to standard output.
+Testing and finalizing the implementation
+After  implementing the logic  for retrieving and displa ying the last user prompt, the next step is
+to confirm that the behavior works as intended.  This involves verifying that new tr anscript en -
+tries are correctly appended, that only valid user prompts are extr acted, and that the status
+line updates consistently after each inter action.
+Validating the implementation
+When a  new message is submitted, a new entry is appended to the JSONL tr anscript file.  After
+the assistant's response is recorded, the status line updates to reflect the newly submitted
+prompt.
+Repeating this process confirms the following:
+Each new message adds a new JSONL entry
+The displa yed prompt updates accordingly
+The script consistently retrieves the most recent valid user prompt
+The output style is changed (for example, to a Y AML concise style) to confirm that the new
+functionality  remains intact.  The status line continues to displa y the last prompt without issue.
+Figure 8.18 – Status line reflecting the latest user prompt from the tr anscript
+Updating the output label
+In the previous sections, we explored how to control Claude Code's behavior using output
+styles and how to monitor activity through status lines.  Together, these mechanisms provide a
+foundation for shaping how the system communicates and oper ates during runtime.
+With these capabilities in place, we can now look ahead to what the future of agentic coding
+might look lik e when they are combined and extended.  Rather than relying on a single as -
+sistant session, multiple specialized agents can work together, each configured with its own
+role, context, and output behaviour.
+The future of AI coding: The future of AI coding: a
+team of specialized agents
+As agentic development workflows evolve, a single assistant session is often not enough to
+handle complex tasks.  Instead, multiple specialized agents can collabor ate, each responsible
+for a particular role or domain.  By combining the configur ation techniques introduced earlier,
+such as output styles and runtime status lines, we can begin to structure these agents as a coor -
+dinated system r ather than a single gener al-purpose assistant.
+Agentic coding and multiple instances
+One manifestation of agentic coding is based on running multiple Claude Code instances simul -
+taneously , where each instance has the following:
+Output style
+Context
+Role
+Instead of relying on a single gener al-purpose session, responsibilities are distributed across
+specialized instances.
+This mirrors a small start-up team structure.
+Figure 8.19 – A gent roles illustr ated as a specialized start-up team
+In a small start-up team model, different types of work are routed to different specialists.  A UI
+change is handled b y Vina y, the frontend engineer.  A back end change is handled b y Rajesh.  A
+deplo yment issue is handled b y Alex, the DevOps engineer.  Each person has a distinct set of re -
+sponsibilities and skills, and also tends to communicate in a wa y that matches the work they
+do. All names used in this illustr ation are fictional and are included solely to represent exam -
+ple roles in the workflow . Here are some examples:
+A DevOps-oriented instance ma y use Y AML-style output
+A back end-oriented instance ma y use an OpenAPI specification format
+A documentation-oriented instance ma y use structured learning-style output
+Each output style is configured at the system level and influences how responses are gener at-
+ed. An instance ma y also be associated with different commands, agents, and contextual
+constr aints.
+Instances can be named to reflect their responsibilities, similar to named team members.
+Naming and role-based contexts
+Each Claude Code instance can represent a named role, such as the following
+frontend-engineer
+backend-engineer
+devops
+security-review
+The name reflects:
+The output style
+The context
+The type of tasks handled
+Switching between terminals becomes equivalent to switching between specialized team mem -
+bers.  A security-related task is handled in the security-focused instance.  A UI task is handled in
+the frontend-focused instance.
+This structure enables controlled context boundaries and clear separ ation of responsibilities.
+Multiple specialized Claude Code instances oper ate as coordinated agents within the develop -
+ment workflow .
+In this final section, you explored how multiple Claude Code instances can oper ate in par allel,
+each configured with a distinct output style and contextual focus.  You saw how directory-level
+configur ation influences behavior and how specialized sessions mirror role-based collabor a-
+tion within a development team.  This consolidates the chapter's centr al idea: Claude Code is
+not a single fixed interface, but a configur able system that can be shaped into task-specific
+agents.
+Summary
+In this chapter, you learned how Claude Code output styles work and how they can be created,
+reviewed, and applied at either the user or project scope.  You also examined how selecting an
+output style changes Claude Code's system prompt behavior, and how structured formats such
+as YAML and HTML alter the wa y responses are produced and consumed.  The chapter extend -
+ed this configur ation work into workflow control b y embedding file-gener ation behavior into
+an output style and implementing custom status line logic using a Python script that reads run -
+time input and tr anscript history .
+This information is useful because it establishes direct control over how Claude Code commu -
+nicates, not just what it gener ates.  Instead of treating model output as fixed prose, output
+styles allow response structure, tone, and workflow behavior to be defined as part of the devel -
+opment environment.  This mak es it possible to tailor Claude Code sessions for different tasks,
+run multiple specialized sessions in par allel, and version these configur ations as part of a re -
+peatable workflow .
+In the next chapter, we will look at understanding agent skills as a mechanism for extending
+AI agent capabilities.
+Get this book's PDF cop y, code bundle, and more
+Scan the QR code (or go to packtpub.com/unlock ). Search for this book b y name, confirm the edition,
+and then follow the steps on the page.
+Note: Have your invoice handy . Purchases made directly from the Packt website don 't require an
+invoice.
+

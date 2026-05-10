@@ -1,0 +1,581 @@
+9
+Understanding A gent Skills
+Agent skills were introduced b y the Anthropic team in October 2025 as a mechanism for ex -
+tending the capabilities of AI agents.  Skills allow capabilities to be packaged as structured
+units, including custom workflows and task-specific instructions, enabling agents to perform
+more complex and coordinated tasks.  By encapsulating defined behaviors, skills expand what
+agents can accomplish beyond gener al reasoning alone.  Claude can automatically invok e skills
+based on their description field matching the conversation context.
+This chapter examines the concept of agent skills in depth, establishing a clear understanding
+of what they are and wh y they matter in the design of more capable agent systems.
+The chapter progresses through a la yered explor ation of skills, beginning with foundational
+concepts and pr actical usage in environments such as Claude Code, as well as tools such as
+LangChain DeepA gents ( https://docs.langchain.com/oss/python/deepagents/overview ). We will then move
+beneath the surface to analyze how context flows within an agent when a skill is invok ed, clar -
+ifying how the system oper ates internally . Finally , we will consolidate these perspectives
+through a concrete implementation of the skills within a real agent.  The goal is to understand
+not only how to use skills, but also their underlying design and motivation, resulting in a com -
+prehensive and technically grounded understanding of the concept.
+A core concept behind skills is progressive disclosure.  Skills are not permanently loaded into
+the agent's active context.  Instead, the system loads a skill only when it becomes relevant to
+the current task.  This design prevents unnecessary instructions from entering the working
+context and helps maintain clarity during reasoning.  Later in this chapter, we will examine
+how this dynamic loading works when a skill is invok ed and how it affects context flow within
+the agent.
+The following topics will be covered in this chapter:
+The gist of agent skills
+Diving deeper into agent skills
+Comparing agent skills with other agent primitives
+The gist of agent skills
+In this section, we will see agent skills in action and demonstr ate how to use them as part of
+our workflow . We will compare two approaches to completing the same task: first without
+skills and then with skills, so we can clearly observe how the agent behaves in each case.
+Head to the repository and switch to the hookhub  branch, then open the commit list.  Select the
+commit titled improved hook card and hero with multi  agent working.  This commit will
+serve as our starting point.
+Since additional commits will be added later, the br anch history ma y move forward.  However,
+we must begin from this exact commit.  Cop y its hash, open the IDE, and switch to the br anch
+and commit:
+git switch project/hookhub c125545ca118f51c07eb6defe61ba727dbf05788
+After switching, a new hookhub  directory appears.  This directory contains all the code devel -
+oped in the previous sections.
+Move into the directory and install the dependencies:
+cd hookhub
+npm install
+Once installation is completed, start the development server:
+npm run dev
+The HookHub application is now running locally on port 3000 . This restores the exact base -
+line required for the demonstr ation.
+Figure 9.1 – HookHub running locally
+Scenario 1: Styling without skills
+The UI shown in Figure 9.1  is intentionally simple.  Suppose we want the HookHub application
+to adopt a  specific visual identity and match the Anthropic design language exactly .
+Without skills, we can prompt directly:
+Make this web app Anthropic style.
+At this point, the repository contains no reference to Anthropic's br and guidelines.  The agent
+scans the project files and even fetches information from anthropic.com . It derives the design lan -
+guage dynamically from the live website and begins implementing changes.
+This approach works.  The agent updates back ground colors, adjusts typogr aphy, and applies
+visual refinements.  The final result closely resembles the Anthropic aesthetic and demon -
+strates impressive capability .
+However, consider the implications.  Each time we repeat this task, the agent fetches and de -
+rives the same design language again.  If we perform this workflow repeatedly , we reintroduce
+redundant context gathering each time.
+One possible solution would be to embed the design language directly into the CLAUDE.md
+file. The problem is that this context would then attach to every prompt, including back end
+tasks where it is irrelevant.  This leads to unnecessary context expansion and eventual
+degr adation.
+Scenario 2: Styling with skills
+Skills provide a  more elegant solution.  We can create a skill that specifies the design language
+of the Anthropic theme.  Every time we work on the frontend, Claude Code can select that skill,
+use it, and dynamically load the required design context.  Let us see how that is done.
+Open the official Anthropic example skills repository ( https://github.com/anthropics/skills ). Each
+skill resides in its own directory . Navigate to the brand-guidelines  skill and inspect its
+SKILL.md  file.
+A skill ma y contain multiple files, not just Mark down.  It can include scripts, executables, and
+structured resources.  In this case, the SKILL.md  file defines Anthropic's official br and colors,
+typogr aphy, and design artifacts.
+The file begins with front matter.  Only this section is injected into the agent system prompt
+when the skill is selected.  The remainder of the Mark down file, which contains the detailed
+brand guidelines, loads into the prompt only when the skill is activated.
+This mirrors the selective loading mechanism we previously explored with subagents.  Context
+is injected conditionally , not globally .
+Installing skills in Claude Code
+To equip our coding agent with these skills, add the Anthropic skills repository as a mark et-
+place plugin:
+/plugin add marketplace anthropic/skills
+Claude Code clones the repository locally into the .claude/plugins  directory .
+Verify installation b y running /plugins . Browse the available plugins.  Two categories appear:
+Document skills , which include document processing capabilities such as Excel and
+PowerPoint
+Example skills , which include the br and guidelines skill reviewed earlier
+Install the example skills.  After installation, restart Claude Code and ask the following:Some of the examples in this chapter are adapted from the Anthropic Skills repository
+(https://github.com/anthropics/skills ), licensed under the Apache License 2.0.
+Implementations and behaviors ma y evolve over time.NOTE
+Skills from the official Claude Code mark etplace automatically update at startup when a
+new upstream version is available.  Third-party mark etplace skills ma y require manual
+updates or explicit auto-update configur ation through /plugin .NOTE
+A useful detail to note is that when Claude, not Claude Code, introduced support for cre -
+ating decks and documents, it was announced together with skills.  That is because those
+features are built using agent skills internally . In other words, the ability to gener ate
+documents and presentations is powered b y the same skills mechanism we are dis -
+cussing here.NOTE
+Which skills do you have?
+The agent now lists the available skills, including brand-guidelines , which we will use next.
+Figure 9.2 – Claude listing installed skills, including br and-guidelines
+Styling with skills enabled
+Clear the  context and start a fresh Claude instance.  Ask the following:
+Can you make sure that the logo is according to Anthropic brand?
+The agent scans the repository and then requests permission to use the brand-guidelines
+skill.  The skill description is displa yed.  Approve its use.
+When approved, Claude dynamically loads the brand-guidelines  directory into context.  Only
+the relevant Mark down file is injected.  This additional context enables the agent to apply de -
+sign changes according to the official br and definitions.
+After the changes are applied, run the build process:
+npm run build
+Then, restart the development server:
+npm run dev
+The updated  design should now show subtle refinements, including typogr aphy adjustments
+and br and-aligned styling.  The primary objective here is not visual difference but demonstr at-
+ing controlled context injection through skills.The k ey observation is that this context is loaded dynamically . It is not permanent -
+ly attached to every prompt.  This progressive context loading k eeps the working
+context window clean and efficient.  This procedure is also known as progressive
+disclosure.
+If you want to invok e the skill only via the slash command, then enable the disable-
+model-invocation: true  flag in the skill frontmatter.NOTE
+Figure 9.3 – HookHub interface after applying br and-guidelines styling via skills
+Skills are not limited to static Mark down context.  Some include executable scripts.
+Consider the skill-creator  example.  Its directory contains sever al Python scripts.  Within the
+corresponding SKILL.md , the agent is informed that it can execute these scripts.
+Scripts can be written in Python, Bash, JavaScript, or an y language supported in the environ -
+ment.  As long as their behavior is clearly described in the skill definition, the agent can use
+them as deterministic tools.
+This approach enables structured workflows.  If certain processes can be encoded as determin -
+istic scripts, they can be composed into higher-level capabilities through a skill.  The agent can
+then execute sequences of scripts and combine their outputs to accomplish complex tasks.
+Diving deeper into agent skills
+In this  section, we will dive deeper into agent skills b y introducing custom skills . We will also
+review a skill that includes not only a SKILL.md  file but also auxiliary scripts  that the agent
+can execute to help achieve a task.
+The skill we examine is hosted in an online repository . We download it, integr ate it locally , and
+then iter ate on it b y modifying and improving it to fit our needs.  This process demonstr ates the
+flexibility skills provide when designing structured agent workflows.
+Exploring the Claude Skills mark etplace
+We begin in a repository called claude-skills-marketplace
+(https://github.com/mhattingpete/claude-skills-marketplace/tree/main ), which is released under  the
+Apache 2.0 license.  This repository contains a collection of Claude Code skills that can be down -
+loaded and integr ated into Claude Code or an y other agent environment that supports skills,
+such as Claude Desktop or LangChain DeepA gents.  This is one of sever al repositories that con -
+tain Claude Code skills, which can be downloaded and integr ated into Claude Code or an y oth -
+er agent that supports skills, such as Claude Desktop or LangChain DeepA gents.
+The repository contains multiple installable skills.  It can even be added as a mark etplace in
+Claude Code through the plugin system, as demonstr ated in the previous section.
+Under the Engineering Workflows  file, we find a skill named git-pushing . This skill is de -
+signed to help push code to GitHub.
+Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+---
+name: git-pushing
+description: Stage, commit, and push git changes with conventional commit messages.  Use when user w
+---
+# Git Push Workflow
+Stage all changes, create a conventional commit, and push to the remote branch.
+## When to Use
+Automatically activate when the user:
+- Explicitly asks to push changes ("push this", "commit and push")
+- Mentions saving work to remote ("save to github", "push to remote")
+- Completes a feature and wants to share it
+- Says phrases like "let's push this up" or "commit these changes"
+## Workflow
+**ALWAYS use the script** - do NOT use manual git commands:
+```bash
+bash skills/git-pushing/scripts/smart_commit.sh
+```
+With custom message:
+```bash
+bash skills/git-pushing/scripts/smart_commit.sh "feat: add feature"
+```
+Script handles: staging, conventional commit message, Claude footer, push with -u flag.
+Opening  the SKILL.md  file for this skill reveals the following description:
+Stage, commit, and push Git changes with conventional commit messages
+Use when the user wants to commit and push changes, mentions pushing to remote, or asks
+to save work
+The Y AML front matter at the top of the file is the only portion loaded into the Claude Code
+agent's system prompt.  The remainder of the file is read only when the skill is selected for
+execution.
+Opinionated workflows in Skills
+Within the workflow section of SKILL.md , we see that the agent is instructed to alwa ys use a
+script named smart_commit.sh .
+Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+---
+name: git-pushing
+description: Stage, commit, and push git changes with conventional commit messages.  Use when user w
+---
+# Git Push Workflow
+Stage all changes, create a conventional commit, and push to the remote branch.
+## When to Use
+Automatically activate when the user:
+- Explicitly asks to push changes ("push this", "commit and push")
+- Mentions saving work to remote ("save to github", "push to remote")
+- Completes a feature and wants to share it
+- Says phrases like "let's push this up" or "commit these changes"
+## Workflow
+**ALWAYS use the script** - do NOT use manual git commands:
+```bash
+bash skills/git-pushing/scripts/smart_commit.sh
+```
+With custom message:
+```bash
+bash skills/git-pushing/scripts/smart_commit.sh "feat: add feature"
+```
+Script handles: staging, conventional commit message, Claude footer, push with -u flag
+The script  contains the actual Git logic, including git add , git status , and git commit  op-
+erations.  The skill author intentionally restricts the main agent from issuing r aw Git com -
+mands.  Instead, the agent must use the designated script.
+This illustr ates a k ey concept.  Skills encode opinionated workflows.  If a team wants the com -
+mits to follow a specific structure or process, that logic can be packaged into a skill.  The agent
+then acquires that capability in a controlled manner.
+Reviewing the script
+In the scripts  directory , we find smart_commit.sh . This script defines the Git execution flow .
+The agent can run this script, but only when it decides to use the git-pushing  skill.
+This script contains the actual execution logic.  It runs a sequence of Git commands, such as
+staging changes, checking status, and committing with a specific message.  The main agent is
+expected to run this script when it uses the git-pushing  skill.  The important point is that the
+agent only knows about this script when it decides to use that skill.  The script becomes part of
+the available context only after the skill is selected.
+Compared to the br and guidelines skill we saw earlier, this one does more than provide refer -
+ence content.  It includes auxiliary scripts  that the agent can execute to help achieve the task,
+which, in this case, is committing and pushing code to GitHub.
+This script-running capability gives us a lot of flexibility . If we have workflows that we want to
+define deterministically in code, we can package them inside a skill.  The agent can then run
+those scripts as part of completing the workflow instead of improvising a sequence of manual
+commands.
+Although this ma y resemble MCP , the mechanisms differ.  MCP enables API calls and communi -
+cation with external services.  Skills oper ate b y injecting structured context and optionally ex -
+posing scripts.
+Creating a project-level custom skill
+Switch to  the project/skills  branch.  To create a project-level skill, we define it under the
+.claude  directory so that it is scoped to this repository .
+Create the following structure:
+.claude/
+  skills/git-pushing/
+    scripts/
+      smart_commit.sh   
+    SKILL.md
+Here is how it should look
+Figure 9.4 – Local skill directory structure for the git-pushing skill
+This mirrors the  structure of the mark etplace skill.
+Copy the contents of SKILL.md  and smart_commit.sh  from the GitHub repository into the cor -
+responding local files.  The SKILL.md  file references scripts/ smart_commit.sh , so maintain -
+ing the same directory structure ensures compatibility .
+At this stage, the skill is fully replicated locally .
+Figure 9.5 – Local SKILL.md referencing the smart_commit.sh automation script
+Although it could have been installed via the plugin system, cop ying it manually provides full
+control over customization.
+Using the custom skill
+Open a Claude Code session from the project directory and add the following prompt:
+List available skills.
+The newly created project-level git-pushing  skill appears alongside previously installed mar -
+ketplace skills.
+Enter the following:
+push changes
+Claude will ask whether to use the git-pushing  skill.  After approval, it loads SKILL.md  and
+determines that it must execute smart_commit.sh .
+Instead of issuing individual Git commands, the agent runs the script.  In some cases, the script
+may fail due to a git error.  If this happens, Claude will not stop.  Instead, it will fall back to its
+default reasoning.  It will analyze the repository state, suggest running git add -A , create a
+commit using its own logic, and then push the changes manually .
+This means that Claude can resolve the situation using its default behavior and complete the
+push.  This is important because skills do not replace the agent's reasoning.  When a skill fails,
+Claude can return to its default behavior and continue the task.
+If the script execution fails, the resulting commit will not be gener ated through the skill but
+through Claude's default behavior.  This distinction matters.  Skills provide structured work -
+flows, but they do not remove the agent's gener al reasoning ability . If a scripted workflow fails,
+the agent can still attempt to recover and complete the task using its base capabilities.
+With that clarified, we can now move on to customizing the skill behavior itself.
+Editing skill behavior
+Add an  additional trigger phr ase, such as "push to remote ", under the When to Use
+section in SKILL.md .
+ ## When to Use
+Automatically activate when the user:
+- Explicitly asks to push changes ("push this", "commit and push", "push to remote")
+- Mentions saving work to remote ("save to github", "push to remote")
+- Completes a feature and wants to share it
+- Says phrases like "let's push this up" or "commit these changes"
+Everything above the closing --- delimiter is Y AML frontmatter and is injected into the
+agent's system prompt.  The content below the delimiter is loaded only when the skill is
+activated.
+ ---
+name: git-pushing
+description: Stage, commit, and push git changes with conventional commit messages.  Use when user w
+---
+# Git Push Workflow
+Stage all changes, create a conventional commit, and push to the remote branch.
+## When to Use
+Automatically activate when the user:
+- Explicitly asks to push changes ("push this", "commit and push", "push to remote")
+- Mentions saving work to remote ("save to github", "push to remote")
+- Completes a feature and wants to share it
+- Says phrases like "let's push this up" or "commit these changes"
+Why is that happening? W e edited the When to Use  section inside SKILL.md and added the
+"push to remote " phr ase. However, that section is not part of the Y AML frontmatter.
+Only the Y AML front matter at the top of the file is injected into the agent's system prompt on
+every request.  Everything below is invisible to the agent unless the skill has already been
+selected.
+This means the change we made does not influence the skill selection decision at all.
+Now we clear the context to ensure a fresh session and type the following:
+push to remote
+Claude will still ask to use the git-pushing  skill.  This is not because of the phr ase we added.  It
+is because the original front matter already described the skill as handling commit-and-push
+oper ations.  The intent of "push to remote " is semantically close enough to "push
+changes " or "push to GitHub ", which were already covered in the description.
+So what is happening here is important.
+Skill selection is driven entirely b y the front matter.  The agent matches user intent against the
+name and description fields in that Y AML block.  The remainder of the file pla ys no role in the
+selection phase.
+Only after  the skill is selected does Claude load the rest of SKILL.md , including the workflow
+instructions and script references.
+This is the progressive disclosure model :
+1. The agent alwa ys sees the front matter.
+2. Based on that, it decides whether to activate the skill.
+3. Only then does it load the full skill context and an y auxiliary instructions.
+That is wh y our modification was redundant.  It was placed outside the portion of the file that
+participates in the selection process.
+With that clarified, let us proceed to modify the behavior of the script itself.
+Enabling automatic skill approval
+Now that we understand how skill selection works, consider the following scenario.
+What if the skill triggers correctly , but every single time we use it, Claude pauses and asks for
+approval before executing the script?
+In that case, even though the workflow is packaged inside a skill, we still introduce friction.
+Every commit-and-push oper ation requires manual confirmation.  If the goal is to create a
+streamlined, opinionated workflow , repeated prompts defeat that purpose.
+So, the next logical step is to change not how the skill is selected, but how it executes.  What if
+we allow the skill to run without asking for permission each time?
+After confirming that the skill triggers correctly , choose the option that allows Claude Code to
+use this skill without asking for approval every time.
+When we do this, Claude updates settings.local.json .
+This is important.
+What actually changes is not the skill itself.  The skill definition remains the same.  Instead,
+Claude updates the local configur ation so that when this particular skill is selected, it can exe -
+cute without inter active confirmation.
+This means two separ ate permissions are involved:
+Permission to activate the skill
+Permission to execute scripts defined inside the skill
+By enabling automatic approval, we remove the need to manually confirm both steps in future
+runs.
+Now , when we run "push to remote ", Claude will immediately load the skill and execute
+smart_commit.sh  without prompting.  The workflow defined inside the skill will then be fully
+automated.
+After the  script runs successfully , we inspect the resulting commit.
+Figure 9.6 – Commit message gener ated b y the smart_commit.sh automation script
+As you can see, the commit message is minimal.  It simply reports that a certain number of files
+have been updated.
+This is not an AI-gener ated message.
+If we inspect smart_commit.sh , we see that the commit message is constructed using static
+logic.  It counts modified files and inserts that number into a predefined message template.
+There is no call to Claude inside the script.  So, even though the workflow is wr apped in a skill,
+the intelligence level of that workflow is determined entirely b y the script implementation.
+This is an important distinction.  A skill does not automatically mean AI-driven logic.  A skill is
+simply a packaging mechanism.  It can contain deterministic scripts, AI calls, or both.
+Right now , our workflow is deterministic and simplistic.  So, we improve it.
+Modifying the script to use the Claude CLI
+We now  ask Claude to edit smart_commit.sh  so that it invok es the Claude CLI to gener ate the
+commit message.
+The prompt is as follows:
+can u please edit @.claude/skills/git-pushing/scripts/smart_commit.sh to use Claude Code cli to cre
+This will change the nature of the workflow .
+Previously , the script gener ated a commit message using static shell logic.
+Now , it does  the following:
+1. The script should call claude -p with a prompt.  The -p flag runs Claude in prompt
+mode: it sends the query , prints the response to stdout , and then exits.
+2. The Claude CLI will gener ate the commit message dynamically .
+3. The script will use that output in the git commit  command.
+What we have created here is a la yered system:
+1. The main Claude Code agent selects the skill.
+2. The skill runs smart_commit.sh .
+3. The script itself invok es the Claude CLI.
+4. The Claude CLI gener ates the commit message.
+5. The script completes the commit and push.
+This is the composition.  The skill orchestr ates deterministic execution.  The script orchestr ates
+an AI call.  The AI call gener ates structured output.  The script consumes that output.
+We can run the following:
+push to remote
+We now see pir ate-style language in the commit message.
+Figure 9.7 – Skill invoking the Claude CLI to gener ate an AI commit message
+That confirms that the script is successfully invoking the Claude CLI internally .
+So, we have moved from a static workflow to a h ybrid deterministic and AI workflow .
+Breaking the expected structure
+Now , what if the directory structure no longer matches what the skill expects? T o explore that,
+consider this scenario.  We return to the IDE and intentionally break the structure.  We tak e the
+smart_commit.sh  script and move it out of the scripts  directory into the root of the git-
+pushing  directory . Then, we delete the scripts  directory entirely .
+At this point, the structure no longer matches what SKILL.md  specifies.  The skill definition ex -
+pects the script to be under skills/git-pushing/scripts/ , but the file now exists directly
+under skills/git-pushing/ . This creates an inconsistent setup.  The path described in the
+skill is no longer accur ate, and the repository structure is now technically incorrect.
+Executing the skill after the structur al mismatch
+Clear the context to ensure a fresh session.
+Then, enter the following:
+push to remote
+Claude Code selects the git-pushing  skill and proceeds to execute the script.
+Even though the directory structure no longer matches the path described in SKILL.md , the
+script still runs successfully .
+Figure 9.8 – Running the git-pushing skill after modifying the directory structure
+This behavior is important.  The skill still works because skills ultimately inject context and in -
+structions into the agent.  Even though the path reference inside SKILL.md  is inaccur ate, the
+agent reasons about the repository structure and locates smart_commit.sh  in its new location.
+The mismatch does not prevent execution.  The agent interprets the instruction to run smart_-
+commit.sh , searches for the project, finds the file, and executes it.
+So, even after breaking the declared structure, the workflow still completes successfully .
+But wh y did  the skill still work?
+The reason this works is that skills are not rigid bindings to exact file paths.  They provide con -
+textual instructions.  Even if the context contains an inaccur ate path, the agent is capable of re -
+solving it b y inspecting the project structure.  The execution succeeds because the file still exists
+somewhere in the repository . The agent adapts.
+Now consider a slightly different scenario.  What happens if smart_commit.sh  is deleted
+entirely?
+At that point, there is no file for the agent to locate.  The workflow cannot be executed because
+the required artifact no longer exists.  This illustr ates the boundary: if the structure is inconsis -
+tent but the file exists, the agent can recover.  If the file does not exist, execution fails.
+Running a skill in an isolated subagent context
+By default, a skill  runs inside the current conversation context.  However, it can be executed in
+an isolated subagent context b y setting:
+---
+context: fork
+agent: Explore
+---
+When context is set to fork, Claude runs the skill in a separ ate execution br anch.  This isolates
+intermediate reasoning and tool usage from the main conversation.
+The agent field determines which subagent type handles execution (for example, Explore or
+Plan).
+To ensure the skill is triggered only through a slash command (for example, /skill-
+name ) and not automatically b y Claude Code, add disable-model-invocation: true  to
+the front matter.NOTE
+Comparing agent skills with other agent
+primitives
+In this section, we will compare agent skills to other agent primitives, such as MCP , subagents,
+memory , and slash commands.  The comparison focuses on context management, context engi -
+neering, and execution flow .
+Agent skills and MCP
+Both agent skills and MCP servers are essential tools in the modern agentic toolkit, but they
+solve different problems and oper ate at different la yers of the context architecture.  Agent
+skills are procedur al knowledge containers.  They are folders that contain instructions, scripts,
+and resources that teach an AI agent how to perform specialized tasks consistently .
+Consistency is the k ey idea.  With agent skills, we package a workflow and give it to the agent so
+that it performs the task in a predefined manner.  From a context-engineering perspective,
+skills are based on progressive disclosure.
+When a session with a coding agent, or an y agent that supports skills, begins, the agent loads
+only a brief description and the names of the available skills.  The context cost at this stage is
+low. Typically , this consumes around 100 to 200 tok ens per skill, regardless of how complex the
+skill is internally .
+When a skill becomes relevant to a task, and this decision is made b y the agent, the full instruc -
+tions derived from the SKILL.md  file are loaded into the context.  Only if the skill is actively
+used and the agent decides to execute a script does that script get loaded as well.  If a skill con -
+tains multiple scripts, those that are not used are not loaded into the context.  Because of this
+progressive loading mechanism, skills are highly context-efficient.
+Now consider MCP . In the MCP architecture, tool definitions and server specifications are pro -
+visioned upfront at the beginning of the conversation.  This impacts context efficiency . For ex -
+ample, five MCP servers ma y consume 50,000 tok ens before the first prompt is even sent.
+MCP solves a different problem.  It connects agents to external resources.  That is the purpose of
+MCP servers.
+Skills solve a different problem.  They give an agent the ability to perform specialized tasks in a
+consistent wa y.
+So, while both are agent primitives, they address different la yers of the system.
+Invocation and execution differences
+Both skills and MCP tools are invok ed based on the agent's judgment.  The agent decides
+whether to use a skill or an MCP tool based on their respective descriptions.
+The invocation mechanism is, therefore, similar.  In both cases, the agent evaluates whether
+the capability is relevant to the task.
+An interesting experiment would be to implement the same capability twice: once as a skill
+and once as an MCP tool exposed b y an MCP server.  Observing which one the agent chooses in
+practice would reveal how it reasons about these primitives.
+Execution, however, differs.  For MCP , execution happens inside the MCP server.  The server
+may run locally or be deplo yed in the cloud.  For skills, execution usually happens locally with -
+in the main agent thread.  Scripts defined inside skills are executed as part of the agent's prima -
+ry execution flow . However, if the skill frontmatter specifies context: fork , the skill runs in
+an isolated subagent context instead of the main agent.
+This distinction in execution location is important when reasoning about architecture.
+Agent skills and subagents
+The similarity between agent skills and subagents is that they both allow us to define dedicated
+instructions for specific tasks.  A skill contains structured instructions and optional scripts.  A
+subagent can be defined with its own instructions as well.
+The k ey difference is context isolation.  Subagents oper ate in their own isolated and fresh con -
+text window . They are well suited for long-horizon tasks that would otherwise expand the
+main agent's context window significantly . Skills, b y contr ast, oper ate within the main context
+of the agent.  When a skill is invok ed, its instructions are loaded into the existing context win -
+dow r ather than into a separ ate one.
+Both skills and subagents are invok ed b y the main agent.  The main agent decides whether to
+delegate a task to a subagent or execute it using a skill.
+In terms of flexibility and control, subagents provide more flexibility . With subagents, the sys -
+tem prompt can be dynamically adjusted and tailored to specific needs.  With skills, the system
+prompt remains that of the main agent, which is typically managed b y the vendor and is not
+easily modified.
+As a rule of thumb, note the following:
+If the task is heavy and risks bloating the main context window , a subagent is appropriate.
+If the goal is to give the agent automatic expertise or enforce a specific methodology for a
+recurring task, a skill is the better choice.
+Both are valuable primitives, but they oper ate under different contexts and execution models.
+By default, skills run inline within the main agent, while subagents execute in isolated con -
+texts.  However, a skill can specify context: fork , which runs it in a lightweight isolated con -
+text similar to a subagent, though with fewer configur ation controls.
+To place skills and subagents in the broader Claude Code model, the following table compares
+them to MCP servers and slash commands.
+Dimensions Skills MCP SubagentsSlash
+commands
+PurposeStandardize
+how tasks are
+performedConnect to ex -
+ternal servicesDelegate work
+to isolated
+agentsUser-triggered
+shortcuts
+Context
+loadingFront matter
+first, full con -
+tent on use.Tools loaded at
+session startFresh context
+per runFull prompt
+injected
+Trigger Agent decision Agent decisionAgent
+delegationUser runs
+/command
+Execution
+locationMain agent
+threadMCP server (lo -
+cal or remote)Isolated sub -
+agent contextMain agent
+thread
+Context
+isolationShares the
+main contextExternal
+executionFully isolatedShares main
+context
+Dimensions Skills MCP SubagentsSlash
+commands
+Scripts Yes No Yes No
+Failure
+handlingAgent falls
+back to
+reasoning.Agent handles
+server errorsMain agent re -
+tries or adaptsNone
+Best useRepeatable
+workflowsExternal APIs
+or servicesLong-horizon
+tasksQuick actions
+Context
+efficiencyHigh (lazy-
+loading)Low (tools
+loaded up
+front)High (off -
+loaded work)Low (full
+prompt every
+time)
+Customization Full control Server-defined Flexible Limited
+Table 9.1 – Comparing agent primitives
+Summary
+In this chapter, we explored agent skills from both a pr actical and architectur al perspective.
+We began b y understanding the gist of agent skills through a hands-on comparison between
+prompting an agent directly and using a skill to encapsulate structured behavior.  Through the
+HookHub example, we observed how skills enable progressive context loading, allowing the
+agent to dynamically inject only the relevant instructions when needed instead of bloating the
+main context window . We then went deeper b y creating a custom project-level skill, integr at-
+ing auxiliary scripts, modifying its behavior, and even enhancing it to invok e the Claude CLI.
+This allowed us to see how skills can package opinionated workflows, combine deterministic
+execution with AI-gener ated output, and still allow fallback behavior when scripts fail.  Finally ,
+we positioned agent skills within the broader agentic landscape b y comparing them with MCP
+and subagents, clarifying how each primitive oper ates in terms of context architecture, execu -
+tion flow , and control.
+We have now developed not only the ability to use skills but also a clear mental model of how
+they function internally and when to apply them as part of designing more capable and con -
+text-efficient agent systems.
+In the next chapter, we will learn how to use Claude Code within the desktop application.
+Get this book's PDF cop y, code bundle, and more
+Scan the QR code (or go to packtpub.com/unlock ). Search for this book b y name, confirm the edition,
+and then follow the steps on the page.
+
+Note: Have your invoice handy . Purchases made directly from the Packt website don 't require an
+invoice.

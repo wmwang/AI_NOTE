@@ -1,0 +1,281 @@
+5
+Automating Y our Development W orkflow with
+Claude Code and GitHub
+In this chapter, we will look into the integr ation between Claude Code and GitHub.  This inte -
+gration involves a series of configur ation steps, including installing the GitHub CLI, configur -
+ing it to work with Claude Code, and selecting the repositories on which Claude Code will
+oper ate.
+Once configured, Claude Code can be used directly within a repository . It can be tagged on pull
+requests and issues, where it reviews code, suggests fixes, and helps resolve reported prob -
+lems.  Claude Code can also participate in pull request workflows b y reviewing changes when a
+pull request is created.
+When a pull request is opened, GitHub A ctions  is used to run the automation.  GitHub A ctions
+is GitHub's serverless workflow platform, commonly used for CI/CD tasks.  In this setup, GitHub
+Actions executes workflows that rely on the Claude Code CLI and the Claude Code SDK.
+For those of you who are not familiar with GitHub A ctions, it is an automation system that
+runs in response to events.  These events can include actions such as tagging Claude on an issue
+or opening a new pull request.  Each event can be configured to trigger specific workflows
+based on project requirements.
+The workflows themselves are defined using Y AML files, commonly referred to as GitHub
+workflow files.  These files describe which events should trigger an action and which com -
+mands or scripts should be executed in response.
+This integr ation is already used in real-world production systems.  Anthropic, for example, uses
+Claude Code with GitHub A ctions across its open-source repositories to automate issue han -
+dling and related workflows.  For a public example, see Anthropic's GitHub A ctions workflows:
+https://github.com/anthropics/skills/actions .
+The following topics will be covered in this chapter:
+Installing and configuring the Claude Code GitHub integr ation
+Tagging Claude Code to resolve GitHub issues
+Rerunning issue resolution with project memory
+Installing and configuring the Claude Code GitHub
+integr ation
+In this  section, we will demonstr ate the integr ation using a different repository called
+IceBreak er (https://github.com/emarco177/IceBreaker ), which is an open-source project available on
+GitHub.  We are using this repository for demonstr ation purposes only . You can follow along us -
+ing an y GitHub repository you own.  If you choose to use your own repository , mak e sure you
+have administr ator access, as installing the Claude GitHub app and configuring workflows re -
+quires admin permissions.
+Before starting the installation, mak e sure you are running Claude Code from a direc -
+tory that already has an initialized Git repository connected to GitHub.  In this chapter,
+we use the IceBreak er repository , which is already configured.  The integr ation will
+only work inside a valid GitHub repository .TIP
+To begin the GitHub integr ation, open Claude Code from the desktop and type /git . This re -
+veals the /install- github-app  command.  Selecting this command starts the setup process.
+Before Claude Code can be integr ated with a GitHub account, two prerequisites must be met:
+First, the GitHub CLI  (also referred to as the gh CLI) must be installed locally . At this point,
+the CLI is not yet installed, so we install it next.
+Second, the GitHub CLI must be authenticated with a GitHub account.  Claude Code relies on
+this authenticated session to inter act with repositories.
+Installing prerequisites
+To install and  authenticate the GitHub CLI, complete the following steps:
+1. Open a new terminal instance and install the GitHub CLI using the following command:
+brew install gh
+2. Once the installation completes, verify that the CLI is available b y running the following:
+gh --help
+3. Next, authenticate the CLI with GitHub b y running the following:
+gh auth login
+During the authentication process, select HTTPS  as the connection method and proceed with
+logging in through the web browser.  A one-time code is provided, which must be entered in
+the browser to complete authentication.  If two-factor authentication is enabled, approval is
+completed using the configured second factor.
+After this step, the GitHub CLI is authenticated successfully and all prerequisites for Claude
+Code integr ation are in place.
+Installing the Claude GitHub app
+With the prerequisites  complete, we return to Claude and continue the installation.  We close
+the terminal window since it is no longer needed and press Enter  in Claude as instructed.  At
+this point, we are redirected to a GitHub page.The installation command varies b y oper ating system.  The example below shows mac -
+OS using Homebrew . If you are using Linux or Windows, refer to the official GitHub CLI
+installation documentation for the appropriate command for your platform:
+https://cli.github.com/NOTE
+Figure 5.1 – Installing the Claude GitHub app
+Start the integr ation of Claude Code into the GitHub account.  This integr ation allows Claude to
+comment, create pull requests, and solve issues.  We will demonstr ate these capabilities  later in
+the book.
+After clicking Install , we are redirected back to the Claude web application.  Returning to the
+terminal, we press Enter  again to proceed.
+Installing the GitHub workflow
+Installing the  integr ation requires adding a GitHub workflow to the repository . This workflow
+runs the pipelines that handle Claude's comments and actions.
+Two options will be presented to you for installation
+Tag Claude , which allows us to tag Claude in issues and pull request comments, then runs
+through a GitHub workflow .
+Claude Code  Review , which automatically reviews new pull requests
+We select the first option.
+Next, we choose an authentication method.  Since Claude's usage consumes tok ens, someone
+needs to pa y for those tok ens. We can either configure a long-lived tok en associated with a
+Claude subscription or provide an Anthropic API k ey. The long-lived tok en is suitable for small
+to medium usage within a subscription, while an API k ey is typically used when running large-
+scale or high-frequency workflows that would exceed subscription limits.  In this case, we
+choose the long-lived tok en associated with the Claude subscription.
+After confirming this choice, we authorize the integr ation.  This authorization also tr acks tok en
+consumption and associates it with the Claude subscription.
+If an error appears, it is because the GitHub integr ation was initiated from a directory
+that is not connected to a GitHub repository .
+To fix this, open a new terminal in a project directory that already has a GitHub reposi -
+tory initialized and connected to your account.  In this example, we use the IceBreaker
+directory , which was introduced earlier in the book and is already configured with
+GitHub.
+Reopen Claude, navigate again to the GitHub installation, and Claude should correctly
+detect the current repository . Open the configur ation popup, select the appropriate ac -
+count, and gr ant access to the repositories.  After confirming, return to the CLI and con -
+figure Claude Code again using the long-lived tok en.NOTE
+Creating the pull request
+Once authentication completes, Claude initializes the integr ation b y fetching repository infor -
+mation and automatically creating a pull request.
+Figure 5.2 – A utomatically Creating a Pull Request for Claude GitHub workflow
+This pull request contains sever al updated files under the .github  directory . These are Y AML
+files that configure the GitHub workflow . We open the pull request to review it.
+The workflow enables Claude to be tagged in comments and issues and allows it to run
+through GitHub A ctions.  GitHub A ctions provides the compute environment where Claude op -
+erates, and the workflow is configured to use tok ens associated with our account.
+From a security perspective, the API k ey or access tok en is stored as a GitHub A ctions secret.
+This happens automatically during configur ation.  Only users with the appropriate repository
+access can trigger the workflow . When Claude is tagged, it can create br anches, commits, and
+comments.
+Before merging the pull request, the newly added GitHub workflow should run automatically .
+In the GitHub A ctions  tab, we will see the Claude Code workflow executing.  Once it finishes
+successfully , proceed with merging.
+While the workflow runs, it updates the pull request.  Claude reads the files it added, specifical -
+ly two Y AML files under .github/workflows : claude.YAML  and claude-code-re-
+view.YAML . It reviews these files for security issues and code quality , and posts its feedback di -
+rectly in the pull request .
+At the end of the review , Claude Code approves the pull request, indicating that it finds the
+changes acceptable, as shown in the following screenshot.
+Figure 5.3 – Pull request approved with all checks passed
+We now merge the pull request.  After merging, the repository should now contain a new direc -
+tory, .github/workflows , which did not exist before.  Inside this directory are the two Y AML
+files added b y the integr ation:
+claude. YAML
+claude-code-review. YAML
+The first Y AML file will show the Claude workflow configur ation.  The file will contain a step
+called Run Claude Code . The authentication tok en is referenced from a secret named
+CLAUDE_CODE_OAUTH_TOKEN . No sensitive information is stored directly in the workflow file,
+which k eeps the setup secure.
+name: Claude Code
+on:
+  issue_comment :
+    types: [created]
+jobs:
+  claude:
+    runs-on:  ubuntu-latest
+    steps:
+      - name: Checkout  repository
+        uses: actions/checkout@v4
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics /claude-code-action@beta
+        with:
+          claude_code_oauth_token : ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN  }}
+A simplified excerpt of the workflow file is shown below .
+Figure 5.4 – Claude GitHub A ctions W orkflow Y AML File
+At this point, the  integr ation is complete.  The configur ation can be further customized, includ -
+ing selecting the model, defining which tools Claude can use, and adjusting other settings to
+match specific needs.
+Using Claude Code to resolve GitHub issues
+In this section, we  will demonstr ate how to tag Claude Code to help resolve issues in a GitHub
+repository after the integr ation has been installed.
+We start b y navigating to the Issues  section of the repository . The issue we are looking at is a
+simple one, opened b y a user named happyLolonly . The issue r aised b y the user was to im -
+prove the readability of a variable name b y renaming a variable from linkedin_username  to
+linkedin_url , since the variable actually holds a Link edIn URL.
+Start b y tagging Claude on the issue and asking it to solve the problem:
+@claude, can you fix this
+Once Claude is tagged, a new GitHub action starts running automatically . In this case, the ac -
+tion is called small rename . This action is triggered as soon as Claude is mentioned.
+Open the action to view its details and watch the logs as they stream in real time.  The logs con -
+sist mainly of JSON output showing tool calls, tool inputs, and tool outputs.  While this informa -
+tion is useful for deep debugging, it is not human readable and is difficult to follow at a high
+level.
+For most cases, instead of inspecting the r aw logs, it is better to return to the issue itself.
+Claude's to-do list and context discovery
+Back in the  issue view , Claude creates a to-do list that updates as it progresses.  The first step
+Claude tak es is attempting to locate a CLAUDE.md  file in the repository .
+Figure 5.5 – Claude T o-Do List and Context Discovery in Issue View
+The purpose of a CLAUDE.md  file is to provide additional context.  These files help Claude un -
+derstand the technology stack, the project structure, coding conventions, and an y preferences
+we want to communicate.  This is part of context engineering, where we intentionally supply
+information to help the model perform its task more effectively .
+Spoiler ahead! In this repository , there is no CLAUDE.md  file.  This is intentional to show an im -
+portant point: in agentic AI workflows, things do not alwa ys work correctly , and mistak es are
+expected.
+Because of this, it is critical to review an y changes carefully r ather than accepting them blind -
+ly. This principle applies throughout all agentic workflows, not just in this example.
+Reviewing the proposed changes
+Once Claude finishes its to-do list, it updates a file named linkedin.py . We then open the diff
+by creating a pull request.
+Figure 5.6 – Reviewing the pull request with proposed changes
+At first glance, the pull request description looks reasonable.  However, when you inspect the
+actual code changes, you will see that Claude renamed a variable that is part of an API request
+sent to a third-party service.
+Figure 5.7 – Incorrect V ariable Rename Breaking Third-Party API Contr act
+This is a problem.  The third-party API expects the pa yload to follow a specific format with spe -
+cific variable names.  Changing this variable name breaks the contr act with the external end -
+point and causes the code to fail.
+Because of this, the pull request is incorrect and should not be accepted.
+Understanding Claude's workflow
+Claude  performs its changes on a new br anch that it creates automatically . The br anch follows
+a naming convention such as claude/issue/ <issue-number >. This is an important detail
+because it means Claude never works directly on the main br anch.
+We retain full control over whether to review , modify , or merge the changes.  This br anching
+strategy is also foundational for scaling agentic workflows.  In pr actice, we can run multiple
+Claude instances in par allel, each working on its own br anch.
+This idea connects to more advanced workflows, such as using Git worktrees, which we will
+cover later in the book.
+This example shows both the power and the limitations of using Claude Code for issue resolu -
+tion.  Claude can automate changes quickly , but without sufficient context, it can introduce
+breaking changes.  Reviewing code remains essential, and understanding how Claude oper ates
+within br anches is critical as we scale agentic workflows.
+Adding repository context with CLA UDE.md
+The goal of this section is to show how adding explicit repository context helps Claude Code
+produce more accur ate and reliable changes when resolving issues.
+What if Claude failed to resolve the earlier GitHub issue involving the variable rename be -
+cause it lack ed sufficient repository context? Let us see how to validate that assumption.  We
+start b y going to the desktop, where the GitHub project directory is located.  We open the
+project in Cursor and run a quick fetch to pull the latest changes.  At this point, we already have
+the Y AML files from the previous step.  Next, we open Claude.
+Initializing the repository context
+We run the /init  command in Claude.  As mentioned before, this command gener ates a
+CLAUDE.md  file that captures repository-specific context, including the technology stack,
+project structure, and other relevant details.  After confirming the command, Claude begins
+scanning the repository files.  This process tak es a short amount of time as Claude gathers the
+required information.
+During initialization, Claude requests permission to execute certain commands, such as listing
+files.  We explicitly allow these actions.  A local settings file is updated to whitelist the approved
+commands, and these permissions persist for the dur ation of the local session.  This approval
+model provides fine-gr ained control over what Claude is allowed to do.
+Once the scan completes, Claude writes the CLAUDE.md  file.
+Reviewing and committing CLA UDE.md
+We locate the newly created CLAUDE.md  file in the source directory and review its contents.
+The file includes a structured summary of the repository and appears correct.
+We then instruct  Claude to commit the CLAUDE.md  file.  Claude prepares a commit message,
+which we review and accept.  The commit is created locally and then pushed to the remote
+repository . Committing this file ensures that the repository context is versioned, shared with
+the team, and available to Claude Code when running in automated workflows, such as GitHub
+Actions.
+In the commit history , we should see a new entry indicating that CLAUDE.md  has been added.
+Figure 5.8 – Committing CLA UDE.md to the repository
+With the repository context now available, we return to the issue that Claude previously failed
+to resolve.
+We tag Claude on the issue again and ask it to address the problem.  This time, we provide an
+additional hint, specifying that the required change is located within a particular function.  We
+submit the comment:
+@claude, can you please address this issue? Please notice that you need to edit the function *ice_b
+A GitHub A ctions pipeline starts immediately , confirming that Claude Code has been triggered.
+We wait for the workflow to complete.
+Inspecting Claude's changes
+Claude gener ates a task list and begins execution.  Although the experiment is slightly biased
+due to the additional hint, it still demonstr ates the effect of providing proper context.
+Once the workflow finishes, inspect the br anch created b y Claude.  The changes show that the
+variable name has been updated from linkedin_username  to linkedin_url , and the update
+has been applied consistently both in the function definition and at the call site.  Unlik e the pre -
+vious attempt, this change preserves the external API contr act and does not break the integr a-
+tion.  The logic is correct.
+We can now create a pull request with the title Renamed link edin_username  to link edin_url .
+This accur ately reflects the scope of the change.
+Figure 5.9 – Pull request created with corrected variable name
+As soon as the pull request is opened, the Claude Code review workflow runs automatically .
+Claude analyzes the diff and performs a code review , producing a checklist of review steps and
+findings.
+This review system is fully configur able.  Additional checks, such as linters, test execution, or
+custom validation rules, can be added as needed.  This level of configur ability is a k ey reason
+Claude Code can be effective in team-based engineering workflows.
+The review is completed with an over all assessment of approval.  No functional issues are
+detected.
+With the review approved, the pull request can be merged.
+Summary
+In this chapter, we explored how Claude Code integr ates with GitHub and how it can be used
+as part of real development workflows.  We walk ed through installing the required tooling,
+configuring the Claude GitHub app, and setting up GitHub A ctions workflows that allow Claude
+to respond to issues and pull requests.  We also saw how Claude oper ates b y creating br anches,
+opening pull requests, and participating in automated reviews, and wh y reviewing its changes
+is essential.  Through hands-on examples, we observed how missing repository context can
+lead to incorrect changes and how introducing a CLAUDE.md  file improves accur acy. By now ,
+you have a clear understanding of how to use Claude Code safely , where it adds value, and
+how to retain full control over your code base.
+In the next chapter, we will focus on structured agentic workflows, examining planning mode,
+spec-driven development, and par allel agent coordination in pr actice.
+Get this book's PDF cop y, code bundle, and more
+Scan the QR code (or go to packtpub.com/unlock ). Search for this book b y name, confirm the edition,
+and then follow the steps on the page.
+Note: Have your invoice handy . Purchases made directly from the Packt website don 't require an
+invoice.

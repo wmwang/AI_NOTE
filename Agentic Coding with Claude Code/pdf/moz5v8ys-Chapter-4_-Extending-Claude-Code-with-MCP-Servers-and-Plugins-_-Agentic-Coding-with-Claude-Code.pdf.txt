@@ -1,0 +1,1138 @@
+4
+Extending Claude Code with MCP Servers
+and Plugins
+The Model Context Protocol  (MCP ) provides a standardized wa y for AI ap -
+plications to connect to tools, data sources, and services through a common
+interface.  Instead of building separ ate integr ations for each host application,
+developers can implement functionality once in an MCP server and reuse it
+across an y MCP-compatible client.  MCP was introduced to address this inte -
+gration challenge.  This abstr action la yer enables interoper ability , portability ,
+and ecosystem growth.  Within the context of Claude Code, MCP becomes par -
+ticularly important, as it enables developers to extend the coding agent with
+additional tools, capabilities, and integr ations in a structured and reusable
+way.
+In this chapter, you will learn what MCP is, wh y it was created, and how it
+works in pr actice.  You will explore the integr ation problem that MCP solves
+and examine its core architectur al components: hosts, clients, and servers.
+Through pr actical demonstr ations, you will connect MCP servers to AI ap -
+plications such as Claude and Cursor, configure both local and remote MCP
+servers, and understand how tools are exposed and invok ed through the
+protocol.
+You will also examine important oper ational consider ations.  As powerful as
+MCP is, it introduces challenges related to context management, performance,
+and execution efficiency . This chapter explores context engineering str ategies
+to reduce context pollution, properly scope MCP configur ations, and dynami -
+cally manage servers within a session.  In addition, you will learn how Claude
+Code plugins bundle MCP servers and related components into reusable,
+shareable units, enabling team-wide standardization.
+The over all goal of this chapter is to help you build a strong conceptual and
+practical foundation in MCP . By the end, you will understand not only how
+MCP enables cross-platform tool integr ation, but also how to configure and
+manage it responsibly in real-world AI systems.
+This knowledge is important because MCP is r apidly becoming a foundational
+layer in agent-based architectures.  As AI development shifts toward tool-aug -
+mented and autonomous systems, understanding MCP's architecture, bene -
+fits, and tr ade-offs will allow you to design scalable, efficient, and interoper a-
+ble AI applications.
+In this chapter, we cover the following topics:
+Why MCP?
+MCP core architecture
+MCP in action
+Connecting Claude Code to MCP server
+MCP Scope cheat sheet
+Context engineering in the MCP ecosystem
+Project-level MCP configur ation
+Current limitations of MCP
+Managing configur ation with Claude Code plugin
+Why MCP?
+MCP has  seen r apid adoption, with widespread discussion and numerous
+MCP server implementations.  Man y AI applications, including tools such as
+Claude Code and Cursor, integr ate MCP within their systems.
+Before defining MCP in detail, it is important to understand the need it
+addresses.
+The integr ation problemAlthough this book centres on Claude Code, MCP is a cross-platform
+protocol supported b y multiple AI development tools.  For demonstr a-
+tion purposes, this chapter uses Cursor in some examples.  The under -
+lying concepts remain the same and can be applied when using
+Claude Code.NOTE
+Consider  an AI agent designed to perform actions such as sending Slack mes -
+sages, reading and sending emails, or querying a database.  To enable these
+capabilities, the required functionality must be implemented directly . This in -
+volves working with APIs such as Slack or Gmail and writing custom code
+that wr aps these integr ations as tools accessible to the agent.
+Figure 4.1 – A gent integr ating with Slack, Gmail, and a database via APIs
+In man y cases, custom implementations are necessary . For example, an email
+integr ation ma y intentionally exclude access to the delete endpoint in the
+Gmail API to prevent unintended data loss.  The integr ation logic is therefore
+tailored to specific requirements and implemented manually .
+Frameworks ma y provide built-in tools.  For example, a fr amework might in -
+clude a pre-implemented Gmail integr ation covering the full API surface.
+Such tools can be used out of the box for generic needs.  However, regardless
+of whether built-in or custom tools are used, the functionality must be inte -
+grated within the specific agent environment.
+Once implemented, the agent can send emails, post Slack messages, or exe -
+cute database queries.  The integr ation works within that specific agent.
+The portability challenge
+Assume  the agent becomes widely adopted and other teams want to use its
+functionality in different environments.  Now suppose the agent becomes
+widely adopted and other teams want to use its functionality in different
+environments.
+For example, consider an agent originally built to run inside the Cursor envi -
+ronment.  In this setup, the agent integr ates with external services such as
+Slack, Gmail, and a database through their respective APIs.  The following dia -
+gram illustr ates this architecture.
+Figure 4.2 – A gent coupled to the Cursor environment and its API integr ations
+In this case, the agent is tightly coupled to the Cursor environment.  The inte -
+grations with Slack, Gmail, and the database were implemented specifically
+for that setup.
+Now suppose we  want to integr ate the same agent capabilities into Claude
+Code.  Even though the functionality is conceptually the same, the integr ation
+cannot simply be reused.  Because the implementation was written specifical -
+ly for our agent, the integr ation must be recreated for Claude Code.
+As a result, similar capabilities lik e sending Slack messages, inter acting with
+Gmail, or executing database queries need to be reimplemented for the new
+environment.  Now imagine we want to integr ate the same capabilities into
+another environment.  What if we want to integr ate the same agent into
+Cursor?
+Figure 4.3 – Reimplementing agent integr ations for the Claude Code
+environment
+Extending  support to other environments such as Cursor, Bolt, GitHub
+Copilot, or other AI code assistants requires repeating this process.  Each new
+integr ation introduces additional implementation work.  The same functional -
+ity must be adapted separ ately for each target system.
+MCP as an abstr action la yer
+The portability challenge creates a recurring integr ation problem.  Each time
+the same functionality needs to be used in a different environment, develop -
+ers must rebuild the integr ation from scr atch.
+MCP addresses this problem b y introducing an additional abstr action la yer. A
+well-known principle in software engineering states:
+"We can solve an y problem b y introducing an extr a level of indirection."
+— Andrew K oenig
+This idea is closely related to the fundamental theorem of software engineer -
+ing, which states that man y complex system problems can be simplified b y
+adding a la yer of abstr action.  MCP servers serve this purpose.
+Instead of integr ating functionality separ ately into each agent, the implemen -
+tation is integr ated once into an MCP server.  Agents that support MCP can
+then connect directly to that MCP server.
+Figure 4.4 – MCP server acting as a unified integr ation la yer for external
+services
+With this  approach, compatibility is implemented a single time.  Once capabil -
+ities are exposed through an MCP server, they can be used across an y plat -
+form that supports the protocol.  Capabilities initially implemented for Cursor
+become compatible with Claude Code and other MCP-supporting environ -
+ments without requiring additional integr ation logic.
+Developers do not need to rewrite or duplicate integr ation code for each plat -
+form.  Any system that supports MCP can connect and use the functionality
+seamlessly .
+Network effects and ecosystem growth
+The growth of MCP reflects a network effect similar to social platforms.  A so -
+cial application with a small user base provides limited value.  As adoption in -
+creases and users contribute content, the system becomes more valuable, cre -
+ating a reinforcing cycle of growth.
+A similar dynamic is occurring with MCP . As adoption increases and more
+MCP servers are developed, the ecosystem expands.  The growing number of
+implementations broadens the r ange of available integr ations and capabili -
+ties, increasing the over all utility of the protocol.
+With this foundation established, the next step is to examine the core archi -
+tecture of MCP is and how it oper ates in pr actice.
+MCP core architecture
+MCP standardizes how applications provide context  to large language mod -
+els (LLMs ). Context can tak e multiple forms.  It ma y include additional infor -
+mation appended to a prompt, the specification of a tool to invok e, or even
+the prompt itself.
+Figure 4.5 – MCP core architecture connecting hosts, clients, and MCP servers
+In this sense, context encompasses both supporting data and oper ational in -
+structions that shape how the LLM responds.
+Once such a standard becomes widely adopted, it enables the development of
+powerful and extensible integr ations across AI applications.
+Advantages of MCP
+The MCP documentation ( https://modelcontextprotocol.io/ ) highlights sever al ad -
+vantages of adopting MCP:
+First, MCP supports a broad ecosystem of integr ations, tools, and data
+sources that can be connected to LLM-powered applications in a modular
+way. For instance, Claude Code, as an AI-powered coding agent, lever ages
+MCP to extend its capabilities through structured tool integr ation.
+Second, MCP reduces coupling to specific LLM vendors or AI application
+providers.  Developers can implement core functionality in the form of
+tools and expose them through MCP servers.  These tools can then be
+reused across different vendors and host applications without
+modification.
+Open source fr ameworks such as LangChain address some overlapping
+challenges in AI engineering.  However, MCP and LangChain approach
+these problems differently , and their solutions do not directly overlap.  For
+example, both ma y support extensibility , but the mechanisms and archi -
+tectur al implications differ.
+Core components of MCP
+The MCP architecture consists of three primary components: MCP hosts, MCP
+servers, and MCP clients.
+MCP hosts
+An MCP host  is an AI application that supports MCP . Examples include Claude
+Desktop, development environments such as Claude Code or Cursor, and spe -
+cialized AI agents.  These applications are augmented through MCP b y con -
+necting them to additional tools, data sources, or products that are not avail -
+able natively .
+Figure 4.6 – MCP hosts connecting to MCP servers through MCP clients
+MCP servers
+MCP servers  expose  functionality to MCP hosts.  This functionality ma y in-
+clude the following:
+Access to external tools, such as invoking an API to retrieve weather
+information
+Database search capabilities
+Knowledge resources such as PDFs or large text
+Figure 4.7 – MCP servers exposing tools, databases, and external APIs to MCP
+hosts
+The MCP server acts as a gatewa y or proxy that exposes these tools, re -
+sources, and prompts according to the MCP specification.
+Figure 4.8 – MCP server acting as a gatewa y that provides standardized access
+to external resources
+To conform to the protocol, an MCP server implements specific methods, such
+as the following:
+listPrompts
+getPrompt
+listTools
+callTool
+listResourceTemplates
+Progress notification mechanisms
+Once implemented, an MCP server can be connected to an y MCP host that
+supports the protocol.  Functionality written once can therefore be reused
+across multiple host applications.  This reusability is a centr al architectur al
+advantage of MCP .
+MCP clients
+An MCP client resides within the MCP host.  It enables communication be -
+tween the host and an MCP server using MCP .
+Figure 4.9 – MCP client inside the host managing communication with MCP
+servers
+For example, to connect a weather MCP server to Claude Desktop, an MCP
+client inside Claude Desktop manages the inter action with that server.  The
+client and server communicate exclusively through the defined protocol.
+There is a one-to-one relationship between an MCP client and an MCP server.
+A single MCP client cannot communicate with multiple MCP servers.
+Therefore, if an MCP host needs to connect to multiple MCP servers, it must
+instantiate multiple MCP clients, one for each server.
+Figure 4.10 – Multiple MCP clients connecting a host to different MCP servers
+This structure completes the core architecture of MCP and establishes the
+foundation for building interoper able, extensible AI applications.
+MCP in action
+Let us now walk  through a pr actical example of adding and configuring an
+MCP server.  This demonstr ation illustr ates the capabilities enabled b y MCP
+and how those capabilities function in pr actice.  The example connects an
+MCP server that implements weather retrieval functionality to two different
+clients: Claude Desktop and Cursor.
+The same MCP server is used in both cases.  Configur ation details are ad -
+dressed separ ately; the focus here is on the resulting behavior once the server
+is connected.  Any client that supports the MCP protocol can use this function -
+ality , including Claude Code, Claude Desktop, Cursor, Claude Code, Lovable,
+and other compatible clients.
+Behavior without an MCP server
+In Claude Desktop, no MCP servers are initially configured in the Developer
+settings.  For example, when querying the weather in San Fr ancisco without
+an MCP server connected, the language model typically responds that it does
+not have access to real-time weather information.  In some cases, it ma y at-
+tempt to invok e a search tool to retrieve summarized information instead.
+Without MCP , the model is limited to its tr aining data and cannot retrieve live
+data directly , except through generic built-in tools such as search.
+Connecting an MCP server
+After configuring the  weather MCP server, it appears in Claude's Developer
+settings along with its runtime details.
+Figure 4.11 – W eather MCP server configured in Claude developer settings
+When querying the weather in San Fr ancisco again, the system prompts for
+permission to execute the weather tool locally . Tool execution requires ap -
+proval because it ma y involve running local code.  Security consider ations re -
+lated to tool execution are addressed separ ately .
+Security warning: MCP servers can run code on your machine
+MCP servers run code locally with the same permissions as your user
+account.  This means they can access files, environment variables,
+and network resources on your system.
+Before adding an MCP server, be aware of the following risks:
+An MCP server can execute commands on your machine, includ -
+ing reading, modifying, or deleting files.NOTE
+Once Claude Code is gr anted permission to invok e the MCP tool, the following
+sequence occurs:
+1. The MCP  server contains the logic for retrieving weather data
+2. The server exposes a function named getForecast
+3. The getForecast  function accepts two arguments: latitude and longitude
+4. The language model (Claude Sonnet 3.7) determines the latitude and longi -
+tude corresponding to San Fr ancisco
+5. The model issues an MCP call to the getForecast  function
+6. The MCP server executes the function and returns a response
+7. The language model processes the response and gener ates the final
+answer:
+A malicious server could send sensitive information (such as
+source code, environment variables, or API k eys) to an external
+service.
+Tool responses from MCP servers ma y contain hidden instructions
+that influence the model's behavior.
+Treat MCP servers the same wa y you treat an y third-party dependen -
+cy. Review the source code, when possible, install servers from trust -
+ed maintainers, and avoid running MCP servers with elevated
+privileges.
+Figure 4.12 – Claude invoking the MCP weather tool and returning the fore -
+cast response
+The result is a weather report based on real-time data retrieved through the
+MCP server.
+Although retrieving weather data is a simple example, the underlying mecha -
+nism supports arbitr ary logic.  Any functionality can be implemented in an
+MCP server.  By implementing the MCP protocol, developers enable compati -
+ble clients to invok e that functionality through tool calls.  This extends AI
+agents beyond static model capabilities and allows them to execute external
+logic.
+Reusing the same MCP server across clients
+The same weather  MCP server can be connected to Cursor.  Once configured,
+the MCP server appears in the MCP tab within Cursor's settings.
+Figure 4.13 – Claude invoking the MCP weather tool and returning the forecast
+response
+The connected server is listed along with the tools it exposes:
+GetAlerts
+GetForecast
+The configur ation also shows the command used to run the server, which in
+this case is a Node.js server.  Within Cursor Chat, MCP functionality is avail -
+able when using agent mode.
+Figure 4.14 – Invoking the MCP weather tool from Cursor in agent mode
+When querying  the weather in San Fr ancisco, the agent calls the
+GetForecast  tool with the appropriate arguments.  In this configur ation,
+Cursor runs in Y OLO mode, meaning tools are executed automatically with -
+out requiring manual approval.  While this approach is convenient, it carries
+security implications.
+The agent performs the following actions:
+1. Calls the GetForecast  tool with latitude and longitude arguments.
+2. Receives the weather data from the MCP server.
+3. Determines that weather alerts ma y also be relevant.
+4. Calls the GetAlerts  tool to check for alerts in San Fr ancisco.
+5. Compiles the responses into a final answer that includes both weather
+conditions and an y active alerts.
+In this case, two tools are invok ed within a single prompt.  The agent au -
+tonomously determines which tools to call and how to combine their results
+into a coherent response.
+The weather example demonstr ates a gener al pattern: MCP enables AI agents
+to execute external logic defined in MCP servers.  Clients that support MCP can
+connect to these servers and invok e their tools.
+By implementing the MCP protocol in a server, developers mak e its function -
+ality accessible to an y compatible MCP client.  This removes limitations im -
+posed b y static model knowledge and allows agents to perform dynamic, real-
+time, and custom oper ations.
+Connecting Claude Code to MCP server
+We start with  an empty project and an empty br anch called project/MCP  in
+this book's GitHub repository . To access the repository , follow the steps in the
+Download the example code files  section in the Preface . We then list the avail -
+able MCP servers using the /mcp  slash command.  At this point, no MCP
+servers are listed.
+Figure 4.15 – Listing available MCP servers in Claude Code using the /mcp
+command
+A link is available that tak es us to the MCP documentation, which explains
+how to add MCP servers.  There are multiple wa ys to do this:
+Adding MCP servers through files
+Adding MCP servers using the CLI
+MCP servers can be added through files; however, the CLI is recommended.
+The CLI is typically the most up to date, and if formatting changes or APIs
+break, using the CLI ensures compatibility .
+Adding Context7 MCP Server via the CLI
+Context7  (https://context7.com/ ) provides  up-to-date documentation for a large
+number of packages.  Man y packages, especially in the AI ecosystem (such as
+LangGr aph), change frequently , and having the latest documentation ensures
+that gener ated code aligns with the latest APIs.
+Context7 indexes close to 30,000 ( https://github.com/upstash/context7 )packages.
+At the time of writing, the repository has approximately 49,200 stars.
+To use Context7 with Claude Code, Claude Code integr ation is required.  The
+command is as follows:
+claude mcp add –transport http context7 https://mcp.context7.com/mcp
+This command performs the following actions:
+Uses claude mcp add
+Specifies HTTP as the tr ansport
+Assigns the MCP name context7
+Provides the MCP server's URL
+This is a remote MCP server, meaning the server does not run locally . Instead,
+it runs on the Context7 servers.
+Each invocation sends a request to the remote server.  This approach offers
+sever al advantages:
+The service can scale easily
+The MCP can be accessed from multiple clients
+HTTP tr ansport and remote MCP servers are explained in more detail in the
+MCP course available at: https://www.udemy.com/course/model-context-protocol/ .
+The command is copied and pasted into the terminal.  Before execution, the -
+-help  flag is added so you can review available options.
+MCP server scope and configur ation
+The help  output shows that the MCP server's scope can be configured.  The
+MCP server can exist at the following scopes:
+User scope
+Project scope
+Session scope
+Optional values can also be provided for environment variables or HTTP
+headers.
+Figure 4.16 – A dding an MCP server to the project using the mcp add command
+In this example, the project scope is selected when adding the MCP server.
+After execution, a new file is created containing the Context7 MCP configur a-
+tion.  The configur ation specifies the HTTP tr ansport type and the MCP
+server's URL.
+ {
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}
+To run the MCP server locally instead of remotely , the following alternative
+command can be used:
+claude mcp add context7 – npx -y  @upstash/context7-mcp.
+This command uses npx to download the repository and execute it locally .
+Restarting Claude Code and enabling the MCP server
+After installing the MCP server, Claude Code must be restarted.  Exit the ses -
+sion, clear the terminal, and start Claude again.
+Figure 4.17 – Claude Code detecting and enabling the configured MCP server af -
+ter restart
+On startup, Claude will detect the mcp.json  file and prompts for permission
+to connect to the configured MCP servers.  The first option is selected to allow
+the connection.
+Claude then creates a settings.local.json  file for the current user session.
+Opening this file confirms that the Context7 MCP server is enabled, allowing
+Claude to query it when needed.
+Listing and inspecting installed MCP
+servers
+The MCP servers can  now be listed.  We can see that the Context7 MCP server
+is connected.
+Figure 4.18 – Listing installed MCP servers and inspecting the connected
+Context7 server
+Click into it and see that it exposes two tools:
+resolve-library-id
+get-library-docs
+These tool descriptions become part of the agent's context, allowing the agent
+to dynamically invok e tools as required.  For instance, when requesting the
+latest LangGr aph documentation, the agent first calls resolve-library-id  to
+obtain the appropriate context ID, followed b y get-library-docs  to retrieve
+the latest documentation.
+Querying LangGr aph using the Context7 MCP server
+We can ask the following question and specify that the Context7 MCP server
+should be used:
+What is the latest version of LangGr aph?
+Claude Code asks for permission to invok e the Context7 MCP tool.  We approve
+the request, and the permissions are updated in settings.local.json .
+Figure 4.19 – Invoking the Context7 MCP tool to retrieve the latest LangGr aph
+version
+The MCP server  resolves the libr ary ID and then mak es another request to re -
+trieve the documentation.
+Based on the documentation returned b y Context7, the latest version of
+LangGr aph is reported as 1.2.
+Persisting MCP server usage in project memory
+We configure Context7 to be used every time we ask a question about
+LangGr aph.  To do this, we add an instruction and save it to the project memo -
+ry so that it persists across sessions.
+The instruction is recorded, and a Claude.md  file will be created with the fol -
+lowing entry:
+When discussing LangGraph, always use context7 MCP
+Verifying persistent MCP behaviorLangGr aph is an actively evolving fr amework.  You ma y encounter a
+later version than the one demonstr ated here; however, the architec -
+tural concepts and patterns discussed remain relevant.NOTE
+We can restart Claude, clear the session, and ask the following question:
+What is a LangGraph interrupt?
+Claude Code automatically selects the Context7 MCP server.  It resolves the
+LangGr aph libr ary, retrieves the relevant documentation and code snippets,
+and returns an explanation of a LangGr aph interrupt.
+Figure 4.20 – Claude automatically using the Context7 MCP server to explain a
+LangGr aph interrupt
+Because Context7 provides access to current documentation and APIs, the
+gener ated code reflects the most up-to-date usage.
+Committing MCP artifacts to version control
+We can add the gener ated files to the GitHub repository . We commit the
+changes with the message context7 mcp and push them upstream with the
+following command:
+git commit -m "context7 mcp"
+The commit can be found in this book's GitHub repo.  To access the repository
+link, follow the steps in the Download the example code files  section in the
+Preface .
+MCP scope cheat sheet
+Choosing  the correct scope helps k eep your environment organized and pre -
+vents unnecessary configur ation from leaking into unrelated projects.  The
+following table summarizes when to use each MCP scope:
+AspectProject-
+scopeUser-scopeSession-
+scope
+Config
+location.mcp.json
+in the project
+root~/.claude/set -
+tings.jsonStarted with
+--mcp-con -
+fig flag or
+added mid-
+session
+VisibilityEveryone on
+the projectOnly you, across all
+projectOnly the cur -
+rent session
+Committed
+to git?Yes No No
+Persists
+across
+sessions?Yes Yes No
+Shared with
+team?Yes No No
+Table 4.1 – MCP scope comparison: project, user, and session
+When to Use Each MCP Scope
+The following guidelines illustr ate common scenarios for each scope.
+Project-scope  (.mcp.json )
+Use project scope when the MCP server is part of the project's shared
+development environment.
+Database tools specific to this project (for example, a project's Postgres
+MCP)
+Project-specific APIs such as internal services or staging environments
+Custom tooling the whole team needs, such as deplo yment scripts or
+test runners
+Documentation servers tied to the project's technology stack
+User-scope  (~/.claude/settings.json )
+Use user scope for tools that are personal or tied to your own
+credentials.
+Personal productivity tools (Slack, Linear, Notion)
+Tools tied to your credentials, such as GitHub with your P AT or email
+access
+Gener al-purpose servers you want available across all projects (for ex -
+ample, T avily search or Context7 documentation)
+Servers that rely on secrets you do not want committed to the
+repository
+Session-scope  (--mcp-config / ephemeral )
+Use session scope for tempor ary or experimental setups that should not
+persist.
+One-off debugging servers such as a tempor ary proxy or mock API
+Experimental or untrusted servers you are evaluating
+Servers that rely on short-lived tok ens (O Auth sessions or tempor ary
+credentials)
+CI/CD environments where servers are started dynamically during a
+run
+Context engineering in the MCP
+ecosystem
+In this section, we cover context engineering within the MCP ecosystem.  The
+example shown uses Claude Code, but the concepts apply to an y agentic sys -
+tem that supports MCP .
+Figure 4.21 – Good vs bad context usage within limited LLM context windows
+Context is the most expensive and limited resource in agentic systems, espe -
+cially in agentic coding workflows.  Context directly affects agent perfor -
+mance.  Poor context results in poor performance from  the agent.  This discus -
+sion focuses only on performance implications and deliber ately excludes
+pricing and latency consider ations.
+
+Figure 4.22 – Context engineering: reducing tok ens b y loading only necessary
+context
+One of the quietest but most impactful sources of context inefficiency is MCP
+configur ation.  MCP is powerful, but if it is not used carefully , it can signifi -
+cantly degr ade context efficiency . The main issue is that MCP can bloat the
+context window with unnecessary tok ens for tools that are not required for
+the task at hand.
+The problem – overly gener al MCP configur ation
+The root cause of the problem of context inefficiency is overly gener al MCP
+configur ation.  When MCP servers are configured too broadly , the agent loads
+every available tool into its context window before processing a single re -
+quest.  This consumes valuable tok ens before an y reasoning begins, leaving
+less space for the actual task.
+Figure 4.23 – Context window waste caused b y overly broad MCP configur ation
+In Claude Code, MCP servers are commonly configured at the project level us -
+ing an mcp.json  file.  This file loads multiple MCP servers and all of their as -
+sociated tools.
+Figure 4.24 – Gener al MCP configur ation loading all tools at startup.
+Most setups follow this pattern.  A single, gener al-purpose MCP configur ation
+is used to load all MCP servers and tools.  The intent is to equip the agent with
+everything it might need.
+The result is that every session loads all MCP servers and all MCP tools, even
+when they are not relevant.  This can consume tens of thousands of tok ens be -
+fore a single prompt is written.
+In this section, we introduce this problem and demonstr ate how to fix it using
+context engineering techniques.
+Example repository and MCP server
+The code used in this section is available in the context-engineering-mcp
+branch in the book's GitHub repo.  To access the repository link, follow the
+steps in the Download the example code files  section in the Preface . We start
+from the first commit so the setup can be reproduced exactly .
+The repository contains a simple MCP server implemented in verbose_m -
+cp_server.py . The server is written using F astMCP and exposes a large num -
+ber of MCP tools, including the following:
+add_two_numbers
+subtract_two_numbers
+multiply_two_numbers
+The server intentionally includes man y MCP tools that are not required.  Each
+tool also includes a detailed description.  Here is an example:
+Figure 4.25 – V erbose MCP tool definition increasing context size
+These descriptions help the MCP client decide whether a tool should be in -
+voked, but they also directly contribute to context size.
+Running the MCP server
+The MCP server is  run using the UV package manager.  The repository con -
+tains a uv.lock  file that defines the F astMCP dependency
+(https://github.com/PrefectHQ/fastmcp ). Follow these steps:
+1. Run uv sync  and activate the virtual environment using the following:
+source .venv/bin/activate.
+2. Once the environment is active, the F astMCP CLI
+(https://github.com/jlowin/fastmcp ) is available.  We start the MCP server using
+fastmcp run verbose_mcp_server.py --transport http .
+3. The verbose mathematical  oper ations MCP server is now running using
+streamable HTTP tr ansport and is exposed at
+http://127.0.0.1:8000/mcp .
+Adding the running MCP server to Claude
+Code
+We need to inspect how MCP servers and their tools affect context once they
+are loaded into a session.  With the MCP server running locally , we open
+Claude Code and add this MCP server.
+To do this, we create a project-level MCP configur ation file named .mcp.j-
+son.
+If we return to the repository and inspect the br anch, there is a commit titled
+Add project-based MCP configur ation . This configur ation can be copied di -
+rectly , with API k eys added as needed.  The API k eys shown in the example are
+obfuscated.
+Project-level MCP configur ation
+The project-level MCP configur ation defines four MCP servers:
+A locally running verbose MCP server
+Context7, which was covered earlier ( https://context7.com/ )
+Tavily (https://tavily.com/ ), used to search the internet, cr awl websites, and
+extract web pages
+Playwright MCP , used for browser automation
+
+Figure 4.26 – Project-level MCP configur ation with multiple servers defined in
+mcp.json
+This is a project-level configur ation, meaning all four MCP servers are loaded
+automatically when Claude Code starts from the project's directory .
+The API k eys in the configur ation are obfuscated.
+To validate  that the configur ation is applied correctly , follow these steps:
+1. Open the terminal.
+2. Change directory into the project folder.
+3. Confirm that you are on the context-engineering-mcp br anch.
+4. Run Claude Code.
+5. Run /mcp  to confirm that all four MCP servers are connected.
+Figure 4.27 – Multiple MCP servers connected in Claude Code.
+Inspecting context usage
+Next, we run /context  to inspect the context usage for the current session.
+At this  point, we are already close to half of the context window , even though
+no prompt has been written.  The /context  output reveals how the available
+tokens are distributed.
+Figure 4.28 – MCP tools consuming a large portion of the context window
+The break down shows the following:
+Around 2,000 tok ens are dedicated to the Claude Code's system prompt
+Claude Code's system tools are consuming roughly 12,000 tok ens
+MCP tool descriptions are consuming close to 20% of the context window
+There are no messages.  There is no memory file.  There are no sub-agents
+configured.
+If sub-agents were present, they would also appear in the context, including
+instructions describing how and when to use them.
+At this stage, almost 50% of the context window is already consumed.
+Depending on the task, man y of these MCP servers and especially the verbose
+mathematical MCP tools are unnecessary .
+Reducing context b y scoping MCP configur ation
+To reduce context usage, the MCP configur ation must be scoped more
+narrowly .
+Perform the following steps:
+1. Remove the project-level .mcp.json  file.
+2. Create a new file named .mcp.json.tavily .
+3. Copy the T avily MCP configur ation from the repository .
+4. Paste it into .mcp.json.tavily .
+Figure 4.29 – Scoped MCP configur ation using mcp.json.tavily .
+This  configur ation now contains only the T avily MCP server.
+Next, start Claude Code using the scoped configur ation:
+Return to the terminal and run the following:
+claude --mcp-config .mcp.json.tavily.
+The --mcp-config  flag accepts space-separ ated paths to MCP configur ation
+files.
+When Claude starts, we inspect the MCP servers again using /mcp .
+Figure 4.30 – A ctive MCP servers with scoped config.
+At this point, we see the T avily MCP , which is expected.  However, we also see
+the verbose MCP server and Context7.  The Pla ywright MCP server is no longer
+present.
+This happens because Claude Code is still loading MCP servers from the user-
+level MCP configur ation, which includes Context7, T avily , and the verbose
+MCP server.
+Enforcing a strict MCP configur ation
+To ensure that only the intended MCP configur ation is loaded, a strict configu -
+ration must be enforced.
+Run the following:
+claude --mcp-config .mcp.json.tavily --strict-mcp-config.
+The --strict-mcp-config  flag instructs Claude Code to ignore the default
+MCP hier arch y and load only the MCP servers defined in the specified config -
+uration file.
+Let's verify the result:
+1. Run /mcp  and confirm that only the T avily MCP server is loaded.
+2. Run /context  and verify that the context usage from MCP tools is signifi -
+cantly reduced, since only the T avily MCP server is active.
+Figure 4.31 – Context usage after enabling strict MCP configur ation
+MCP-related context usage drops from nearly 20% to approximately 2.4%.
+This allows the agent to remain focused and avoids carrying unnecessary tool
+context for the current task, which in this case is research.
+Managing MCPs dynamically within a session
+In addition to configur ation-based scoping, MCP servers can also be managed
+dynamically within a session.
+To do this, follow these steps:
+1. Restore the gener al project-level .mcp.json  configur ation.
+2. Restart Claude Code.
+3. Disable the verbose MCP server.
+4. Disable the Pla ywright MCP server.
+5. Run /mcp  to confirm that both servers are disabled.
+6. Run /context .
+Figure 4.32 – MCP context usage after disabling selected servers
+MCP-related context usage is now approximately 3.2% .
+This approach allows MCP servers to be enabled or disabled directly within a
+session using the CLI, without modifying MCP configur ation files.
+Current limitations of MCP
+MCP was  designed to standardize how agents connect to data.  However, its
+current implementation introduces sever al dr awbacks.  These limitations pri -
+marily stem from how LLM context is managed and how agent tasks are
+executed.
+Figure 4.33 – MCP abstr action la yer between LLMs and external APIs
+As a result, agents  may become slower, more expensive, and less effective
+than intended.  There is no perfect protocol, and MCP is no exception.
+Context pollution
+The most significant issue with MCP is context pollution.  MCP requires tool
+definitions to be loaded upfront into the model's context.  These definitions,
+including required arguments and expected outputs, are placed into the sys -
+tem prompt.
+Figure 4.34 – Context pollution from preloaded MCP tool definitions
+Because all tool definitions must be preloaded, this creates a substantial tok en
+overhead.  To use an MCP server, the agent must receive definitions for every
+available tool.
+In a configur ation with 58 tools across servers such as GitHub MCP , Slack
+MCP , and Centr al MCP , tool definitions alone can consume 55,000 tok ens be -
+fore the conversation begins.  In some cases, tool definitions can consume
+hundreds of thousands of tok ens.
+In LLM applications and agent systems, context is the primary resource that
+must be optimized.  When context is satur ated with tool definitions, the agent
+carries large amounts of irrelevant information.
+For example, an agent task ed with modifying a frontend page still carries
+thousands of lines of context related to unrelated tools, such as database utili -
+ties or PDF readers.  This irrelevant data persists across every step and iter a-
+tion of the conversation.
+Figure 4.35 – Needle-in-a-ha ystack problem from too man y MCP tools
+As context fills with unrelated definitions, model performance degr ades.  The
+model must search through excessive information, increasing the lik elihood
+of hallucinations, instruction-following failures, or incorrect tool selection.
+The more polluted the context becomes, the harder it is for the model to lo -
+cate relevant information.
+Inefficient agent execution
+Beyond context management, MCP also introduces inefficiency in agent
+execution.
+
+Figure 4.36 – Inefficient agent execution with repeated MCP tool calls
+Traditional MCP usage relies on a "ping-pong" inter action pattern.  Each action
+requires a full round trip:
+The model requests a tool.
+The tool executes.
+The result is appended to the conversation history .
+The entire updated history is sent back to the model to determine the next
+step.
+When multiple tool calls are required, this process expands r apidly .
+Intermediate results accumulate in the context window , even when they are
+not necessary for producing the final answer.  Although some of these results
+could be removed at later stages, the current MCP implementation retains
+them, further polluting the context.
+Figure 4.37 – MCP tool call round trips between model, client, and server
+Each round trip requires an additional LLM inference.  Multiple inference
+passes increase both latency and cost.  As tool calls scale, so do the number of
+model invocations, resulting in slower execution and higher expenses.
+The native tongue problem – JSON versus code
+MCP also forces LLMs to oper ate in a wa y that does not align with their
+training.
+Figure 4.38 – LLM tr aining vs tool-call formats
+The protocol relies heavily on structured tool call tok ens and JSON schemas.
+However, LLMs are primarily tr ained on natur al language text and code, not
+on specialized syntactic tool invocation tok ens.
+Although model vendors have improved tool call reliability , this format is not
+the model's native mode of oper ation.  Text and code are more natur al repre -
+sentations for LLMs.  Code, in particular, aligns more closely with tr aining
+data and model capabilities than JSON-based tool invocation mechanisms.
+This mismatch creates friction between the model's tr aining distribution and
+the structured inter action style required b y MCP .
+Limitations of tool definitions and schemas
+MCP tool definitions  and JSON schemas describe what a tool looks lik e: its pa -
+rameters, inputs, and outputs.  However, these schemas do not capture usage
+patterns.
+Figure 4.39 – Limits of JSON schemas for tool usage
+Usage patterns include when a tool should be used, how it should be used in
+context, and when it should not be used.  This is a deeper concept than a struc -
+tural definition alone.
+Even when instructions are provided to guide tool usage, schemas themselves
+cannot encode these behavior al constr aints.  As a result, the protocol defines
+structure but not intent or correct application patterns.
+CodeMode b y Cloudflare
+Cloudflare first introduced in a blog post ( https://blog.cloudflare.com/code-mode/ ).
+CodeMode , an execution model designed to change how agents inter act with
+MCP tools.
+The idea addresses dr awbacks discussed earlier regarding MCP , particularly
+context bloat and increased latency caused b y multiple LLM calls.
+Instead of using MCP in the usual wa y, Cloudflare suggests taking all tool defi -
+nitions, tool interfaces, and tool implementations from MCP and converting
+them into a TypeScript API.  Rather than allowing the LLM to choose which
+tool to call through tool calling, the LLM is ask ed to gener ate code that uses
+the TypeScript API.
+Figure 4.40 – Cloudflare Code Mode replacing tool calls with code execution
+In this model, the  LLM gener ates the entire code that needs to be executed.
+The gener ated code includes multiple tool calls implemented as function in -
+vocations.  That code is then executed once inside a sandbox.
+This approach reduces the number of round trips involved in tool calling.
+Instead of making a tool call, receiving a result, and making another tool call
+repeatedly , the LLM writes code that performs the sequence internally . The
+main advantage described is that LLMs are very strong at writing code.
+Writing code is a common task for LLMs, and they have extensive tr aining
+data on code.  Because the code is written once and executed once, tool defini -
+tions do not need to be repeatedly sent, which reduces tok en usage.
+Key observations
+Cloudflare  states that MCP has often been used b y directly exposing tools to
+the LLM.  In CodeMode, MCP tools are converted into a TypeScript API, and
+the LLM writes code that calls that API.
+The reported result is that agents are able to handle more tools and more
+complex tools.  One issue with MCP is that too man y tools increase context
+size, which increases cost and latency and can degr ade performance.  When
+tools are presented as a TypeScript API r ather than as direct tool definitions,
+performance improves.  The explanation offered is that LLMs have seen large
+amounts of real-world TypeScript in tr aining, but only a small set of contrived
+tool-call examples.
+The approach is described as particularly effective when multiple calls must
+be chained together.  In tr aditional MCP usage, each tool output must be
+passed back into the LLM before the next call.  This  repetition consumes time,
+energy , and tok ens. When the LLM writes code, it performs all calls internally
+and only returns the final result.
+The conclusion presented is that LLMs are better at writing code to call MCP
+than calling MCP directly .
+Tool calling and its constr aints
+In tr aditional MCP usage, the LLM gener ates special tok ens representing tool
+calls.  These tok ens are parsed to extr act the function name and arguments.
+The system then executes the function and returns the result.
+These special tool-call tok ens are not common in real-world data.  They are
+syntactic constructs introduced during tr aining.  Although model vendors
+have improved tool-calling performance significantly , the mechanism re -
+mains synthetic.
+When too man y tools or overly complex tools are exposed, the LLM ma y
+struggle to select the correct one or ma y use it incorrectly . As a result, MCP
+server designers are encour aged to simplify APIs to mak e them more suitable
+for LLM consumption.
+By contr ast, LLMs handle full progr amming APIs more effectively . They can
+analyze and gener ate code against complex APIs without simplification.  The
+distinction made is that LLMs have seen extensive real-world code but very
+few real-world tool calls.
+An analogy is provided: asking an LLM to perform tasks with tool calling is
+compared to putting Shak espeare through a short Mandarin course and ask -
+ing him to write a pla y in Mandarin.  The implication is that tool calling is not
+the model's strongest domain.
+The role of MCP
+MCP  remains useful because it provides a uniform method for connecting
+agents with tools.  MCP tools represent an RPC interface with attached docu -
+mentation.  Most MCP servers wr ap existing tr aditional APIs.
+Instead of exposing MCP tools directly as callable tools, CodeMode converts
+them into a progr amming-language API.  Although tr aditional APIs already ex -
+ist, MCP provides a uniform wa y to connect to and learn about those APIs,
+which remains valuable in agent-based systems.
+Integr ating CodeMode
+Cloudflare  extended its A gent SDK to support CodeMode.  In a typical AI SDK
+setup, the model is configured with a system prompt, user message, and tools.
+In CodeMode, the tools and prompt are wr apped using a CodeMode helper.
+For example, consider an application built with the CloudF are AI SDK that
+looks lik e this:
+const stream = streamText ({
+  model: openai("gpt-5.3" ),
+  system: "You are a helpful research assistant.
+    Your job is to help the user…" ,
+  messages : [
+    { role: "user", content: "Research on deep agents"  }
+  ],
+  tools: {
+    research agent's tool definition
+  }
+})
+With CodeMode, the system prompt and tool definitions are wr apped using
+the codemode  helper before being passed to the application.
+import { codemode } from "agents/codemode/ai" ;
+const { system, tools } = codemode({
+  system: " You are a helpful research assistant.
+    Your job is to help the user…" ,
+  tools: [
+    research agent's tool definition
+  ],
+})
+After this change, the application gener ates and executes TypeScript code that
+invok es the defined tools, including MCP servers.
+Converting MCP to TypeScript
+When  connecting to an MCP server in CodeMode, the A gent SDK fetches the
+MCP server's schema and converts it into a TypeScript API.  The gener ated API
+includes TypeScript definitions and documentation comments derived from
+the schema.
+These TypeScript definitions are loaded into the agent's context.  The entire
+API is currently loaded at once, though future improvements ma y allow dy -
+namic searching or browsing of the API.
+Although loading the entire API still increases context size, this occurs once at
+initialization.  The LLM then reads the API and gener ates code.  Since LLMs are
+strong at processing code, this approach lever ages that strength.
+Execution in a sandbox
+In CodeMode, instead of presenting all MCP tools directly , the agent is given a
+single tool that executes TypeScript code.
+The gener ated code runs inside a secure sandbox that is isolated from the in -
+ternet.  The sandbox can access external systems only through the provided
+TypeScript APIs representing connected MCP servers.
+When sandboxed code calls an API function, the call is routed back through
+RPC to the MCP server via the agent loop.  The sandbox returns results using
+console.log() . When execution is complete, the logs are returned to the
+agent.
+In a tr aditional MCP flow:
+1. The agent receives tool schemas from the MCP server.
+2. The LLM call includes tool definitions matching MCP tools.
+3. The LLM outputs special tok ens for function invocations.
+4. The agent parses and executes the tool calls.
+5. The process repeats.
+While in CodeMode:
+1. The agent retrieves tool schemas from the MCP server.
+2. The LLM call includes a TypeScript API derived from those schemas.
+3. The LLM writes TypeScript code against that API.
+4. The code is executed in a sandbox.
+5. The sandbox inter acts with MCP servers through RPC bindings.
+6. The final logs are returned to the agent.
+The following diagr am shows an architectur al comparison between tr adition -
+al MCP execution and CodeMode.
+
+Figure 4.41 – Tr aditional MCP vs Code Mode execution flow
+CodeMode is presented as an alternative execution model that relies on the
+LLM's ability to gener ate code while retaining MCP as a uniform integr ation
+layer.
+Managing configur ation with Claude
+Code plugins
+Plugins bundle slash commands (skills), sub-agents, MCP servers, and hooks
+into a single, shareable primitive.  These  plugins can be shared within a team
+or published to the open source community , enabling reuse and consistency
+across environments.
+Before plugins were introduced, reusing configur ation required significant
+manual effort.  For example, to use a slash command from an open source
+repository , we had to navigate to that repository , cop y the slash command,
+and paste it into the local .claude  directory . The same process applied to
+sub-agents and hooks.  MCP servers followed a different setup process, but the
+over all workflow remained manual and fr agmented.
+Claude Code plugins address this problem b y bundling all of these compo -
+nents into a single plugin that can be installed and integr ated seamlessly .
+Plugins can be sourced from open source repositories or internal repositories
+and shared across teams.
+Claude Code provides a CLI-based plugin system that is intuitive and easy to
+use.
+Benefits of the plugin system
+One of the primary benefits of plugins is the ability to share a uniform Claude
+Code setup across a team.  For example, when onboarding a new developer,
+we ma y want them to have the same tools, the same agents and sub-agents,Please check the official docs for reference:
+https://code.claude.com/docs/en/plugins .NOTE
+and the same MCP servers as the rest of the team.  Plugins provide a mecha -
+nism to standardize the Claude Code development environment.
+Plugins also support fine-gr ained installation.  Instead of installing an entire
+plugin, it is possible to install only a specific component, such as a single MCP
+server.
+In addition, Claude Code introduces a new primitive called a mark etplace.  A
+mark etplace is represented b y a JSON file that describes the plugins available
+for installation.
+It is also worth noting that Google's Gemini CLI introduced a similar concept
+called Gemini Extensions.  Gemini Extensions were published on October 8,
+2025, while Claude Code plugins were published on October 9, 2025.  This one-
+day difference suggests either very r apid iter ation b y the Claude Code team or
+that both teams were working simultaneously on implementing the same
+idea.
+Exploring the official plugin mark etplace
+To explore how plugins work, we start from the Claude Code course
+repository .
+Within the Claude Code open source repository , there is a .claude-plugin
+directory . Inside this directory is a marketplace.json  file.
+This file defines the official plugin mark etplace.  It lists the available plugins
+and provides metadata and source paths for each plugin.
+Examples of plugins listed in the mark etplace include the following:
+pr-review-toolkit
+commit-commands
+agent-sdk-dev
+feature-dev
+Security guidelines
+The mark etplace functions as a registry that Claude Code can load to discover
+available plugins.
+Adding a mark etplace to Claude Code
+Before installing plugins, a mark etplace must be added to Claude Code.
+To add a mark etplace, follow these steps:
+1. Open Claude Code and run the following command:
+/plugin
+2. Select Browse  and install plugins.
+3. Since no mark etplace is configured initially , select A dd Mark etplace.
+4. Provide either of these:
+1. A GitHub repository URL
+2. A direct link to a marketplace.json  file
+In this case, the base URL of the official Claude Code repository is provided.
+Claude Code detects the mark etplace file automatically and loads the avail -
+able plugins.
+Once the mark etplace file has been loaded, the list of plugins and their de -
+scriptions becomes visible.
+Figure 4.42 – Claude Code plugin mark etplace showing available plugins
+Reviewing plugin sources and security
+consider ations
+At this  stage, only plugin descriptions are visible.  To understand what a plug -
+in actually installs, the plugin source must be inspected.
+Each plugin entry in marketplace.json  includes a source field.  This field
+points to the location of the plugin 's implementation.
+Before installing a plugin, it is important to review this source.  From a securi -
+ty perspective, this is similar to installing MCP servers or using system
+prompts and agents written b y other people.  Installing plugins without re -
+viewing their implementation introduces risk.
+To review a plugin source, follow these steps:
+1. Open the marketplace.json  file.
+2. Locate the plugin entry .
+3. Identify the source field.
+4. Navigate to the source path in the repository .
+For example, the agent-sdk-dev  plugin points to a directory inside the
+repository . To inspect it, follow these steps:
+1. Navigate to the repository .
+2. Open the plugins/  directory .
+3. Open the agent-sdk-dev/  directory .
+4. Open the .claude-plugin/  directory .
+5. Inspect the plugin.json  file.
+The plugin.json  file contains plugin metadata and defines the agents and
+slash commands (skills) that the plugin installs.
+Another  example is the feature-dev plugin.  This plugin includes sever al
+agents, such as the following:
+Code reviewer
+Code explorer
+Code architect
+It also includes a slash command defined in feature-dev.md . This slash com -
+mand is used to describe the features to be implemented and to guide the
+workflow .
+Installing and managing plugins
+Once a mark etplace is added, plugins can be installed and managed.
+Installing a plugin
+To install a plugin, follow these steps:
+1. Open the plugin interface using /plugin .
+2. Select Browse and install plugins .
+3. Locate the commit-commands  plugin.
+4. Open the plugin details.
+5. Select Install .
+6. Wait for the installation to complete.
+After installation, the plugin appears in the installed plugins list.
+Verifying the installation
+To verify  that the plugin is installed and enabled, follow these steps:
+1. Open the installed plugins list.
+2. Locate the commit-commands plugin.
+3. Confirm that it is mark ed as installed.
+4. Confirm that it is enabled.
+Updating a plugin
+Plugins are back ed b y repositories and can be updated over time.  To update a
+plugin, follow these steps:
+1. Select the installed plugin.
+2. Locate the Update  option.
+3. Apply the update.
+Updating a plugin is conceptually similar to rebasing against a repository's
+latest version.
+Attempting to uninstall a plugin
+The plugin interface includes an uninstall option.  To attempt to uninstall a
+plugin, follow these steps:
+1. Select the installed plugin.
+2. Locate the Uninstall  option.
+3. Attempt to uninstall the plugin.
+At this stage, uninstalling does not work as expected.  The uninstall action
+does not remove the plugin.  This appears to be a current limitation or bug.
+Figure 4.43 – Attempting to uninstall a Claude Code plugin
+Using the feature-dev plugin
+Next, the feature-dev  plugin is used to demonstr ate a complete workflow .
+Before proceeding, ensure that the plugin is installed and enabled.
+Figure 4.44 – F eature-dev plugin details in Claude Code
+Starting the workflow
+To start the workflow , follow these steps:
+1. Open Claude Code and run the following command:
+/feature-dev
+2. Wait for the plugin to initialize.
+Once the command has been executed, Claude enters a discovery phase.  At
+this point, Claude begins asking questions to understand what feature needs
+to be implemented.
+Handling Git state during the feature-dev
+workflow
+Before switching br anches, Claude Code inspects the current Git state of the
+repository .
+At this point in the workflow , the repository ma y contain uncommitted local
+changes . Switching br anches without handling these changes could result in
+conflicts or lost work.
+Checking the Git state
+As part of the workflow:
+Claude checks the current working tree state.
+Claude detects that there are local, uncommitted changes.
+Claude determines that switching br anches directly would be unsafe.
+These checks happen automatically as part of the feature-dev workflow .
+Stashing local changes
+To safely proceed, Claude uses git stash  to preserve the current working
+state.
+During this step, Claude does the following:
+Stashes the current working directory changes
+Confirms that the working tree is now clean
+Proceeds to switch br anches
+This ensures that no local changes are lost.
+Switching br anches and restoring state
+After inspecting the feature br anch, Claude returns to the original br anch and
+restores the previous Git state:
+1. Claude switches back to the main br anch.
+2. Claude reapplies the stashed changes.
+3. Claude confirms that the working directory has been restored.
+At this point, the repository is back in its original state, with local changes
+intact.
+Providing feature details
+The task in this example is to update the repository's README  file.
+The README  file contains a table listing course lessons.  A new lesson exists in
+a GitHub br anch named context-engineering-mcp , and this br anch must be
+added to the table.  To access the repository link, follow the steps in the
+Download the example code files  section in the Preface .
+When prompted, do the following:
+Describe the required change.
+Provide the URL of the context-engineering-mcp  branch.
+Inspecting the README file in the feature
+branch
+Claude examines  the README file in the feature br anch.  During this step,
+Claude does the following:
+1. Switches to the context-engineering-mcp  branch.
+2. Inspects the README  file.
+3. Identifies  the table structure.
+Figure 4.45 – Inspecting the README in the feature br anch
+Switching back to the main br anch
+After inspecting the feature br anch, Claude does the following:
+1. Switches back to the main br anch.
+2. Prepares to apply the change.
+3. Proposes a new table entry .
+Reviewing and refining the proposed
+change
+Claude gener ates an initial description for the new  table entry . Before pro -
+ceeding, do the following:
+1. Review the description.
+2. Identify inaccur acies.
+3. Refine the wording.
+Figure 4.46 – Reviewing and refining the proposed README change
+The description  is almost correct and requires a small adjustment before
+continuing.
+Committing, pushing, and verifying the
+change
+Once a change has been approved, the following occurs:
+1. Claude creates a commit.
+2. Claude pushes the commit to the remote repository .
+3. Refresh the repository .
+4. Open the README  file.
+5. Verify that the new lesson entry appears in the table.
+Figure 4.47 – V erifying the README update after commit
+This confirms  that the workflow completed successfully .
+Plugin mark etplaces and enterprise use
+Claude Code supports  third-party plugin mark etplaces.
+For example, a DevOps automation mark etplace can provide plugins contain -
+ing slash commands, agents, and MCP servers related to infr astructure work -
+flows.  Organizations can also create private mark etplaces for internal use.
+These mark etplaces can contain plugins specific to internal tools or teams
+and remain private.
+It is lik ely that platform companies, such as Supabase, will publish their own
+mark etplaces and plugins to improve integr ation with Claude Code.
+Plugins also support fine-gr ained installation.  Individual components such as
+a single slash command or an MCP server can be installed without installing
+an entire plugin.  This plugin ecosystem is expected to grow and pla y an im -
+portant role in enterprise-scale Claude Code adoption.
+Summary
+In this chapter, you learned wh y MCP was created and how it solves the inte -
+gration problem in AI systems.  You explored its core architecture: hosts,
+clients, and servers and saw how MCP enables reusable, cross-platform tool
+integr ation.  Through hands-on examples, you configured and used the
+Context7 MCP , connected servers to Claude, and managed MCP settings using
+the CLI.  You also learned how poor MCP configur ation can pollute the context
+window and degr ade performance, and how to optimize usage through con -
+text engineering and scoped configur ations.  Finally , you explored Claude
+Code plugins, examined the limitations of MCP , and reviewed CodeMode as an
+alternative execution model.
+Understanding MCP is important because it is becoming a foundational inte -
+gration la yer in agent-based AI development.  Knowing how to use it efficient -
+ly and when to question it will help you build more scalable and effective AI
+systems.
+In the next chapter, we will cover GitHub repository configur ation, pull re -
+quest and issue automation, and the use of GitHub A ctions for workflow
+execution.
+Get this book's PDF cop y, code bundle,
+and more
+Scan the QR code (or go to packtpub.com/unlock ). Search for this book b y name,
+confirm the edition, and then follow the steps on the page.
+Note: Have your invoice handy . Purchases made directly from the Packt website
+don't require an invoice.
+

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "deck",
+  "title": "claude-code-chapter-4-slides.html",
+  "entry": "claude-code-chapter-4-slides.html",
+  "renderer": "deck-html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "pptx",
+    "zip"
+  ],
+  "createdAt": "2026-05-10T03:57:20.987Z",
+  "updatedAt": "2026-05-10T03:57:20.987Z",
+  "metadata": {
+    "inferred": true
+  }
+}

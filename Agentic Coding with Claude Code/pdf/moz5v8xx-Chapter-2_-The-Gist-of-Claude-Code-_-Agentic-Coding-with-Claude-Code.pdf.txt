@@ -1,0 +1,393 @@
+2
+The Gist of Claude Code
+This chapter should help you get comfortable with Claude Code b y walking through how it ac -
+tually works in pr actice.  Instead of jumping str aight into advanced features, we start b y build -
+ing an understanding of the system itself, the terminology it uses, and the wa y it inter acts with
+a code base.  Along the wa y, you will see how Claude Code observes a project, builds context,
+and uses that context to assist with coding tasks.
+We start b y setting up a simple Next.js project and integr ating it with Claude Code.  This gives
+us a pr actical wa y to explore concepts lik e CLAUDE.md  files, the permission system, and wh y
+being deliber ate about context matters.  We also look at how Claude Code can be extended us -
+ing external tools through the Model Context Protocol (MCP) , and what that enables in da y-
+to-da y workflows.
+The chapter also introduces spec-driven design as a wa y to guide Claude's behavior before an y
+code is written.  By creating and referencing a specification, we can influence the quality and
+consistency of the results we get back.  As part of this process, we start building a project called
+HookHub.  The  HookHub project you build here will sta y with us throughout the book and act
+as a shared reference point as we move into more advanced agentic workflows later on.
+The following topics will be covered in this chapter:
+Setting up the Next.js project
+Connecting Pla ywright MCP to Claude Code
+Using spec-driven design
+Implementing the main page using spec-driven design
+All right.  Let's get to it!
+Installing Claude Code
+Before proceeding, ensure that Claude Code is installed on your machine.
+Claude Code now provides a native installer that detects your oper ating system and in -
+stalls the appropriate version automatically . Follow the official installation guide:
+https://code.claude.com/docs/en/setup#native-install-recommended
+The installer handles setup and updates based on your machine type.  Once installation
+is complete, you can verify it b y running:
+claude --version
+After confirming Claude Code is installed correctly , continue with the Next.js setup
+below .
+All terminal commands in this chapter are demonstr ated on macOS.  If you are using
+Windows, you should run these commands inside WSL  (Windows Subsystem for
+Linux ) or an equivalent Unix-lik e shell environment.  This ensures that commands such
+as npx, npm, claude , and other CLI tools behave as shown in the examples.NOTE
+Setting up the Next.js project
+In this section, we will set up the Next.js project manually . Although Claude could have been
+prompted to create the Next.js project, I am doing this manually due to local permission issues
+and configur ations that need to be handled beforehand.  For those who prefer, Claude is fully
+capable of running these Bash commands when given the correct syntax.
+We begin b y setting up a Next.js project.  You can follow the official Next.js installation guide
+(https://nextjs.org/docs/app/getting-started/installation ) or paste the following command:
+npx create-next-app@latest
+As you can see from the following screenshot, we are in the project/HookHub  branch.
+Figure 2.1 – project/hookhub br anch
+We paste the  command and scaffold the Next.js project.  You will get an option to proceed as
+shown:
+edenmarco@Edens-MacBook-Pro-2 claude-code-crash-course % npx create-next-app@latest
+Need to install the following packages:
+create-next-app@15.4.6
+Ok to proceed? (y)
+After pasting the command, you ma y encounter an error.  This occurs because the current user
+does not have the required permissions to install packages globally on the system.
+There are two wa ys to resolve this.  One option is to run the command with sudo . Another op -
+tion is to adjust npm permissions so that the installation can proceed without elevated privi -
+leges.  For simplicity , we rerun the command with sudo , which gr ants the necessary
+permissions.
+Once executed with the correct permissions, the Next.js project scaffolding proceeds success -
+fully . You will be prompted to confirm the configur ation options.  Select the default options and
+continue.  The dependencies are then installed, and the boilerplate code for the Next.js project
+is gener ated.
+After installation is completed, navigate into the newly created project directory:
+cd hookhub
+Now start the development server:
+npm run dev
+If you attempt to run the server from the wrong directory , the command will fail.  Ensure that
+you are inside the project directory before running it.
+Once the server starts successfully , open http://localhost:3000  in your browser.  You should
+see the default Next.js boilerplate application.
+At this point, the Next.js project is running locally and ready to be integr ated with Claude Code.
+After running the command again, we create the project hookhub.  Select Yes for the prompts
+and install all the required dependencies.  Once the setup is complete, you will be able to see
+the boilerplate code for the Next.js project.
+Running and verifying the application
+Once everything is set up, we navigate into the hookhub directory and run the  project using
+npm run dev .
+The Next.js application is now running.  Open localhost:3000  and you will see the standard
+Next.js boilerplate application as shown:
+Figure 2.2 – Default Next.js application running on localhost:3000
+Initializing Claude code
+Before making  further changes, return to Claude Code and provide it with the context of the
+project.  This is done b y initializing CLAUDE.md  files so that they can be added to the project
+context.
+Claude Code is opened through the Cursor integr ation.  I personally prefer positioning Claude
+Code centr ally and the code editor on the right, as shown.  This setup allows Claude Code to act
+as the primary driver.
+Figure 2.3 – Claude Code opened via Cursor Integr ation
+The first step when initializing a project with Claude Code is to run the /init  command.  This
+applies whether the project is new or already contains man y files.  When /init  is executed,
+Claude scans the files, checks their content, and begins gener ating reflections on the code base.
+Claude identifies the tech stack, main content, and directory structure.  All of this information
+is captured in a CLAUDE.md  file, which will be explored later in the book.  These Mark down
+files will eventually be distributed across the project to support context engineering.  The pur -
+pose of these files is to send high-quality context to the LLM with every request.  This mak es it
+easier for the LLM to gener ate accur ate and useful code.
+While Claude runs, its status shows that it is Booping .
+Figure 2.4 – Booping in Cursor Integr ation
+In this context, Claude is analyzing the repository , exploring the directory structure, and read -
+ing file contents.  After that, a task will be created to analyze the codebase structure, and a se -
+ries of batch  commands will be executed to list and read files.
+Please k eep in mind that this process can tak e longer for larger projects.  Once it is done,
+Claude prepares to create the CLAUDE.md  file based on the information it has gathered and
+will gener ate the following:
+Figure 2.5 – Gener ated CLA UDE.md file with project overview and commands
+As you can see, a CLAUDE.md  file has been created, containing the project structure and related
+details.
+To save  the file, Claude requests permission.  We can either allow it to write the file and contin -
+ue editing without further prompts or den y the change if we want to modify or discard it.  This
+permission system applies to every new file or edit.
+Opened changes in Cursor
+Save file to continue...
+Do you want to make this edit to CLAUDE.md?
+1. Yes
+2. Yes, and don't ask again this session (shift+tab)
+3. No, and tell Claude what to do differently (esc)
+This is an important part of pr acticing safe agentic coding.  Allowing unrestricted access can
+quickly lead to unintended file changes and bugs.  Maintaining control ensures safer
+workflows.
+Select Yes for now and choose not to be ask ed again during this session.  Claude completes the
+process and creates the CLAUDE.md  file.
+Contents of the CLA UDE.md file
+The file  includes the project architecture, structure, and basic information such as the
+following:
+The project goal
+The business problem being solved
+How the project is run
+The fr ameworks in use, including Next.js
+The folder and directory structure
+From this point on, whenever prompts are sent to Claude Code, it first loads the relevant
+CLAUDE.md  files.  These files evolve dynamically as the project changes.  When major updates
+occur, the /init  command can be run again, and additional CLAUDE.md  files can be added as
+needed.
+As more metadata and structur al information are provided, Claude is able to behave more con -
+sistently and gener ate higher-quality results.
+Claude Code now provides a dedicated installer, which handles setup and updates automatical -
+ly. If issues occur, rerunning the installer typically resolves them.
+After exiting the current session and restarting, a new command called security review  be-
+comes available.  This command introduces a sub-agent designed to assist with security re -
+views and penetr ation testing against common vulner abilities.  It analyzes your codebase and
+flags common issues such as insecure patterns, misconfigur ations, and vulner abilities aligned
+with O WASP T op 10 risks.
+Sub-agents will be covered in depth in Chapter 3 .
+Connecting Pla ywright MCP to Claude Code
+We begin b y searching in Google for Pla ywright MCP . For those who do not know , Pla ywright is
+a browser automation tool that can be connected to Claude Code using the Model Context
+Protocol (MCP).  If you do not know what MCP is, do not worry , it is covered in depth in the
+book.  There is also an entire chapter dedicated only to MCP .
+You can think of MCP as external capabilities that we can equip Claude Code with.  In this
+repository , there are instructions for how to connect Claude Code to the Pla ywright MCP . Scroll
+and find the following command:
+claude mcp add playwright npx @playwright/mcp@latest
+Copy the command and paste it into the terminal.  At this point, we are using the Claude Code
+command-line interface  (CLI).
+Figure 2.6 – Running Claude Code CLI in the terminal
+In the terminal, we enter the command as shown in the following:
+edenmarco@Edens-MacBook-Pro-2 claude-code-crash-course % claude mcp add playwright npx @playwright/
+As you  can see, we specified the MCP name as playwright  and used npx
+@playwright/mcp@latest , which is where Claude Code pulls the repository and runs the code.
+The code being run is the Pla ywright MCP , and this is what gives Claude Code the extr a capabil -
+ity of browser automation.
+We also added the -s user  flag.  This ensures the MCP works for every instance of Claude
+Code we open because it is applied at the user scope.  By doing this, we are taking advantage of
+Claude Code's hier arch y system, which will be covered in depth in later sections.
+Verifying the MCP connection
+Now , we open Claude again and enter /mcp . After pressing Enter , we should see all the MCP
+servers connected to Claude Code.
+Figure 2.7 – V erifying MCP Server Connections in Claude Code
+We can see the playwright  MCP , and we can also see another MCP called context7 , which was
+configured earlier.  This is another useful MCP that will be discussed later.
+Using Pla ywright MCP to pen a browser
+To verify the  Playwright MCP integr ation, we enter open browser  in Claude Code and add cn-
+n.com . At this point, we encounter the permission system again, similar to the one shown:
+Figure 2.8 – Pla ywright MCP Permission Prompt to Open a Browser
+Claude Code prompts us with a tool use request, asking whether it can run the Pla ywright tool
+to navigate to the URL cnn.com .
+This is an external tool that has been connected to Claude Code, not a built-in tool.  A built-in
+tool would be something lik e editing a file, creating a file, or deleting a file.  As before, select
+Yes, and choose not to be ask ed again for this specific tool.
+A browser opens, and we are now on cnn.com . Claude Code has used the Pla ywright MCP for
+browser automation and opened the site.
+This becomes  useful when we want to test a user interface or perform UI automation.
+Using cursor rules as additional context
+Next, open a browser and search for cursor directory , or navigate directly to https://cur -
+sor.directory/ . The Cursor directory is a place where useful Cursor rules can be found.  These
+rules allow additional context to be provided to Cursor through Mark down files, such as per -
+sonas for the AI coding assistant—for example, making it behave lik e a senior developer spe -
+cialized in a specific field.
+These Cursor rules also work with Claude Code.  To see this in pr actice, look for a Cursor rule
+for Next.js, select one, and cop y it as shown.
+Figure 2.9 – Browsing Cursor Directory for Next.js Rules
+Creating a frontend memory context
+We return to Cursor and add this to a CLAUDE.md  file.  We already have the CLAUDE.md  file that
+Claude created previously . We also have a broader memory system in which we can provide
+Claude with extr a context.
+In this case, we want to give it the Cursor rule and the persona of someone who knows Next.js
+very well, with the goal of producing better results.  We first create a directory called memory ,
+then create a subdirectory called frontend . Inside it, we create a file named CLAUDE.md  and
+paste in the Cursor rule that you copied previously .
+The rule that I copied contains content such as: "You are a senior frontend developer and an ex -
+pert in React, Next.js, JavaScript, TypeScript, HTML, CSS… " and so on.  In effect, we are giving
+Claude Code a more focused persona aligned with the tech stack we are using.
+In the previous CLAUDE.md  file, we told it that we are using a Next.js tech stack.  In this
+CLAUDE.md  file, we are giving it a persona.
+At this point, it is clear that context is important for LLMs.  So, we ask Claude the following
+question:The memory file mentioned will not be automatically loaded b y Claude.  This is inten -
+tional.  Claude only auto-loads certain CLAUDE.md  files b y default.  In this chapter, we
+are setting up the memory structure first.  In Chapter 3 , we will configure when and
+how these memory files are loaded so they influence responses.NOTE
+What are you expert in?
+You might expect it to recite that it is an expert in frontend engineering, Next.js, TypeScript,
+and everything written in the CLAUDE.md . However, the response ma y be surprising.
+The answer comes back as a generic statement:
+Figure 2.10 – Generic Claude Response Without Loaded Project Context
+As you can see, it sa ys "expert AI assistant specialized in software engineering and coding
+tasks," without an ything specific to Next.js or frontend.  This mak es it seem lik e the file is not
+working.
+However, this is b y design.  Claude has a system of automatically loading CLAUDE.md  files, and
+this will be covered in depth in Chapter 3 . There are also other files, called memory files, that
+are not automatically loaded.
+Instead, we can  explicitly tell Claude when to load them, depending on context.  This opens the
+door to context engineering, which will be explored in the book.
+The idea is that we can configure Claude to load the frontend context only when needed.  For
+example, we can load it when designing or building the UI, when working only on TypeScript
+files, when working in specific directories, or when the request is clearly related to frontend
+work.
+This gives us the freedom to customize Claude's behavior according to our needs.  This will be
+demonstr ated in the book, and one hint is that hooks can be used for this.  We can reference
+context from other files, and there are sever al wa ys to work with memory , which will be cov -
+ered in depth later in the book.
+Using pec-driven design
+In this section, instead of vibe coding the application, we use something called spec-driven de -
+sign . This will be elabor ated on later in the book, but the gener al idea is to create a spec file de -
+scribing the application, the use case or business use case, and possibly some nonfunctional
+requirements.
+The spec file that we create should tell Claude to reference the spec file when it is going to
+code.  This helps optimize the context window and improves the results we get.
+To begin, we press Shift  + Tab and switch to plan mode  in Claude Code.  Plan mode is designed
+for tasks lik e this, where we want to do read-only work, conduct some research, and plan what
+Claude is going to do.
+I have added the following prompt, in which I ask Claude to help write a spec file for a project
+called HookHub.
+I want you to help me write a spec file for a project I am building.  It's called "hookhub".  It's a 
+As shown in the prompt, I have
+Described HookHub  as a place where open-source Claude hooks are displa yed and browsed
+Asked Claude to search for Claude hooks  and write an initial specification
+Clarified that this is an MVP, with functionality limited to displa ying hooks
+Specified that hooks are found in Git repositories  and include a name, category , de-
+scription, and a link to the repository
+Stated that the main page should display the hooks in a grid vie w
+This is the full prompt.  There is nothing fancy here, and no prompt engineering is applied.
+Once we submit the prompt, Claude only uses read-only tools.  No writing or editing occurs at
+this stage.
+Claude begins b y researching Claude hooks.  It calls the web search tool with queries related to
+open-source Claude Code hooks and requests permission to fetch documentation from
+Anthropic, which we approve before proceeding.
+After the research step is completed, Claude presents a plan similar to the following:
+Figure 2.11 – Claude's Proposed Plan for HookHub MVP Specification
+The plan includes the following:Since we are working in plan mode, we also need to select the model before pasting the
+prompt.  Most of the time, when using plan mode, we prefer heavier models with deep
+reasoning capabilities.  To control which model is used, we run the /models  command
+and ensure that the latest version of Opus is selected.  At the time of writing, this is the
+most advanced model available for deep reasoning.  When the prompt is pasted, we
+only see a representation of the text r ather than the actual text.NOTE
+Creating a specification that covers the project overview
+MVP scope
+Data model for a Claude Code hook
+UI and UX requirements
+Technical architecture
+User stories
+Future consider ations
+At this point, we approve the plan.  Claude then moves to write mode and requests to write the
+file to hookhub/SPEC.md . Decline and instruct Claude to write the spec under a spec directory
+and name the file CLAUDE.md .
+I want you to write it into a spec directory and make this a CLAUDE.md file
+Claude responds again and prepares to write the file under spec/CLAUDE.md . Approve this and
+allow the edit.
+Claude will provide a to-do list for the first time.  Claude begins iter ating through the tasks and
+requests.  We approve the actions as prompted.
+Claude creates the spec  directory and gener ates the CLAUDE.md  file.  We will go into much
+more detail about to-dos later in the book, but it is important to note that they pla y a major
+role in the  quality of the results.  This is one of the reasons Claude Code works well as a coding
+agent.  Specifically , Claude Code behaves as a deep agent that can handle long-running, multi-
+step tasks that require significant reasoning.  Deep agents and how Claude fits into this catego -
+ry will be covered later in the book.
+Reviewing the gener ated spec
+Once the process is completed, we now have a new CLAUDE.md  file.
+Figure 2.12 – HookHub Product Specification in CLA UDE.md
+The file includes the project overview , vision, and a large amount of information that will help
+Claude during implementation.
+The spec provides useful context, such as hook categories, hook object structure, and how the
+application should look.  It also includes the steps required to build the project.  This document
+will be added to the repository and will help Claude produce better results during
+implementation.
+With this, you should have an idea of how using an LLM to help gener ate a spec is a common
+pattern.  Other advanced patterns will be covered later in the book.
+Finally , move the spec  directory under the memory  directory .
+At this point, your structure should look lik e this:
+memory/
+  ├── frontend/
+  │   └──  CLAUDE.md
+  └── spec/
+      └──  CLAUDE.md
+This allows all long-term context to live in one place and be reused whenever it is needed.
+Implementing the main page using the SPEC
+Before we implement  anything, we switch the model and use Sonnet . In the prompt, we write
+the following:
+Can you please help me implement the main page grid as specified in the spec file?
+We then use the @ symbol to tag the spec file.  The spec file we have is spec/CLAUDE.md . We
+will need to tag the file to attach it to the context.
+Every time we mak e a prompt, get a result, and then mak e another prompt, we k eep
+filling the context.  Over time, this results in man y back-and-forth iter ations between us
+and Claude.
+If we continue using the same session without doing an ything about it, we eventually
+fill the context window . When that happens, results start to get worse.
+There are a couple of wa ys to handle this.  There are custom commands, which will be
+covered later in the book, that help clear or summarize the context window while k eep-
+ing the useful parts.  For now , we use a simple, naive technique.  Claude Code also pro -
+vides built-in commands such as /clear  and /compact  for managing the context win -
+dow without restarting the session.  These were introduced earlier, and we will revisit
+them later.  For now , restarting gives us a clean slate in the most str aightforward wa y.
+We exit the current Claude Code session b y running /exit . After that, we open Claude
+again, navigate into the HookHub Next.js project, and open it from there.  At this point,
+the context is fresh and empty .
+We write the prompt again: Can you please implement the main page, a grid of the hooks,
+as specified in the spec file?
+This time, we notice that the file reference cannot be found.  The reason is that Claude
+Code was opened within the HookHub  directory , but the memory  directory is still at the
+root of the project.NOTE
+Running the implementation
+We write the prompt again to implement the grid according to the spec file.  Claude now begins
+doing the heavy lifting.  It creates a to-do list and starts implementing each task in the list.
+A request will appear to approve file writes, such as creating the Hooks.ts  file.  Once ap -
+proved, the implementation will continue and will tak e some time to complete.
+Once the implementation is completed, the hook card component is created, and Claude con -
+tinues running through the remaining steps.  It then runs linting to catch potential errors.  Once
+that finishes, we see a summary of what was implemented, including the card components, the
+hero section, the header, and other related pieces.
+Figure 2.13 – Claude Implementation Summary After Code Gener ation
+Refresh the application in the browser and you will see a grid of Claude Code hook cards.
+Figure 2.14 – Basic Next.js application
+This is a basic Next.js application.  While some features, such as search, are not yet implement -
+ed, others are already in place.  Over all, it provides a solid sk eleton that we can continue build -
+ing on.
+Later in the book, we will explore advanced agentic workflows for AI coding.  This includes
+spinning up multiple sub-agents dynamically , iter ating on UI components, and using meta-To fix this, we move the memory  directory up in the hier arch y so that it sits under
+hookhub . Once this is done, the file reference works as expected.  After this move, the
+memory directory is no longer at the cr ash course root level.  It now lives inside the
+HookHub project directory .
+prompting.  This project will serve as the foundation for those experiments.
+At this point, we commit the code to the repository so it can be shared.  We run git status ,
+add all files, and confirm that there are no secrets or environment variables included.
+We then commit the changes with a message such as initial project  and push them to the
+repository .
+From the repository , you can navigate to the project/hookhub  branch, review the files, and
+pull the exact code from this commit.  A command is also provided so you can clone the reposi -
+tory and get everything set up locally . To access the repository link, follow the steps in the
+Download the example code files  section in the Preface .
+After completing all the steps in this chapter, your HookHub project should have the following
+structure:
+hookhub/
+  ├── app/
+  ├── components/
+  ├── memory/
+  │   ├──  frontend/
+  │   │   └──  CLAUDE.md
+  │   └──  spec/
+  │       └──  CLAUDE.md
+  ├── package.json
+  ├── next.config.js
+  └── ...
+If your structure matches this, you are correctly set up for the next chapter.
+Summary
+In this chapter, we established a pr actical foundation for working with Claude Code b y moving
+through each step of the setup and workflow . Rather than jumping str aight into advanced fea -
+tures, we focused on understanding how Claude Code observes a project, builds context
+through CLAUDE.md  files, and relies on explicit permissions to oper ate safely . This groundwork
+is essential because the quality of results you get from Claude Code depends directly on the
+quality of context, structure, and control you provide.
+We also saw how Claude Code can be extended beyond its built-in capabilities using MCPs,
+how external tools lik e Pla ywright fit into the workflow , and wh y spec-driven design helps pro -
+duce more consistent and predictable outcomes.  The HookHub project created here is not just
+an example, it is a working baseline that will be reused as we explore more advanced agentic
+workflows later in the book.  Every concept introduced in this chapter is something we will
+build on, r ather than revisit from scr atch.
+In the next chapter, we will cover pricing and authentication, slash commands, user and
+project level configur ation, and integr ation with Cursor.
+Get this book's PDF cop y, code bundle, and more
+Scan the QR code (or go to packtpub.com/unlock ). Search for this book b y name, confirm the edition,
+and then follow the steps on the page.
+Note: Have your invoice handy . Purchases made directly from the Packt website don 't require an
+invoice.

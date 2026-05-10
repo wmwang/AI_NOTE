@@ -1,0 +1,713 @@
+3
+Getting Started with Claude Code – A T our of
+Essential Commands
+In this chapter, we will move from getting started with Claude Code to configuring it for da y-to-
+day use.  The goal is to help you get comfortable with how Claude Code behaves in pr actice,
+how you control it inside a session, and how you set it up so it sta ys consistent across projects.
+We will briefly cover pricing and authentication so you can choose the right setup before you
+begin.  After that, we focus on the parts you will use constantly: slash commands for managing
+sessions and context, configur ation at the user and project level, and running Claude Code di -
+rectly inside IDEs lik e Cursor.  We then build on those foundations with the features that mak e
+longer workflows more secure and reliable, including hooks for automation, memory through
+CLAUDE.md  files, rewind through checkpointing, and custom slash commands (skills) for re -
+peatable, well-scoped workflows.
+The following topics will be covered in this chapter:
+Pricing and plans for Claude Code
+Controlling Claude Code with slash commands
+Using hooks in Claude Code
+Understanding memory in Claude Code
+Rewind feature in Claude Code
+Skills in Claude Code
+Pricing and plans for Claude Code
+In this section, we  will discuss the pricing options and the different plans available for oper at-
+ing and consuming Claude Code.  We start with authentication because the wa y you authenti -
+cate also determines how you are billed for tok en usage.Skills can be invok ed manually using the /skill-name  syntax, which is wh y older doc -
+umentation sometimes refers to them as skills. Internally , they are now unified under
+the Skills  system.NOTE
+Pricing and plan details mentioned in this section are accur ate at the time of writing.
+Because subscription tiers, usage limits, and billing policies ma y change, alwa ys refer to
+the official Claude pricing page for the most up-to-date information:
+https://claude.com/pricingNOTE
+Figure 3.1 – Claude Code authentication options screen
+Claude Code provides three main wa ys to authenticate and pa y for the tok ens you use.
+Figure 3.2 – Login methods for Claude Code subscription and API billing
+Option 1: Using an Anthropic API k ey
+One option  is to authenticate using an Anthropic API k ey. This uses a pa y-as-you-go billing
+model, where usage is tr acked through the Anthropic console.  This option is useful for users
+who prefer usage-based billing or who want to evaluate Claude Code before committing to a
+subscription.
+When using the Anthropic API k ey method while following this book, usage will vary depend -
+ing on how frequently Claude Code is invok ed and which models are used.
+If you follow this option, select the API k ey authentication method and authorize Claude Code
+through your Anthropic organization.  Claude Code then gener ates an API k ey and configures it
+automatically in the terminal.  Once complete, Claude Code oper ates using the pa y-as-you-go
+model.
+Points to k eep in mind when using Anthropic API
+When using an API k ey, it is important to monitor tok en consumption.  This can be done direct -
+ly inside Claude Code using the /cost  command.  This command is available only when
+Claude Code is authenticated using an Anthropic API k ey. It displa ys the number of tok ens con -
+sumed and their distribution.
+Figure 3.3 – Monitoring T oken Usage with the /cost Command
+The same information is also available through the Anthropic console.  The cost is zero because
+no tok ens have been  used yet.  Just type an ything, and then once you receive the output, type
+/cost  again.
+Figure 3.4 – Updated T oken Usage after Running a Prompt
+Please remember that pricing varies depending on the model being used.  For example, using
+Opus results in higher tok en costs compared to other models.
+Important consider ations when using an API k ey
+Using an API k ey requires caution.  There is a risk of accidentally exposing the k ey, which could
+allow others to consume tok ens at your expense.  In extreme cases, this can result in unexpect -
+edly high charges.
+In addition, this book involves working with agents, sub-agents, and orchestr ation patterns, all
+of which can consume a large number of tok ens. If something is misconfigured, it is possible to
+trigger man y agents simultaneously , significantly increasing costs.
+One wa y to mitigate this risk is to set spending limits in the Anthropic console.  Anthropic al -
+lows you to define usage limits for your account, after which requests are no longer served.
+For details on configuring these limits, refer to the Anthropic settings page ( https://platform. -
+claude.com/settings/limits ).
+Option 2: Using a Claude subscription
+If you  followed the setup in Chapter 2 , you are using Option 2, which  authenticates through a
+Claude subscription.  We will be using this option throughout this book, which is authenticating
+through a Claude subscription.  With this approach, you connect your existing Claude subscrip -
+tion directly to Claude Code.  This provides seamless integr ation with predictable monthly
+billing.
+Claude currently offers the following subscription tiers:
+Free – $0/month (does not include access to Claude Code)
+Pro – $20/month
+Max 5x – $100/month
+Max 20x – $200/month
+Claude Code access is available starting from the Pro plan and above.
+In this book, I use the Max 5x plan, which provides higher usage limits than Pro while remain -
+ing cost-effective for regular development workflows.
+Now , unlik e the previous option, with a subscription plan, cost monitoring behaves differently .
+Since Claude Code usage is included in the subscription, there is no need to tr ack tok en-level
+costs using /cost . Pricing is fixed, although usage limits still apply depending on the plan.
+Figure 3.5 – Viewing Subscription Usage with the /usage command
+Available models under this option
+Using the /models  command shows which models are available.  Claude Code currently sup -
+ports Opus, Sonnet, and Haiku:
+Claude Opus : Claude Opus  is the most capable model and is well suited for complex tasks
+and deep reasoning.  It has a context window of 200K tok ens and is typically used for deep
+planning or research tasks.  Because of its higher cost, Opus is gener ally not used for writing
+large amounts of code.
+Claude Sonnet : Claude Sonnet  provides a balance between intelligence, speed, and cost.  It
+also has a 200K tok en context window and is the primary model used for code gener ation
+throughout this course.  Because of its balance, Sonnet performs most of the heavy lifting
+when writing and modifying code.
+Claude Haiku : The  fastest and most lightweight model.  It is well suited for simple tasks,
+quick iter ations, and lower-latency workflows where speed is more important than deep
+reasoning.
+Subscription plans and pricing
+Claude offers sever al subscription tiers.
+Free plan
+Pro plan
+Max 5x plan
+Max 20x plan
+Rate limits were introduced to prevent misuse, such as sharing credentials or abusing the sys -
+tem.  These limits apply across Pro and Max plans.
+For most users, especially hobb yists, starting with the Pro plan is recommended.  Upgr ading to
+the Max plan mak es sense only when higher usage becomes necessary .
+Exact usage limits can be difficult to quantify , and this is not unique to Claude Code.  Pricing for
+AI coding agents is an ongoing challenge across the industry . Changes in pricing models have
+led to frustr ation in the developer community , and this remains an evolving area.
+This section was intended to clarify the available pricing options and help you understand
+how billing works when using Claude Code so you can choose the approach that best fits your
+needs.
+Controlling Claude Code with slash commands
+Slash commands  are the primary wa y to control Claude Code features and settings within the
+Claude Code chat.  When we type /, Claude Code shows a list of available commands, as shown
+here:The models themselves are hosted and served b y Anthropic.  For enterprise environ -
+ments, they can also be accessed through supported third-party cloud providers such as
+AWS Bedrock, Google Cloud V ertex AI, or Microsoft Azure.  This setup is typically used
+by organizations that require centr alized billing, cloud-specific compliance controls, re -
+gional deplo yment options, or governance through existing cloud infr astructure.NOTE
+Option 3: Using a third-party cloud provider
+Claude Code can also be authenticated through supported third-party cloud platforms
+such as Amazon Bedrock, Microsoft Azure AI, or Google Cloud V ertex AI.  In this case,
+billing and usage are managed through the selected cloud provider r ather than through
+a Claude subscription or an Anthropic API k ey. For details on supported third-party in -
+tegrations, refer to the official documentation: https://code.claude.com/docs/en/third-party-
+integrationsNOTE
+Figure 3.6 – Listing available slash commands in Claude Code
+When we chat a  lot with Claude Code, the conversation can get very long, which can slow
+things down and cause context rot, which will be discussed later in the book.  It can also cost
+more money or even confuse Claude if it has too much to remember.
+To handle this, there are two commands
+/clear , which er ases everything and starts fresh, lik e a clean slate
+/compact , which creates a short summary of what is important, k eeps the k ey information,
+and removes extr a detail
+Using /clear  and /compact  helps Claude sta y focused and work better over time.  This is con -
+text engineering in action (see Chapter 1 ).
+Let us start the session from zero.  For that, we need to run /clear .
+Another command worth noting is /agents , which helps manage specialized sub-agents.  Sub-
+agents  can be thought of as expert assistants created for specific tasks, such as a code review -
+er, debugger, or architect.
+They oper ate with their own context and tools, and they are used as part of multi-agent work -
+flows.  Sub-agents and these workflows will be covered in a hands-on section later.
+Next, we have the /config  command.  The /config  command opens the configur ation panel
+for Claude Code, where settings and preferences are shown.  Once you run this command, you
+will see the settings as shown here:
+
+Figure 3.7 – Claude Code settings panel with configur ation options
+For example, we can see that Auto-compact  is enabled.  This means Claude will automatically
+run /compact  when it detects that the conversation is approaching tok en limits or when it de -
+cides it is a good point to compact the context.  There are also settings such as using to-do lists,
+checkpointing, and other options.  We will not go through all of them here; the complete and
+up-to-date list of settings is available in the official Claude Code documentation ( https://code. -
+claude.com/docs/en/settings ).
+Beyond the individual options themselves, what matters is how these settings are organized
+and applied.  Claude Code provides a gr anular configur ation system:
+User-wide settings, stored in the home directory under .claude/settings , apply globally
+to every Claude Code instance
+Project-specific settings, stored in .claude/settings.json  within a project directory ,
+apply only to that project and can be shared with a team
+Local settings, allowing personal tweaks without affecting shared project settings
+This structure mak es it possible to maintain global defaults, apply project-level guidelines, and
+still k eep individual preferences.  Throughout the book, the settings shown can be configured
+through these settings files based on personal and team needs.
+Finally , we look at /cost . Since this setup uses a Claude Pro subscription, cost monitoring is
+not shown here because the subscription includes Claude Code usage.  The /cost  command
+becomes more relevant when you use an Anthropic API k ey.
+Integr ating Claude Code with the IDE
+Before  wrapping up this section, let us see how to integr ate Claude Code with an IDE.  In this
+example, we will integr ate it with the Cursor IDE.  Open the slash menu and select IDE to inte -
+grate Claude Code into Cursor.  This will install the Claude Code extension directly in the IDE.
+Once installed, we can see the Claude Code extension inside Cursor.
+Figure 3.8 – Claude Code extension inside the Cursor editor
+You will notice the Claude Code icon in the top-right corner.  This is how most developers use
+Claude Code in pr actice.  Claude Code is typically opened through the Cursor extension, so it
+runs directly inside the IDE.  This allows us to work within the editor, view diffs more clearly ,
+and k eep everything in one  place.  We will use this setup throughout the book.
+We also have the /mcp command, which is used to manage MCP servers.  With this
+command, we can add, remove, and list all configured MCP servers.
+At this point, no MCP servers are configured.  MCP servers provide additional function -
+ality that can be added to Claude Code.  They ma y come from verified vendors or be
+open source, and they effectively extend Claude Code with extr a tools and capabilities.
+MCP is a deep topic on its own.  Throughout this book, we will be integr ating and using
+MCP servers as part of our workflows.  For now , it is assumed that you are familiar with
+the basic idea of MCP servers.NOTE
+Using hooks in Claude Code
+Hooks are  a powerful feature in Claude Code.  They are automatic logic that runs at specific
+points during Claude Code's workflow .
+Figure 3.9 – Hook configur ation and security warning in Claude Code
+For example, hooks  can run before or after a tool is used, or when Claude finishes working.
+They help automate tasks such as formatting code, running tests, or blocking unsafe edits.  By
+doing this, hooks ensure that these actions happen consistently without manual intervention.
+Creating a notification hook
+Let us now  configure our first hook.  In this section, we will build a simple notification hook
+that pla ys a sound whenever Claude finishes producing output.
+All the related code can be found in the repository under project/hooks-notification .
+Before proceeding, clone the repository and check out the project/hooks-notification
+branch.
+Initializing the environment
+Follow these steps:
+1. Ensure  that the repository contains all required artifacts, including the sound file.  Remove
+everything except the audio recording so that the setup starts from scr atch.
+2. Initialize the Python environment for the hook.  Since the hook is a Python script, initialize a
+Python environment and install dependencies.  Initialize the environment using uv. Run
+the following:
+uv init
+This creates a virtual environment and a main file.Hooks are a k ey part of building reliable workflows, and we will spend a significant
+amount of time working with them hands-on later in the book.  To give a brief preview ,
+hooks can also be used to trigger Claude's sub-agents.  Each sub-agent runs with its own
+context and its own set of tools, which opens the door to more complex and powerful
+workflows.NOTE
+This example uses uv, a fast Python package and environment manager b y Astr al. If you do not
+have uv installed, follow the installation instructions in the official documentation: https://doc -
+s.astral.sh/uv/.NOTE
+3. Rename and run the main file.  Rename the main file to play_sound.py , then run the
+following:
+uv run play_sound.py
+This confirms that the environment is set up correctly .
+4. Reopen Claude Code and verify that the hook does not exist yet.  Run a prompt and confirm
+that a response is produced but no sound is pla yed.
+5. Tell Claude Code to write the hook script.  Use the following prompt.
+I want you to please write a python script that is going to play the sound @ulala.wav, every tim
+Ask Claude to write a Python script that pla ys the recorded sound every time it runs.
+Review the proposed changes.
+Figure 3.10 – Reviewing and approving hook file changes in diff view
+6. Claude shows a diff  view , highlighting added and removed lines, and asks for permission
+to edit play_sound.py . Approve the file edit:
+Choose one of the approval options:
+1. Approve once
+2. Approve for the rest of the session
+3. Reject and provide different instructions
+Approving for the session updates local settings so Claude does not ask again for this file.
+This permission step is a security measure because Claude Code modifies files directly .
+7. Install the required dependencies.  The script uses pygame  to pla y audio.  Install it b y run -
+ning the following:
+uv add pygame
+8. Test the script.  Run the script again to confirm that the sound pla ys correctly b y running the
+following command:
+Uv run play_sound.pyCustomizing the notification sound
+The hook does not depend on a specific sound file.  It simply pla ys whichever file the script points
+to. The examples in this section reference @ulala.wav , but you can replace this with an y audio
+file you prefer.
+If you choose a different file, place it in the project (for example, under a hooks/  or assets/
+folder) and update the script to use the new filename or path.NOTE
+9. Open the hooks configur ation to register the script as an automated action.  Open the slash
+menu, type /hooks , and add a new hook from the list provided.
+1. PreT oolUse  – Before tool execution
+2. PostT oolUse  – After tool execution
+3. Notification  – When notifications are sent
+4. UserPromptSubmit  – When the user submits a prompt
+5. Stop  – Right before Claude concludes its response
+This step is  required so Claude Code knows when and how to automatically run the script
+instead of requiring it to be executed manually each time.
+10. Select the hook event.  Choose the Stop  event, which triggers just before Claude finishes its
+response.  This ensures that the script runs immediately after output is gener ated, making it
+suitable for notification-style hooks.  Other events exist, but this one matches our require -
+ments for now .
+11. Configure the hook command.  Set the command to the following:
+uv run play_sound.py
+If it is inside a folder lik e hooks/ :
+your/path/to/play_sound.py
+This ensures the script runs inside the virtual environment.  Select the project scope so that
+the hook applies only to this project.
+12. Review the gener ated configur ation.  A .claude  directory is created containing a settings
+file with the hook configur ation stored as JSON:
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher" : "",
+        "hooks": [
+          {
+            "type": "command" ,
+            "command" : "uv run
+              /Users/edenmarco /GithubProjects /
+                claude-code-crash-course/ play_sound.py "
+          }
+        ]
+      }
+    ]
+  }
+}
+The empty "matcher": " " field means the hook applies to all matching events of that
+type.  In this case, it triggers on every Stop event without additional filtering.
+The configur ation specifies the event type, the optional matcher, and the command to run
+when Claude finishes outputting.
+13. Reload Claude Code.  Exit Claude Code and reopen it so the new settings are loaded.
+14. Verify the hook.  Enter an y prompt and confirm that the sound pla ys every time Claude com -
+pletes its response.  This confirms that the hook is working as expected.
+At this point, the hook is fully configured.  Open Claude Code inside Cursor and enter an y
+prompt:
+hello how are you?
+Once Claude finishes responding, the notification sound should pla y automatically .
+This confirms that
+The Python environment is correctly initialized
+The script executes successfully
+The hook is registered and triggered on the Stop event
+If no sound pla ys, revisit the hook configur ation and ensure that the command path is correct.
+Before moving on, it is worth noting that hooks are one of sever al mechanisms Claude Code
+provides for extending behavior.  While hooks oper ate at specific execution points, other fea -
+tures focus on controlling context and persistence, which we explore next through the memory
+system.
+Understanding memory in Claude Code
+In Claude Code, memory refers to a system that allows the AI to retain and reuse important in -
+formation, such as settings, rules, and contextual details, across coding sessions.  The purpose
+of memory is to improve workflow efficiency and maintain consistency over time.
+Memory is primarily managed through special files called CLAUDE.md  files.  These files store in -
+structions and preferences that Claude Code loads at the start of each session and uses to guide
+its behavior throughout the inter action.
+Types of memory
+Memory in Claude Code is gr anular and can be defined at different levels:
+User memory : User-level memory  is stored in the user's home directory at
+~/.claude/CLAUDE.md . This file typically contains personal preferences that applyNotes on hooks and extensibility
+This hook does not receive an y arguments, but hooks can be configured to receive con -
+textual information.  This ma y include user input, tool calls, or other runtime details.
+Hooks are best organized inside a dedicated hooks directory , as they function lik e re-
+usable utilities.
+Hooks can also produce outputs that influence what Claude Code does next.  They can
+block actions, modify behavior, or even trigger sub-agents.  More advanced hook usage
+will be covered later in the book.  This example serves as a simple introduction.
+Skills continue to work as described earlier.  Internally , commands have been unified
+under the concept of skills.  Existing .claude/commands/  files remain fully supported,
+and equivalent skill definitions under .claude/skills/  behave the same wa y. Skills
+add optional structure, support files, and more control over when and how Claude is in -
+voked. More on skills will be covered in Chapter 9 .NOTE
+Keep production hooks lightweight.  Hooks run automatically and can execute fre -
+quently , so heavy scripts ma y introduce unnecessary latency . For simple notifications,
+a minimal system command such as afplay sound.wav  (macOS) or aplay
+sound.wav  (Linux) is often faster than loading a full Python runtime with external de -
+pendencies.  If possible, prefer lightweight commands for high-frequency hooks.TIP
+across all projects.  Examples include coding style preferences, frequently used workflows,
+shortcuts, and other habits that should remain consistent regardless of the project
+Project memory : Project-level  memory is stored as a ./CLAUDE.md  file within a project di -
+rectory . This memory typically contains team-shared rules and project-specific context,
+such as coding standards, architectur al decisions, and common workflows that apply only
+to that project
+Managed policy (organization-level memory) : Organization-wide  instructions managed
+by IT or DevOps teams.  These are stored in system-level paths (for example, /Library/Ap -
+plication Support/ ClaudeCode /CLAUDE.md  on macOS, /etc/claude-
+code/CLAUDE.md  on Linux/WSL, or C:\Program Files\ ClaudeCode \CLAUDE.md  on
+Windows).  This memory is used for compan y-wide coding standards, security policies, and
+compliance requirements, and it applies to all users within the organization.
+How does Claude Code read memory?
+Claude Code  loads memory using a hier archical and la yered approach.  Starting from the cur -
+rent working directory , it recursively searches upward through parent directories to locate rel -
+evant memory files.  All applicable memory files that are discovered are loaded into the session
+and combined to form the working context.
+This design allows Claude Code to support la yered configur ation.  Global preferences can coex -
+ist with project-level rules, and more specific instructions override broader defaults when con -
+flicts occur.
+The Claude Code memory hier arch y
+Claude Code organizes memory into multiple levels, each serving a distinct purpose.  Higher
+levels tak e precedence and cannot be overridden b y lower ones:
+Level 1 – Managed Policy (Highest Priority) : Organization-wide rules managed b y IT or
+DevOps teams
+Location : System-managed path (for example, /Library/Application
+Support/ ClaudeCode /CLAUDE.md  on macOS)
+Scope : Entire organization
+Override behavior : Cannot be overridden
+Level 2 – User Memory : This file captures personal preferences that apply across all
+projects:
+Location : ~/.claude/CLAUDE.md
+Scope : Personal only
+Level 3 – Project Memory : This file defines shared rules and conventions for a project:
+Location : ./CLAUDE.md  or ./.claude/CLAUDE.md
+Scope : Shared across the team and committed to version control
+Level 4 – Project Rules : For larger projects, memory can be brok en into topic-specific rule
+files:
+Location : ./.claude/rules/*.md
+Scope : Shared across the team and committed to version control
+Level 5 – Project Local Memory : Allows personal overrides for a specific project:
+Location : ./CLAUDE.local.md
+Scope : Personal only and automatically ignored b y Git
+When conflicts occur at the same level, more specific files (those closer to the current working
+directory) tak e precedence.
+How upward discovery works
+When Claude Code is launched, it begins searching for memory files from the current working
+directory and continues upward toward the file system root.
+For example, tak e the following directory structure:
+/Users/edenmarco/
+├── .claude/
+│   └── CLAUDE.md
+└── Desktop/
+    └── my-company/
+        ├──  CLAUDE.md
+        └──  frontend/
+            └──  CLAUDE.md
+Let's sa y Claude Code is started from the following:
+/Users/edenmarco/Desktop/my-company/frontend/
+The following memory files are loaded into the session:
+frontend/CLAUDE.md (current directory)
+my-company/CLAUDE.md (parent directory)
+~/.claude/CLAUDE.md (user-level memory)
+All three files are combined to form an effective context.
+Lazy loading of nested memory files
+Memory files located below the current working directory are not loaded immediately . These
+files are loaded lazily only when Claude Code accesses files within those subdirectories.
+For example, if Claude Code is started in the project root, a memory file inside a backend/  di-
+rectory is not loaded until Claude Code begins working with files in that directory .
+Adding and editing memory in Claude Code
+Adding memory can be done using the hashtag ( #) char acter, which prompts Claude Code to
+store the information in the appropriate memory file.  For more substantial changes, the /mem-
+ory command can be used to open the memory file directly in the code editor.
+A recommended best pr actice is to k eep memory files concise and specific.  Overloading memo -
+ry with vague or excessive information can waste tok ens, introduce confusion, and reduce the
+quality of results.
+Using memory reduces the need for repetitive instructions and helps ensure consistent output
+across sessions.  It mak es inter actions more efficient and focused, while preserving important
+context over time.
+If you have work ed with Cursor before, this concept is similar to Cursor rules.
+Initializing memory with /init
+Claude Code also provides the /init  command, which initializes a new CLAUDE.md  file
+based on the existing code base.  When run, Claude reviews the files in the project and gener -
+ates a CLAUDE.md  file containing relevant contextual information to support future
+inter actions.
+While this section focuses primarily on concepts r ather than hands-on examples, pr actical us -
+age will be demonstr ated shortly . The upcoming sections will show these ideas in action, mak -
+ing it easier to see how memory works in real workflows.
+Hands-on example: Using memory with an existing project
+To further illustr ate how memory works in pr actice, I use an existing repository created for a
+LangChain project.  This project was created to scr ape information from Link edIn and the X
+platform and use it to gener ate an icebreak er. More details on icebreak ers can be found at
+https://github.com/emarco177/IceBreaker . It is a pr actical example built with LangChain agents and
+works well for demonstr ating Claude Code's capabilities.
+We begin b y cloning the repository into a new directory and opening it in Cursor.  For this ex -
+ample, I have named the directory tmp3 . Once it is opened, we can see the full project struc -
+ture.  This is a Python project built using the LangChain stack.
+Figure 3.11 – Cloned IceBreak er repository opened in Cursor
+We then open Claude Code and pin it in the interface.  When prompted, we approve Claude
+Code's request  to access and analyze the project files.
+The first step is to create a CLAUDE.md  file for the project file b y running the /init  com -
+mand.  Running the initialization process causes Claude to scan all the files in the repository . It
+identifies the tech stack, installed packages, required environment variables, and over all struc -
+ture.  Based on this analysis, Claude gener ates a CLAUDE.md  file that captures this information
+as project memory .
+Figure 3.12 – Claude scanning repository files to gener ate CLA UDE.md
+During this  process, Claude lists directories, searches through files, and performs a quick
+analysis using pattern matching and content inspection.  After reading the files, it will produce
+a suggested CLAUDE.md  file.
+
+Figure 3.13 – Gener ated CLA UDE.md file with project overview and architecture details
+The gener ated file includes details such as how to install dependencies using pip, how to run
+the project, and an overview of the main components, including scr aping, summarization, and
+agent logic.  Once approved, this file will become part of the project's memory .
+From this point on, every prompt sent to Claude will include the contents of this CLAUDE.md
+file as part of the context.
+Verifying project memory
+To confirm that the memory is working, we first reset the conversation to eliminate an y influ -
+ence from prior chat history . Use the /clear  command, then ask the question again.  For in -
+stance, I have ask ed Claude about the tech stack used in the project:
+What stack am I using for this project?
+The following should be the output:
+Based on the codebase analysis, your project uses this tech stack:
+Backend Framework: Flask (Python web framework)
+AI/LLM Framework: LangChain with OpenAI GPT models (GPT-4o-mini for agents, GPT-3.5-turbo for conte
+Data Sources: Scraping (LinkedIn), Twitter API, Tavily (web search)
+Package Management: Pipenv
+Code Quality: Black (formatting), isort (import sorting), pylint (linting)
+Testing: pytest
+Output Parsing: Pydantic models
+Frontend: HTML templates with Flask templating
+Environment: Python 3.10+
+The core architecture is a LangChain-powered AI pipeline that combines social media data scraping w
+Claude has provided an accur ate response without needing to invok e an y tools.  This informa -
+tion was inferred earlier when Claude analyzed the files during initialization.
+With this, we can confirm that Claude is relying on stored memory r ather than the chat
+history .
+Adding and using memory entries
+Let us now see how to add new memory entries.  At this point, if we ask a question such as
+What do I lik e to eat? , Claude gener ates a response similar to the following:
+> what do i like to eat?
+I don't have any information about what you like to eat.  I can only see your codebase files and pro
+If you'd like to share what you like to eat, I'd be happy to help with any related coding tasks!
+To enable Claude to answer this question, we add a memory entry using the hashtag syntax.  In
+this case, we state that we lik e to eat pizza and store the entry in the project memory:
+# I like to eat pizza
+With this information added, after clearing the conversation and asking the same question
+again, Claude will now be able to answer correctly using the stored memory:
+> what do i like to eat?
+Pizza
+If we want to add another memory entry , we repeat the same process and add a new entry
+stating a preference for hamburgers.  This time, the entry is stored in user memory , which lives
+in ~/.claude/CLAUDE.md . Clear the conversation and try asking the same question again.
+Claude will correctly recall both preferences:
+> what do i like to eat?
+Based on your CLAUDE.md files, you like to eat both Hamburger (from your global preferences) and Pi
+The same approach can be used for other kinds of persistent information, such as preferred
+coding styles, commonly used tools, or recurring workflow conventions that we want Claude to
+remember across projects and sessions.
+Working with multiple memory files
+As projects grow , a single CLAUDE.md  file can become large and difficult to manage.  Claude
+Code supports using multiple CLAUDE.md  files distributed across a repository . Claude recur -
+sively tr averses the directory structure and loads all relevant memory files into the context.
+This allows memory to be organized in a structured wa y. For example, server-side context can
+live in one area, frontend context in another, and DevOps or Claude-specific rules elsewhere.
+This approach mak es memory easier to maintain and more targeted.
+When combined with hooks, this setup enables more advanced behavior.  For instance, differ -
+ent memory files can be attached depending on the type of work being done.  A context-switch -
+ing hook can attach database-related memory when working with database code, frontend
+context when working on UI components, or API-related memory when handling back end
+logic.
+This level of control allows memory to be tailored dynamically based on user input and work -
+flow needs, opening the door to more advanced and flexible context management patterns.
+Rewind feature in Claude Code
+In this section, we will explore Claude Code's checkpointing and rewind feature, which allows
+you to safely undo changes made during a coding session.  Claude Code automatically tr acks
+file modifications created b y each prompt, making it possible to roll back unwanted edits when
+needed.
+To trigger a rewind, press Esc twice or use the /rewind  command.
+Benefits and importance of the rewind feature
+The value of this feature  is str aightforward:
+It provides a safety net when experimenting with larger or more ambitious changes
+It allows alternative implementations to be explored without losing working code
+It mak es recovery from mistak es fast and predictable
+It reduces the cost of correcting AI-gener ated errors b y making undo oper ations easy
+It increases user confidence when working with AI-assisted coding
+It encour ages wider adoption b y lowering the perceived risk of using AI tools
+It is closely related to the Cost of AI Recovery ( CAIR ) metric
+(https://www.blog.langchain.com/the-hidden-metric-that-determines-ai-product-success/ ), which measures
+how easily users can recover from AI errors and is revisited later in the course
+The rewind feature was introduced sever al months after Claude Code was initially released.
+Figure 3.14 – Timeline of Claude Code releases and the rewind feature introduction
+The rewind feature was heavily requested b y the community , and sever al open source tools at -
+tempted to provide similar functionality before it became a native capability . Today, rewind is
+built directly into Claude Code and is intuitive enough that very little explanation is required.
+To understand how the rewind feature appears and behaves in pr actice, let us briefly review
+the interface context in which it is used.
+Using rewind in pr actice
+At the time  of writing this book, Claude Code is running version 2.1.  The interface includes sev -
+eral recent updates, including visual refinements and the use of Sonnet 4.5, which is
+Anthropic's latest model optimized for coding tasks.  You will also notice a custom status line at
+the bottom of the interface.  This is a user-defined customization and will be covered later in
+the book.
+To demonstr ate the rewind feature, we begin with a simple Next.js example:
+1. Ask Claude Code a question, such as the following:
+How do I bootstrap a Next.js project?
+The prompt is executed locally . Once the setup is complete, run the application using npm
+run dev  and open it in the browser.  As expected, this will produce the standard Next.js
+boilerplate application.
+2. We then intentionally apply a short sequence of incremental changes to the code base.  The
+goal here is not to evaluate the quality of the user interface, but to simulate a realistic de -
+velopment workflow in which changes ma y later need to be undone.  In my example, I will
+be doing the following:
+1. First, prompt Claude Code to create a landing page for HooksHub with a visually distinct
+style
+2. Next, prompt Claude Code to add an F AQ section
+3. Finally , prompt Claude Code to add a footer section
+Figure 3.15 – HooksHub landing page gener ated with Claude Code
+Each prompt results in file edits that are visible through the diff  view , and each change is
+immediately reflected in the running application.
+After the footer is added, it becomes clear that although the feature works, the result is
+heavier and more visually dominant than desired.  This is a natur al point at which undoing
+the change is prefer able to manually editing the code or issuing corrective prompts.
+3. To revert changes, invok e the rewind feature using the /rewind  command.  This opens a
+timeline of the current session, showing all prompts issued so far and indicating which
+prompts resulted in file modifications.
+Figure 3.16 – Using the /rewind command to view session history and file changes
+Prompts  that only gener ate explanations appear without associated file changes, while
+prompts that modify files clearly displa y the affected files and lines.
+4. Select the last prompt you added for your example.  In this case, select the prompt that
+added the footer.  Three options will be presented to you:
+1. Restore code and conversation , which resets both the files and the chat context to that
+point
+2. Restore conversation , leaving file changes intact
+3. Restore code , leaving the conversation history unchanged
+In pr actice, restoring both code and conversation is the most common choice, as it returns
+the project to a clean and consistent state.  Restoring only the code is useful when you want
+to preserve the conversational context while reworking an implementation.
+5. To illustr ate this, restore only the code changes associated with the footer.  The footer is im -
+mediately removed from the application.  This works because Claude Code automatically
+creates a checkpoint before applying an y file edits.
+Each prompt that results in code changes creates a new checkpoint.  These checkpoints persist
+across sessions and are retained for up to 30 da ys, providing a safety net for experimentation
+and iter ation.
+Because the conversation history is still present, a follow-up prompt such as create a foot -
+er, make it minimalistic  can now be issued.  Claude Code correctly resolves the reference
+using the existing context and gener ates a lighter implementation.  Refreshing the application
+confirms that the updated footer better matches the intended design.
+While rewind is powerful, it  does have limitations:
+Bash commands executed b y Claude Code are not tr acked and cannot be reverted
+Manual edits made outside of Claude Code are not captured b y checkpoints
+Rewind does not replace version control systems such as Git
+Checkpoints should be thought of as local, short-term undo functionality r ather than a per -
+manent history
+Used correctly , rewind significantly reduces the cost of experimentation.  It encour ages explo -
+ration, lowers the risk of making changes, and mak es iter ative development with Claude Code
+both safer and more productive.
+Custom slash commands in Claude Code (powered
+by Skills)
+In this section, we will review how to create custom slash commands in Claude Code.  This fea -
+ture is powerful because it gives developers a high degree of flexibility in how Claude Code can
+be customized and extended.  We will create a custom slash command b y defining a skill that
+creates Git commit messages.  More advanced skills will be covered in Chapter 7 .
+Creating a skill
+We will begin with a clean project and switch to the custom-commands  branch.  To create a
+skill, first create a .claude  directory in your project (if it does not already exist).  Inside it,
+create a skills  directory .
+1. Each skill is defined as its own directory:
+.claude/skills/commit-code/
+2. Inside that directory , create a required file named
+SKILL.md
+Skills are defined as Mark down files.  Metadata is declared using Y AML frontmatter at the
+top of SKILL.md , enclosed between --- delimiters.  The body of the file contains the actual
+prompt, written in Mark down.
+3. Add a title to the file.  This title appears in the slash command menu.
+4. Write the command prompt:
+Review the files that have changed, and create a commit with a commit message summarizing the ch
+I have ask ed Claude Code to review the files that have changed and to create a commit with
+a concise commit message summarizing the business logic of the changes.
+Although the  prompt itself is short, Claude Code is able to infer and perform multiple oper a-
+tions.  It can inspect changed files using Git commands, review diffs, and create a commit.  This
+demonstr ates how a single skill can encapsulate a sequence of actions.
+Executing the skill
+To test the  command, open Claude Code and type /. The new commit-code  command should
+appear in the list.  Executing it will cause Claude Code to run the prompt defined in the
+Mark down file.
+Claude Code will also detect untr acked files in the .claude  directory and ask whether they
+should be added.  Any approved decision will be stored in settings.local . Claude will then
+propose a commit message based on the detected changes and displa y the corresponding Git
+commands.
+But what if the gener ated commit message is not descriptive enough? Instead of proceeding,
+we stop and improve the skill.
+Improving the skill with $AR GUMENTS
+Head to  the initial prompt added at the start and update the command prompt.  In my example,
+I am asking Claude Code to accept user-provided hints b y introducing an $ARGUMENTS
+placeholder.
+Review the files that have changed, and create a commit with a commit message summarizing the chang
+Use user hints to be the message main subject $ARGUMENTS
+After making this change, execute /commit-code  again and provide a subject hint related to
+skills:
+/commit-code custom code
+Claude Code should now gener ate a more descriptive commit message that reflects the re -
+quested changes.
+Once approved, the commit is created, co-authored b y Claude.  We then push the changes b y
+running git push  to the remote repository and verify the commit in the project's custom-
+commands  branch.
+You can also create and execute additional skills b y just doing the following:
+1. Create a new command file with an appropriate titleWe can pass arguments when invoking a skill.  Arguments are available via the $ARGU-
+MENTS  placeholder.
+The $ARGUMENTS  placeholder gets replaced with whatever follows the skill name when
+invoking it.  More about this will be covered in Chapter 9 .NOTE
+2. Define a prompt that produces output based on user input
+3. Attach arguments so the command can accept dynamic values at runtime
+After restarting Claude Code, the new command becomes available and can be executed with
+user-provided input.  This shows how skills can support dynamic and flexible behavior.
+Improving auto-gener ated commit messages with
+context engineering
+Earlier, we discussed context engineering.  To mak e this more concrete, let us look at a specific
+use case tak en directly  from the Claude Code documentation:
+---
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
+description: Create a git commit
+---
+## Context
+- Current git status: !`git status`
+- Current git diff (staged and unstaged changes): !`git diff HEAD`
+- Current branch: !`git branch --show-current`
+- Recent commits: !`git log --oneline -10`
+## Your task
+Based on the above changes, create a single git commit.
+This example shows a skill that performs the same task as gener ating a commit message, but in
+a wa y that is more robust, safer, and richer in features.  Understanding wh y this approach is
+better helps clarify how context engineering, tool control, and agent design come together in
+practice.
+In skills, we can run shell and Bash scripts.  This means we can execute arbitr ary code as part
+of a command.  As a result, we can mak e HTTP requests, run containers, or perform an y other
+oper ation that can be expressed as code.  This effectively removes most limitations on what a
+skill can do.
+In this  specific slash command example, the configur ation begins b y defining a set of allowed
+tools.  This limits the scope of the agent b y restricting which tools it is permitted to use.
+If you have experience implementing agents, this aligns with the principle of least privilege.
+The idea is to scope the agent so that it has only the minimum set of capabilities required to
+perform its task.  In the case of gener ating a commit message, the necessary oper ations are lim -
+ited to commands such as git add, git status, and git commit.
+Restricting the toolset in this wa y improves security . In the earlier, simpler commit-message
+command, no such limitations were applied, meaning the agent had access to all the tools
+available in Claude Code.  In that situation, if the context was poisoned (for example, b y mali -
+cious input), the agent could potentially perform unintended actions on the system.  This is one
+of the reasons the documented example is a stronger and safer design.
+This example also demonstr ates deliber ate prompt engineering.  The context is explicitly de -
+fined and carefully constructed.  Before gener ating the commit message, the command exe -
+cutes a series of Git commands, such as git status , git branch , and git log . These com -
+mands provide precise context about the state of the repository and the changes being
+committed.
+When viewed this wa y, the workflow closely resembles retrieval-augmented gener ation.  First,
+the system retrieves relevant information b y running Git commands to gather context.  Once
+that context is available, the gener ation step produces the commit message.
+This illustr ates how retrieval and gener ation are combined within a single, well-scoped com -
+mand.  It also shows how multiple concepts discussed earlier, including context engineering,
+tool restriction, and agent design, come together in a pr actical and extensible wa y.
+Over all, this approach opens up a wide r ange of possibilities for building safer and more capa -
+ble workflows using skills in Claude Code.
+Summary
+In this chapter, you learned how to configure and work with Claude Code beyond the basics.
+We covered authentication and pricing at a high level, how to control Claude Code using slash
+commands, and how to integr ate it directly into the IDE for a smoother workflow . You explored
+configur ation options, hooks for automation, and memory through CLAUDE.md  files, as well as
+how context is loaded and reused across sessions.  We also examined checkpointing and
+rewind to safely undo changes, and skills to encapsulate repeatable workflows with proper
+tool scoping.  By this point, you should understand how Claude Code oper ates in pr actice, how
+to keep it safe and predictable, and how to shape its behavior to support more advanced, long-
+running development workflows.
+In the next chapter, we will look at the Model Context Protocol ( MCP ) and how it standard -
+izes integr ation between AI applications and external tools.
+Get this book's PDF cop y, code bundle, and more
+Scan the QR code (or go to packtpub.com/unlock ). Search for this book b y name, confirm the edition,
+and then follow the steps on the page.
+Note: Have your invoice handy . Purchases made directly from the Packt website don 't require an
+invoice.The section which is enclosed between --- delimiters is called frontmatter and is eval -
+uated before the prompt body .NOTE

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 11: Understanding Deep Agents | Claude Code Training</title>
+    <style>
+        :root {
+            --bg:      oklch(98% 0.005 250);
+            --surface: oklch(100% 0 0);
+            --fg:      oklch(22% 0.02 240);
+            --muted:   oklch(50% 0.018 240);
+            --border:  oklch(90% 0.008 240);
+            --accent:  oklch(58% 0.16 145);
+
+            --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+            --slide-width: 1920px;
+            --slide-height: 1080px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #111; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: var(--font-body); color: var(--fg); }
+        #canvas { width: var(--slide-width); height: var(--slide-height); background: var(--bg); position: relative; transform-origin: center center; flex-shrink: 0; box-shadow: 0 40px 100px rgba(0,0,0,0.5); display: grid; grid-template-areas: "content"; }
+        .slide { grid-area: content; width: 100%; height: 100%; padding: 80px 120px; display: none; flex-direction: column; position: relative; border: 1px solid var(--border); }
+        .slide.active { display: flex; }
+        .mono { font-family: var(--font-mono); }
+        .accent { color: var(--accent); }
+        .muted { color: var(--muted); }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8em; }
+        h1 { font-size: 84px; font-weight: 800; line-height: 1.1; margin-bottom: 40px; }
+        h2 { font-size: 56px; font-weight: 700; line-height: 1.2; margin-bottom: 30px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 8px; }
+        p, li { font-size: 32px; line-height: 1.5; margin-bottom: 20px; }
+        ul { list-style: none; }
+        li { position: relative; padding-left: 40px; margin-bottom: 24px; }
+        li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 40px; border-radius: 4px; }
+        .code-block { background: #0d1117; color: #c9d1d9; padding: 30px; border-radius: 6px; font-family: var(--font-mono); font-size: 24px; border: 1px solid #30363d; position: relative; line-height: 1.4; }
+        .grid-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; pointer-events: none; }
+        .slide > * { z-index: 1; }
+        .footer { position: absolute; bottom: 40px; left: 80px; right: 80px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 18px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div id="canvas">
+        <div class="grid-bg"></div>
+
+        <!-- 01: Title -->
+        <section class="slide" data-screen-label="01 Title">
+            <div class="uppercase mono accent" style="margin-bottom: 20px;">Chapter 11 // 理解深度代理</div>
+            <h1>Understanding<br>Deep Agents</h1>
+            <div style="font-size: 40px; color: var(--muted); margin-bottom: 60px;">Unlocking long-term reasoning and recursive investigation.</div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase muted">Power</div>
+                    <div style="font-size: 32px; font-weight: bold;">Infinite Reasoning</div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Goal</div>
+                    <div style="font-size: 32px; font-weight: bold;">System-wide Truth</div>
+                </div>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">01 / 18</div></div>
+        </section>
+
+        <!-- 02: Objectives -->
+        <section class="slide" data-screen-label="02 Objectives">
+            <div class="uppercase mono accent">Chapter Goals // 本章目標</div>
+            <h2>The Limits of Reasoning</h2>
+            <div class="grid-2">
+                <ul>
+                    <li>Standard Agents vs. Deep Agents.<br><span class="muted">標準代理 vs. 深度代理</span></li>
+                    <li>The recursive reasoning loop.<br><span class="muted">遞歸推理循環</span></li>
+                    <li>System-wide investigative patterns.<br><span class="muted">系統級別的調查模式</span></li>
+                </ul>
+                <ul>
+                    <li>Managing time and token costs.<br><span class="muted">管理時間與標記成本</span></li>
+                    <li>Self-correction and hypothesis testing.<br><span class="muted">自我修正與假設測試</span></li>
+                    <li>When to go "Deep".<br><span class="muted">何時選擇「深度」模式</span></li>
+                </ul>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">02 / 18</div></div>
+        </section>
+
+        <!-- 03: Fast vs. Slow Thinking -->
+        <section class="slide" data-screen-label="03 Fast vs Slow">
+            <div class="uppercase mono accent">Concept // 核心觀念</div>
+            <h2>Fast vs. Slow Thinking</h2>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <div class="mono accent">Standard Agent (Fast)</div>
+                    <p style="font-size: 18px;">Reactive. Fixes local issues. "What can I do now?"</p>
+                    <p class="muted">Great for: Bug fixes, small features, refactoring.</p>
+                </div>
+                <div class="card">
+                    <div class="mono accent">Deep Agent (Slow)</div>
+                    <p style="font-size: 18px;">Proactive. Explores architecture. "Why is it built this way?"</p>
+                    <p class="muted">Great for: Planning, auditing, major migrations.</p>
+                </div>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">03 / 18</div></div>
+        </section>
+
+        <!-- 04: The Reasoning Loop -->
+        <section class="slide" data-screen-label="04 Reasoning Loop">
+            <div class="uppercase mono accent">Mechanism // 運作機制</div>
+            <h2>The Reasoning Loop</h2>
+            <p>Deep Agents don't just act; they build a **World Model** first.</p>
+            <div style="display: flex; justify-content: space-around; align-items: center; height: 400px; margin-top: 40px;">
+                <div class="card" style="width: 250px; text-align: center;">Hypothesize</div>
+                <div style="font-size: 40px;">➡️</div>
+                <div class="card" style="width: 250px; text-align: center;">Investigate</div>
+                <div style="font-size: 40px;">➡️</div>
+                <div class="card" style="width: 250px; text-align: center;">Validate</div>
+            </div>
+            <p style="text-align: center; margin-top: 40px;" class="muted">If validation fails, the loop restarts with a new hypothesis. (如果驗證失敗，循環將帶著新假設重新開始。)</p>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">04 / 18</div></div>
+        </section>
+
+        <!-- 05: Recursive Search -->
+        <section class="slide" data-screen-label="05 Recursive Search">
+            <div class="uppercase mono accent">Investigation // 遞歸搜尋</div>
+            <h2>Recursive Investigation</h2>
+            <p>Deep Agents follow the breadcrumbs across the entire stack.</p>
+            <div class="grid-2">
+                <div class="code-block" style="font-size: 20px;">
+                    1. Finds usage in UI.<br>
+                    2. Traces to API Hook.<br>
+                    3. Traces to Backend Controller.<br>
+                    4. Traces to Database Schema.<br>
+                    5. Identifies mismatch in data types.
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">The Depth</div>
+                    <p style="font-size: 24px;">Standard agents usually stop at step 2. Deep agents won't stop until they reach the **Source of Truth**.</p>
+                </div>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">05 / 18</div></div>
+        </section>
+
+        <!-- 06: Self-Correction -->
+        <section class="slide" data-screen-label="06 Self-Correction">
+            <div class="uppercase mono accent">Quality // 自我修正</div>
+            <h2>The Power of Self-Correction</h2>
+            <p>Deep Agents are taught to be their own <b>Harshest Critics</b>.</p>
+            <div class="code-block">
+                <span class="accent">➜</span> <span class="muted">Thinking: My previous assumption about the cache was wrong. The latency persists even with cache disabled.</span><br>
+                <span class="accent">➜</span> <span class="muted">New Hypothesis: The bottleneck is in the connection pool. I will now run a stress test to confirm.</span>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">06 / 18</div></div>
+        </section>
+
+        <!-- 07: When to go "Deep"? -->
+        <section class="slide" data-screen-label="07 When to go Deep">
+            <div class="uppercase mono accent">Strategy // 應用場景</div>
+            <h2>When to go "Deep"?</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <b class="accent">YES ✅</b>
+                    <ul style="font-size: 18px;">
+                        <li>"Audit our security layer for potential leaks."</li>
+                        <li>"Why is the build 2x slower this week?"</li>
+                        <li>"Design a migration path to Microservices."</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <b class="mono" style="color: #cf222e;">NO ❌</b>
+                    <ul style="font-size: 18px;">
+                        <li>"Change this button color to blue."</li>
+                        <li>"Fix this typo."</li>
+                        <li>"Add a unit test for this function."</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">07 / 18</div></div>
+        </section>
+
+        <!-- 08: Patience as a Feature -->
+        <section class="slide" data-screen-label="08 Patience">
+            <div class="uppercase mono accent">Philosophy // 耐心是關鍵</div>
+            <h2>Patience is a Feature</h2>
+            <p>Reasoning takes time. Deep sessions can last for <b>Minutes</b>, not seconds.</p>
+            <div class="card" style="margin-top: 40px; border-left: 8px solid var(--accent);">
+                <p style="font-size: 32px;">"Speed is the enemy of Depth."</p>
+                <p class="muted" style="margin-top: 10px;">If you want a Deep Agent to succeed, you must give it the space to 'Think' without interruption.</p>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">08 / 18</div></div>
+        </section>
+
+        <!-- 09: Resource Management -->
+        <section class="slide" data-screen-label="09 Resource Mgmt">
+            <div class="uppercase mono accent">Cost // 資源管理</div>
+            <h2>Managing the High Cost</h2>
+            <p>Deep reasoning is token-heavy and compute-intensive.</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono accent">Token Budgets</div>
+                    <p style="font-size: 18px;">Deep sessions can easily consume 50k+ tokens in reasoning alone.</p>
+                </div>
+                <div class="card">
+                    <div class="mono accent">Rate Limits</div>
+                    <p style="font-size: 18px;">Be aware of your organization's API tier when running multiple deep agents.</p>
+                </div>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">09 / 18</div></div>
+        </section>
+
+        <!-- 10: Deep Analysis Reports -->
+        <section class="slide" data-screen-label="10 Reports">
+            <div class="uppercase mono accent">Output // 分析報告</div>
+            <h2>The Deep Analysis Report</h2>
+            <p>Deep Agents produce high-density artifacts instead of just code edits.</p>
+            <div class="code-block" style="font-size: 18px;">
+                <div class="mono accent">## Root Cause Analysis: System Latency</div>
+                - **Primary Cause**: N+1 query pattern in `UserService`.<br>
+                - **Secondary Cause**: Inefficient index on `Orders` table.<br>
+                - **Evidence**: 15 trace logs attached.<br>
+                - **Recommendation**: Implement `DataLoader` pattern and re-index.
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">10 / 18</div></div>
+        </section>
+
+        <!-- 11: Trusting the Trace -->
+        <section class="slide" data-screen-label="11 Trace">
+            <div class="uppercase mono accent">Verification // 信任追蹤</div>
+            <h2>Trusting the Trace</h2>
+            <p>Deep agents provide a <b>Reasoning Trace</b>. READ IT.</p>
+            <ul>
+                <li>Look for logical jumps.</li>
+                <li>Verify the files the agent rejected.</li>
+                <li>Identify if the agent missed a "Silo" of information.</li>
+            </ul>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">11 / 18</div></div>
+        </section>
+
+        <!-- 12: Case Study: 0-Day Bug -->
+        <section class="slide" data-screen-label="12 Case Study">
+            <div class="uppercase mono accent">Case Study // 實戰案例</div>
+            <h2>The "Ghost in the Machine" Bug</h2>
+            <div class="grid-2">
+                <div>
+                    <p><b>Issue:</b> Intermittent data corruption in production.</p>
+                    <p><b>Standard Agent:</b> "Can't reproduce. Logs look fine."</p>
+                    <p><b>Deep Agent:</b> Found a race condition in a 3rd-party library used by a dependency of a dependency.</p>
+                </div>
+                <div class="card" style="background: #f1f8ff;">
+                    <b class="accent">The "Aha!" Moment:</b>
+                    <p style="font-size: 20px;">The agent analyzed the raw source of the node_module and found a non-thread-safe singleton.</p>
+                </div>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">12 / 18</div></div>
+        </section>
+
+        <!-- 13: Interacting with Deep Agents -->
+        <section class="slide" data-screen-label="13 Interaction">
+            <div class="uppercase mono accent">Guidelines // 互動指南</div>
+            <h2>How to talk to a Deep Agent</h2>
+            <ul>
+                <li><b>Give it a "Long Leash"</b>: Don't micromanage the first 5 minutes.</li>
+                <li><b>Provide "Seed Knowledge"</b>: Point it to the most relevant entry point.</li>
+                <li><b>Challenge its Assumptions</b>: "Are you sure the issue isn't in module Y?"</li>
+            </ul>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">13 / 18</div></div>
+        </section>
+
+        <!-- 14: Future of Deep Agents -->
+        <section class="slide" data-screen-label="14 Future">
+            <div class="uppercase mono accent">Vision // 未來展望</div>
+            <h2>The Future of Autonomous Engineering</h2>
+            <p>Deep Agents are the first step towards <b>Fully Autonomous Refactoring</b>.</p>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <div style="font-size: 40px;">🧪</div>
+                    <p style="font-size: 18px;">Agents that maintain your test suite overnight.</p>
+                </div>
+                <div class="card">
+                    <div style="font-size: 40px;">🛡️</div>
+                    <p style="font-size: 18px;">Agents that patch security vulnerabilities before they are exploited.</p>
+                </div>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">14 / 18</div></div>
+        </section>
+
+        <!-- 15: Course Wrap-up -->
+        <section class="slide" data-screen-label="15 Wrap-up">
+            <div class="uppercase mono accent">Conclusion // 全課總結</div>
+            <h2>Mastering Claude Code</h2>
+            <div class="grid-2">
+                <ul>
+                    <li>Context is your most valuable asset.</li>
+                    <li>Plan before you act.</li>
+                    <li>Delegate to specialized subagents.</li>
+                </ul>
+                <ul>
+                    <li>Standardize your team with GEMINI.md.</li>
+                    <li>Use Deep Agents for the hardest problems.</li>
+                    <li>Stay in the loop as the <b>Architect</b>.</li>
+                </ul>
+            </div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">15 / 18</div></div>
+        </section>
+
+        <!-- 16: Final Message -->
+        <section class="slide" style="justify-content: center; align-items: center; text-align: center;" data-screen-label="16 Final">
+            <h1 class="accent" style="font-size: 80px;">Code with Intent.<br>Architect with Agency.</h1>
+            <p style="font-size: 40px; margin-top: 40px;">You are now ready to lead an AI-powered engineering team.</p>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">16 / 18</div></div>
+        </section>
+
+        <!-- 17: Q&A -->
+        <section class="slide" style="justify-content: center; align-items: center; text-align: center;" data-screen-label="17 Q&A">
+            <h1 style="font-size: 120px;">Q & A</h1>
+            <div class="mono accent" style="font-size: 40px; margin-top: 40px;">Thank you for your time.</div>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">17 / 18</div></div>
+        </section>
+
+        <!-- 18: Resources -->
+        <section class="slide" data-screen-label="18 Resources">
+            <div class="uppercase mono accent">Links // 學習資源</div>
+            <h2>Where to go next?</h2>
+            <ul>
+                <li><b>Official Docs</b>: docs.anthropic.com/claude-code</li>
+                <li><b>Community</b>: discord.gg/anthropic</li>
+                <li><b>Internal Wiki</b>: your-company.com/ai-guidelines</li>
+            </ul>
+            <div class="footer"><div>DEEP-AGENTS // CHAPTER-11</div><div class="mono">18 / 18</div></div>
+        </section>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        function showSlide(index) {
+            slides.forEach((s, i) => s.classList.toggle('active', i === index));
+            localStorage.setItem('chapter11_slide', index);
+            updateScale();
+        }
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; showSlide(currentSlide); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; showSlide(currentSlide); } }
+        function updateScale() {
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            canvas.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+        window.addEventListener('resize', updateScale);
+        const saved = localStorage.getItem('chapter11_slide');
+        if (saved) currentSlide = parseInt(saved);
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 3: Essential Commands | Agentic Coding with Claude Code</title>
+    <style>
+        :root {
+            /* tech-utility palette */
+            --bg:      oklch(98% 0.005 250);
+            --surface: oklch(100% 0 0);
+            --fg:      oklch(22% 0.02 240);
+            --muted:   oklch(50% 0.018 240);
+            --border:  oklch(90% 0.008 240);
+            --accent:  oklch(58% 0.16 145); /* GitHub-style green */
+
+            --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+            --slide-width: 1920px;
+            --slide-height: 1080px;
+            --scale: 1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: var(--font-body);
+            color: var(--fg);
+        }
+
+        #canvas {
+            width: var(--slide-width);
+            height: var(--slide-height);
+            background: var(--bg);
+            position: relative;
+            transform-origin: center center;
+            flex-shrink: 0;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            display: grid;
+            grid-template-areas: "content";
+        }
+
+        .slide {
+            grid-area: content;
+            width: 100%;
+            height: 100%;
+            padding: 80px 120px;
+            display: none;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .slide.active { display: flex; }
+
+        /* Utility classes */
+        .mono { font-family: var(--font-mono); }
+        .accent { color: var(--accent); }
+        .muted { color: var(--muted); }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8em; }
+
+        /* Typography */
+        h1 { font-size: 84px; font-weight: 800; line-height: 1.1; margin-bottom: 40px; letter-spacing: -0.02em; }
+        h2 { font-size: 56px; font-weight: 700; line-height: 1.2; margin-bottom: 30px; letter-spacing: -0.01em; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 8px; margin-right: auto; }
+        p, li { font-size: 32px; line-height: 1.5; margin-bottom: 20px; color: var(--fg); }
+        ul { list-style: none; }
+        li { position: relative; padding-left: 40px; margin-bottom: 24px; }
+        li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+
+        /* Layout Blocks */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 40px; border-radius: 4px; }
+        .code-block { background: #0d1117; color: #c9d1d9; padding: 30px; border-radius: 6px; font-family: var(--font-mono); font-size: 24px; line-height: 1.4; overflow: hidden; border: 1px solid #30363d; position: relative; }
+        .code-header { font-size: 14px; color: #8b949e; margin-bottom: 15px; border-bottom: 1px solid #30363d; padding-bottom: 10px; display: flex; justify-content: space-between; }
+
+        /* Decorations */
+        .grid-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .slide > * { z-index: 1; }
+
+        /* Header / Footer */
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            left: 80px;
+            right: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 18px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        /* Specific slide styles */
+        .title-slide { justify-content: center; align-items: flex-start; }
+        .title-slide h1 { font-size: 120px; margin-bottom: 20px; }
+        .title-slide .subtitle { font-size: 40px; font-weight: 400; color: var(--muted); margin-bottom: 60px; }
+
+    </style>
+</head>
+<body>
+    <div id="canvas">
+        <div class="grid-bg"></div>
+
+        <!-- Slide 1: Title -->
+        <section class="slide title-slide" data-screen-label="01 Title">
+            <div class="uppercase mono accent" style="margin-bottom: 20px;">Chapter 03 // 核心指令大觀</div>
+            <h1>Essential<br>Commands</h1>
+            <div class="subtitle">Getting Started with Claude Code // 快速上手關鍵操作</div>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <div class="mono uppercase muted">Speaker</div>
+                    <div style="font-size: 32px; font-weight: bold;">AI Education Team</div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Focus</div>
+                    <div style="font-size: 32px; font-weight: bold;">Operations & Productivity</div>
+                </div>
+            </div>
+            <div class="footer">
+                <div>CLAUDE-CODE-TRAINING-2026</div>
+                <div class="mono">01 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 2: Objectives -->
+        <section class="slide" data-screen-label="02 Objectives">
+            <div class="uppercase mono accent">Learning Goals // 學習目標</div>
+            <h2>What we will cover in Chapter 03</h2>
+            <div class="grid-2">
+                <ul>
+                    <li>Pricing Models: API vs. Subscription<br><span class="muted">計費模式：API 對比 訂閱制</span></li>
+                    <li>Mastering Slash Commands<br><span class="muted">精通「斜線指令」系統</span></li>
+                    <li>Reverting changes with Undo & Rewind<br><span class="muted">使用 Undo 與 Rewind 回退變更</span></li>
+                </ul>
+                <ul>
+                    <li>Deep Dive into Memory Upward Discovery<br><span class="muted">深入了解記憶檔案的「向上發現」機制</span></li>
+                    <li>Automation with Development Hooks<br><span class="muted">使用開發鉤子 (Hooks) 實現自動化</span></li>
+                    <li>Seamless IDE Integration<br><span class="muted">無縫整合 IDE 工作流</span></li>
+                </ul>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">02 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Access & Pricing -->
+        <section class="slide" data-screen-label="03 Access Pricing">
+            <div class="uppercase mono accent">Setup // 設定</div>
+            <h2>Access & Pricing (存取與計費)</h2>
+            <div class="grid-2">
+                <div class="card" style="border-top: 4px solid #58a6ff;">
+                    <div class="mono uppercase" style="color: #58a6ff;">Option 1: API Key</div>
+                    <p style="font-size: 24px;">Pay-as-you-go based on tokens.</p>
+                    <p class="muted">Best for power users wanting granular control.</p>
+                    <p class="muted" style="font-size: 20px;">按標記使用量計費。</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--accent);">
+                    <div class="mono uppercase accent">Option 2: Subscription</div>
+                    <p style="font-size: 24px;">Claude Pro / Team plans.</p>
+                    <p class="muted">Managed billing via Anthropic account.</p>
+                    <p class="muted" style="font-size: 20px;">透過 Anthropic 帳戶管理計費。</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">03 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 4: /init -->
+        <section class="slide" data-screen-label="04 init">
+            <div class="uppercase mono accent">First Steps // 起手式</div>
+            <h2>Command: /init</h2>
+            <p>The foundation of any project. (任何項目的基礎。)</p>
+            <div class="grid-2">
+                <div class="code-block">
+                    <div class="code-header"><span>terminal</span></div>
+                    <span class="accent">$</span> claude /init
+                </div>
+                <div class="card">
+                    <p><b>What it does:</b></p>
+                    <ul>
+                        <li>Scans for project structure.<br><span class="muted">掃描項目結構。</span></li>
+                        <li>Generates initial <span class="mono">CLAUDE.md</span>.<br><span class="muted">生成初始 CLAUDE.md。</span></li>
+                        <li>Configures ignore patterns.<br><span class="muted">配置忽略模式。</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">04 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Slash Commands -->
+        <section class="slide" data-screen-label="05 Slash Commands">
+            <div class="uppercase mono accent">Control // 控制指令</div>
+            <h2>Core Slash Commands</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="card" style="margin-bottom: 20px;">
+                        <span class="mono accent">/compact</span>: Condense conversation to save tokens.<br>
+                        <span class="muted" style="font-size: 20px;">精簡對話以節省 Token。</span>
+                    </div>
+                    <div class="card">
+                        <span class="mono accent">/clear</span>: Reset context for a new task.<br>
+                        <span class="muted" style="font-size: 20px;">重置上下文以開始新任務。</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom: 20px;">
+                        <span class="mono accent">/help</span>: View all available commands.<br>
+                        <span class="muted" style="font-size: 20px;">查看所有可用指令。</span>
+                    </div>
+                    <div class="card">
+                        <span class="mono accent">/bug</span>: Report an issue to the team.<br>
+                        <span class="muted" style="font-size: 20px;">向團隊報告問題。</span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">05 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Undo & Redo -->
+        <section class="slide" data-screen-label="06 Undo Redo">
+            <div class="uppercase mono accent">Error Correction // 錯誤修正</div>
+            <h2>Undo & Redo</h2>
+            <p>Did the agent make a mistake? No problem.</p>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <div class="mono uppercase accent">/undo</div>
+                    <p>Reverts the <b>last</b> code change and removes the history entry.</p>
+                    <p class="muted" style="font-size: 20px;">撤銷上一次的代碼變更。</p>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase accent">/redo</div>
+                    <p>Restores a previously undone change.</p>
+                    <p class="muted" style="font-size: 20px;">重做之前撤銷的變更。</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">06 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Rewind -->
+        <section class="slide" data-screen-label="07 Rewind">
+            <div class="uppercase mono accent">Power Feature // 強大功能</div>
+            <h2>Command: /rewind</h2>
+            <p>The "Time Machine" for your codebase. (代碼庫的「時光機」。)</p>
+            <div class="grid-2">
+                <div>
+                    <ul>
+                        <li>Jump back to <b>any</b> previous state in the session.<br><span class="muted">回到會話中的任何先前狀態。</span></li>
+                        <li>Undoes multiple steps at once.<br><span class="muted">一次撤銷多個步驟。</span></li>
+                        <li>Perfect for "branching" new ideas.<br><span class="muted">非常適合測試新的分支構想。</span></li>
+                    </ul>
+                </div>
+                <div class="code-block" style="font-size: 20px;">
+                    <span class="accent">➜</span> <span class="mono">/rewind</span><br><br>
+                    <span class="muted">1. Added Navbar (3 min ago)</span><br>
+                    <span class="muted">2. Fixed Auth Bug (8 min ago)</span><br>
+                    <span class="muted">3. Initial Setup (15 min ago)</span><br><br>
+                    <span class="accent">Select point to return to: [1]</span>
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">07 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Upward Discovery -->
+        <section class="slide" data-screen-label="08 Upward Discovery">
+            <div class="uppercase mono accent">Memory Hierarchy // 記憶層次</div>
+            <h2>Memory Upward Discovery</h2>
+            <p>Claude Code is smart about finding its instructions.</p>
+            <div style="display: flex; justify-content: center; margin-top: 40px;">
+                <svg width="600" height="400" viewBox="0 0 600 400">
+                    <rect x="100" y="300" width="400" height="60" rx="5" fill="var(--surface)" stroke="var(--border)" stroke-width="2" />
+                    <text x="300" y="335" text-anchor="middle" font-family="var(--font-mono)" font-size="18" fill="var(--fg)">/project/src/components/ (Current Dir)</text>
+                    
+                    <path d="M300 300 L300 240" stroke="var(--accent)" stroke-width="3" marker-end="url(#arrowhead)" />
+                    
+                    <rect x="150" y="180" width="300" height="60" rx="5" fill="var(--surface)" stroke="var(--border)" stroke-width="2" />
+                    <text x="300" y="215" text-anchor="middle" font-family="var(--font-mono)" font-size="18" fill="var(--fg)">/project/ (Root CLAUDE.md)</text>
+                    
+                    <path d="M300 180 L300 120" stroke="var(--accent)" stroke-width="3" marker-end="url(#arrowhead)" />
+                    
+                    <rect x="200" y="60" width="200" height="60" rx="5" fill="var(--surface)" stroke="var(--accent)" stroke-width="2" />
+                    <text x="300" y="95" text-anchor="middle" font-family="var(--font-mono)" font-size="18" fill="var(--accent)">Global User Memory</text>
+                </svg>
+            </div>
+            <p style="text-align: center;" class="muted">It looks "up" the directory tree until it finds the rules.</p>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">08 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Lazy Loading -->
+        <section class="slide" data-screen-label="09 Lazy Loading">
+            <div class="uppercase mono accent">Efficiency // 效率</div>
+            <h2>Lazy Loading Context</h2>
+            <div class="grid-2">
+                <div>
+                    <p>The agent doesn't read everything at once. (代理不會一次讀取所有內容。)</p>
+                    <ul>
+                        <li>Reads summary of memory files first.<br><span class="muted">先讀取記憶文件的摘要。</span></li>
+                        <li>Fetches details <b>on-demand</b>.<br><span class="muted">按需獲取細節。</span></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase accent">The Benefit</div>
+                    <p style="font-size: 24px;">Maximizes the available context window for <b>Actual Coding</b> rather than background rules.</p>
+                    <p class="muted" style="font-size: 18px;">為實際編碼保留最大的上下文視窗。</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">09 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Development Hooks -->
+        <section class="slide" data-screen-label="10 Hooks">
+            <div class="uppercase mono accent">Automation // 自動化</div>
+            <h2>Development Hooks</h2>
+            <p>Automate your workflow with event-driven triggers.</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase muted">Common Hooks</div>
+                    <ul>
+                        <li><span class="accent">pre-commit</span>: Run linting.<br><span class="muted">提交前檢查。</span></li>
+                        <li><span class="accent">post-change</span>: Update docs.<br><span class="muted">變更後更新文件。</span></li>
+                        <li><span class="accent">on-success</span>: Notify user.<br><span class="muted">成功後通知。</span></li>
+                    </ul>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span>config.json</span></div>
+                    "hooks": {<br>
+                    &nbsp;&nbsp;"post-task": "osascript -e 'display notification \"Task Complete!\"'"<br>
+                    }
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">10 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Notification Hooks -->
+        <section class="slide" data-screen-label="11 Notification Hooks">
+            <div class="uppercase mono accent">Automation // 自動化</div>
+            <h2>Example: Notification Hook</h2>
+            <div class="grid-2" style="align-items: center;">
+                <div>
+                    <p>Never wait around for a long build or test suite again.</p>
+                    <p class="muted">Setup a hook to notify your system when the agent is finished.</p>
+                </div>
+                <div class="card" style="background: #1e1e1e; border: none; color: white;">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="font-size: 40px;">🔔</div>
+                        <div>
+                            <div style="font-weight: bold;">Claude Code</div>
+                            <div style="font-size: 20px;">Task "Fix Memory Leak" is complete.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">11 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 12: Git Integration -->
+        <section class="slide" data-screen-label="12 Git Integration">
+            <div class="uppercase mono accent">Git // 版本控制</div>
+            <h2>Git Integration</h2>
+            <div class="grid-2">
+                <div>
+                    <p>Claude Code is git-aware. (Claude Code 具備 Git 感知能力。)</p>
+                    <ul>
+                        <li><b>Auto-commit messages</b>: Let the agent summarize the "Why" of the change.<br><span class="muted">自動生成提交消息。</span></li>
+                        <li><b>PR Management</b>: Create and describe pull requests from the CLI.<br><span class="muted">管理 PR。</span></li>
+                    </ul>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span>terminal</span></div>
+                    <span class="accent">$</span> git commit -m "$(claude describe)"
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">12 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 13: IDE Integration -->
+        <section class="slide" data-screen-label="13 IDE Integration">
+            <div class="uppercase mono accent">Workflow // 工作流</div>
+            <h2>IDE Integration</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <p>Run Claude Code in the <b>Integrated Terminal</b> of your IDE (VS Code, Cursor, JetBrains).</p>
+                    <p class="muted">Watch files update in real-time as the agent works.</p>
+                </div>
+                <ul>
+                    <li>Code in IDE, Operation in CLI.<br><span class="muted">在 IDE 編碼，在 CLI 操作。</span></li>
+                    <li>Hot-reload support.<br><span class="muted">支援熱重載。</span></li>
+                    <li>Shared context across tools.<br><span class="muted">工具間共享上下文。</span></li>
+                </ul>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">13 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Skills (Custom Commands) -->
+        <section class="slide" data-screen-label="14 Skills">
+            <div class="uppercase mono accent">Customization // 自定義</div>
+            <h2>Custom Skills</h2>
+            <p>Create your own domain-specific slash commands. (建立你自己的領域專屬指令。)</p>
+            <div class="grid-2">
+                <div>
+                    <p>Define a "Skill" with a prompt and a name. The agent will then know how to execute that task reliably every time.</p>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span>skills/audit.md</span></div>
+                    # Skill: Audit<br>
+                    Check the current file for<br>
+                    security vulnerabilities and<br>
+                    log them to AUDIT.log.
+                </div>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">14 / 15</div>
+            </div>
+        </section>
+
+        <!-- Slide 15: Summary & Homework -->
+        <section class="slide" data-screen-label="15 Summary">
+            <div class="uppercase mono accent">Wrapping Up // 總結</div>
+            <h2>Chapter 03 Summary</h2>
+            <div class="grid-2">
+                <div>
+                    <ul>
+                        <li>Slash commands are your UI.</li>
+                        <li>Undo and Rewind prevent mistakes.</li>
+                        <li>Hooks and Skills automate the boring parts.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase accent">Homework</div>
+                    <p style="font-size: 24px;">Use <span class="mono">/init</span> in a new folder, make 3 changes, and then use <span class="mono">/rewind</span> to return to the first one.</p>
+                </div>
+            </div>
+            <div style="margin-top: auto; text-align: center;">
+                <h1 class="accent" style="font-size: 64px;">Next: Extending with MCP</h1>
+            </div>
+            <div class="footer">
+                <div>ESSENTIAL-COMMANDS // CHAPTER-03</div>
+                <div class="mono">15 / 15</div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach((s, i) => s.classList.toggle('active', i === index));
+            localStorage.setItem('currentSlide_ch3', index);
+            updateScale();
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function updateScale() {
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const scale = Math.min(winW / 1920, winH / 1080);
+            canvas.style.transform = `scale(${scale})`;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        window.addEventListener('resize', updateScale);
+
+        const savedSlide = localStorage.getItem('currentSlide_ch3');
+        if (savedSlide !== null) {
+            currentSlide = parseInt(savedSlide);
+            if (currentSlide >= slides.length) currentSlide = 0;
+        }
+
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>

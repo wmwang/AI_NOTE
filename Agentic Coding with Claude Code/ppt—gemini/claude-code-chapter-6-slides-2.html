@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 6: Planning and Multi-agent Workflows | Claude Code Training</title>
+    <style>
+        :root {
+            --bg:      oklch(98% 0.005 250);
+            --surface: oklch(100% 0 0);
+            --fg:      oklch(22% 0.02 240);
+            --muted:   oklch(50% 0.018 240);
+            --border:  oklch(90% 0.008 240);
+            --accent:  oklch(58% 0.16 145);
+
+            --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+            --slide-width: 1920px;
+            --slide-height: 1080px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #111; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: var(--font-body); color: var(--fg); }
+        #canvas { width: var(--slide-width); height: var(--slide-height); background: var(--bg); position: relative; transform-origin: center center; flex-shrink: 0; box-shadow: 0 40px 100px rgba(0,0,0,0.5); display: grid; grid-template-areas: "content"; }
+        .slide { grid-area: content; width: 100%; height: 100%; padding: 80px 120px; display: none; flex-direction: column; position: relative; border: 1px solid var(--border); }
+        .slide.active { display: flex; }
+        .mono { font-family: var(--font-mono); }
+        .accent { color: var(--accent); }
+        .muted { color: var(--muted); }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8em; }
+        h1 { font-size: 84px; font-weight: 800; line-height: 1.1; margin-bottom: 40px; }
+        h2 { font-size: 56px; font-weight: 700; line-height: 1.2; margin-bottom: 30px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 8px; }
+        p, li { font-size: 32px; line-height: 1.5; margin-bottom: 20px; }
+        ul { list-style: none; }
+        li { position: relative; padding-left: 40px; margin-bottom: 24px; }
+        li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 40px; border-radius: 4px; }
+        .code-block { background: #0d1117; color: #c9d1d9; padding: 30px; border-radius: 6px; font-family: var(--font-mono); font-size: 24px; border: 1px solid #30363d; position: relative; line-height: 1.4; }
+        .grid-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; pointer-events: none; }
+        .slide > * { z-index: 1; }
+        .footer { position: absolute; bottom: 40px; left: 80px; right: 80px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 18px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 20px; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .badge-info { background: #ddf4ff; color: #0969da; }
+        .badge-warn { background: #fff8c5; color: #9a6700; }
+    </style>
+</head>
+<body>
+    <div id="canvas">
+        <div class="grid-bg"></div>
+
+        <!-- 01: Title -->
+        <section class="slide" data-screen-label="01 Title">
+            <div class="uppercase mono accent" style="margin-bottom: 20px;">Chapter 06 // 計畫與多代理工作流</div>
+            <h1>Planning &<br>Multi-agent Workflows</h1>
+            <div style="font-size: 40px; color: var(--muted); margin-bottom: 60px;">Scaling your engineering output with structured reasoning.</div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase muted">Focus</div>
+                    <div style="font-size: 32px; font-weight: bold;">Complex Refactoring</div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Method</div>
+                    <div style="font-size: 32px; font-weight: bold;">Spec-Driven Design</div>
+                </div>
+            </div>
+            <div class="footer"><div>CLAUDE-CODE-TRAINING-2026</div><div class="mono">01 / 18</div></div>
+        </section>
+
+        <!-- 02: Objectives -->
+        <section class="slide" data-screen-label="02 Objectives">
+            <div class="uppercase mono accent">Chapter Goals // 本章目標</div>
+            <h2>The Architect's Blueprint</h2>
+            <div class="grid-2">
+                <ul>
+                    <li>Mastering the <span class="mono accent">/plan</span> workflow.<br><span class="muted">掌握 /plan 工作流</span></li>
+                    <li>Creating and using <span class="mono">SPEC.md</span>.<br><span class="muted">建立與使用設計規格文件</span></li>
+                    <li>Parallelizing tasks with multiple agents.<br><span class="muted">多代理並行開發任務</span></li>
+                </ul>
+                <ul>
+                    <li>Using Git Worktrees for isolation.<br><span class="muted">使用 Git Worktrees 進行環境隔離</span></li>
+                    <li>Managing conflict and state sync.<br><span class="muted">管理衝突與狀態同步</span></li>
+                    <li>The Human-in-the-Loop review process.<br><span class="muted">人類參與的審查流程</span></li>
+                </ul>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">02 / 18</div></div>
+        </section>
+
+        <!-- 03: The Complexity Wall -->
+        <section class="slide" data-screen-label="03 Complexity Wall">
+            <div class="uppercase mono accent">The Problem // 面臨挑戰</div>
+            <h2>Hitting the Complexity Wall</h2>
+            <p>Single-turn prompts fail when the task involves:</p>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🧩</div>
+                    <b style="font-size: 28px;">Cross-cutting changes</b>
+                    <p class="muted">Modifying 10+ files that depend on each other.</p>
+                </div>
+                <div class="card">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📜</div>
+                    <b style="font-size: 28px;">Legacy Tech Debt</b>
+                    <p class="muted">Implicit rules that aren't documented in the code.</p>
+                </div>
+            </div>
+            <p style="margin-top: 40px;" class="accent">"If you don't have a plan, you are planning to fail."</p>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">03 / 18</div></div>
+        </section>
+
+        <!-- 04: Planning vs. Acting -->
+        <section class="slide" data-screen-label="04 Planning vs Acting">
+            <div class="uppercase mono accent">Mental Model // 心理模型</div>
+            <h2>Planning Mode vs. Acting Mode</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="badge badge-info">PLANNING MODE</div>
+                    <ul style="font-size: 24px;">
+                        <li>Research-only (Read-only)</li>
+                        <li>Propose changes in text</li>
+                        <li>Map out the "Why" and "How"</li>
+                        <li>Zero risk to the codebase</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="badge badge-warn" style="background: #daffec; color: #1a7f37;">ACTING MODE</div>
+                    <ul style="font-size: 24px;">
+                        <li>Write-enabled</li>
+                        <li>Follows the blueprint</li>
+                        <li>Executes shell commands</li>
+                        <li>Runs tests and fixes errors</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">04 / 18</div></div>
+        </section>
+
+        <!-- 05: /plan Mode Deep Dive -->
+        <section class="slide" data-screen-label="05 /plan deep dive">
+            <div class="uppercase mono accent">Command // 指令詳解</div>
+            <h2>Entering /plan Mode</h2>
+            <div class="grid-2">
+                <div>
+                    <p>Use <span class="mono accent">/plan [task]</span> to start a non-destructive session.</p>
+                    <p class="muted">使用 /plan 啟動非破壞性工作階段。</p>
+                    <div class="code-block">
+                        <span class="accent">➜</span> <span class="mono">/plan refactor auth logic</span><br><br>
+                        <span class="muted">Claude Code will:</span><br>
+                        1. Grep for existing auth patterns.<br>
+                        2. Read relevant service files.<br>
+                        3. Propose a step-by-step list.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Key Benefit</div>
+                    <p style="font-size: 24px;">Claude won't start typing code until you say <b>"Go"</b>. This saves context and prevents hallucination spirals.</p>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">05 / 18</div></div>
+        </section>
+
+        <!-- 06: SPEC.md - The Source of Truth -->
+        <section class="slide" data-screen-label="06 SPEC.md">
+            <div class="uppercase mono accent">Artifacts // 設計文件</div>
+            <h2>The Power of SPEC.md</h2>
+            <p>For large tasks, ask Claude to write a <span class="mono">SPEC.md</span> first.</p>
+            <div class="code-block" style="font-size: 20px;">
+                <div class="mono accent"># SPEC: New Payment Gateway</div>
+                ## Architecture
+                - Use the Bridge Pattern for multiple providers.
+                - Define `PaymentInterface` in `src/types/`.
+
+                ## Steps
+                - [ ] Create interface.
+                - [ ] Implement Stripe provider.
+                - [ ] Add unit tests for error cases.
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">06 / 18</div></div>
+        </section>
+
+        <!-- 07: Spec-Driven Development -->
+        <section class="slide" data-screen-label="07 Spec-Driven">
+            <div class="uppercase mono accent">Workflow // 工作流</div>
+            <h2>Spec-Driven Development</h2>
+            <div style="display: flex; gap: 20px; margin-top: 40px;">
+                <div class="card" style="flex: 1;">
+                    <b class="accent">1. Design</b>
+                    <p style="font-size: 20px;">Iterate on the SPEC.md with Claude.</p>
+                </div>
+                <div class="card" style="flex: 1;">
+                    <b class="accent">2. Freeze</b>
+                    <p style="font-size: 20px;">Lock the spec as a "Contract".</p>
+                </div>
+                <div class="card" style="flex: 1;">
+                    <b class="accent">3. Execute</b>
+                    <p style="font-size: 20px;">Claude follows the spec line by line.</p>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">07 / 18</div></div>
+        </section>
+
+        <!-- 08: Multi-agent Workflows -->
+        <section class="slide" data-screen-label="08 Multi-agent intro">
+            <div class="uppercase mono accent">Advanced // 進階應用</div>
+            <h2>Multi-agent Workflows</h2>
+            <p>Moving from a single-threaded developer to a <b>Technical Lead</b>.</p>
+            <div class="grid-2">
+                <div>
+                    <ul>
+                        <li>Run multiple Claude Code instances.<br><span class="muted">運行多個 Claude Code 實例</span></li>
+                        <li>Delegate independent sub-tasks.<br><span class="muted">委派獨立子任務</span></li>
+                        <li>Accelerate development by 3x-5x.<br><span class="muted">加速開發 3 到 5 倍</span></li>
+                    </ul>
+                </div>
+                <div style="text-align: center;">
+                    <svg width="400" height="300" viewBox="0 0 400 300">
+                        <circle cx="200" cy="80" r="50" fill="var(--accent)" />
+                        <text x="200" y="85" text-anchor="middle" font-weight="bold" fill="white">You (Lead)</text>
+                        <line x1="200" y1="130" x2="100" y2="200" stroke="var(--border)" stroke-width="2" />
+                        <line x1="200" y1="130" x2="200" y2="200" stroke="var(--border)" stroke-width="2" />
+                        <line x1="200" y1="130" x2="300" y2="200" stroke="var(--border)" stroke-width="2" />
+                        <circle cx="100" cy="220" r="30" fill="var(--surface)" stroke="var(--border)" />
+                        <circle cx="200" cy="220" r="30" fill="var(--surface)" stroke="var(--border)" />
+                        <circle cx="300" cy="220" r="30" fill="var(--surface)" stroke="var(--border)" />
+                    </svg>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">08 / 18</div></div>
+        </section>
+
+        <!-- 09: Parallelism Strategy -->
+        <section class="slide" data-screen-label="09 Parallelism">
+            <div class="uppercase mono accent">Scaling // 擴展策略</div>
+            <h2>How to Parallelize Safely</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono accent">Horizontal Split</div>
+                    <p style="font-size: 22px;">Agent A: Frontend Components<br>Agent B: Backend API Logic<br>Agent C: Unit Test Suite</p>
+                </div>
+                <div class="card">
+                    <div class="mono accent">Vertical Split</div>
+                    <p style="font-size: 22px;">Agent A: Feature A (End-to-End)<br>Agent B: Feature B (End-to-End)<br>Agent C: Infrastructure / Config</p>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">09 / 18</div></div>
+        </section>
+
+        <!-- 10: Git Worktrees -->
+        <section class="slide" data-screen-label="10 Git Worktrees">
+            <div class="uppercase mono accent">Infrastructure // 基礎架構</div>
+            <h2>Isolating Agents with Git Worktrees</h2>
+            <p>Avoid "Conflict Hell" by giving each agent its own folder and branch.</p>
+            <div class="code-block" style="font-size: 22px;">
+                <span class="accent">$</span> git worktree add ../agent-feature-x feature-x<br>
+                <span class="accent">$</span> cd ../agent-feature-x<br>
+                <span class="accent">$</span> claude<br>
+                <span class="muted"># This agent is now isolated and safe.</span>
+            </div>
+            <p style="margin-top: 20px; font-size: 24px;" class="muted">This allows multiple agents to run tests and build processes without interfering with each other.</p>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">10 / 18</div></div>
+        </section>
+
+        <!-- 11: Coordination -->
+        <section class="slide" data-screen-label="11 Coordination">
+            <div class="uppercase mono accent">Management // 協調管理</div>
+            <h2>The Coordination Loop</h2>
+            <div class="grid-2">
+                <div>
+                    <ul>
+                        <li><b>Sync regularly</b>: Merge main into branches.<br><span class="muted">定期同步：將主分支併入代理分支</span></li>
+                        <li><b>Review plans</b>: Check Agent A's SPEC.md against Agent B's.<br><span class="muted">審查計畫：對比各代理的規格文件</span></li>
+                        <li><b>Unified CLI</b>: Use a master terminal to manage the sub-processes.<br><span class="muted">統一介面：使用主終端管理子進程</span></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">The Manager Role</div>
+                    <p style="font-size: 24px;">Your job is to ensure <b>Architectural Integrity</b>. AI is the muscle; you are the nervous system.</p>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">11 / 18</div></div>
+        </section>
+
+        <!-- 12: Communication -->
+        <section class="slide" data-screen-label="12 Communication">
+            <div class="uppercase mono accent">State // 狀態溝通</div>
+            <h2>Passing Context Between Agents</h2>
+            <p>Agents don't talk to each other directly. <b>Files are the medium.</b></p>
+            <div class="grid-2">
+                <div class="card" style="text-align: center;">
+                    <div class="mono accent">Agent A</div>
+                    <p style="font-size: 18px;">Writes API in <span class="mono">api.ts</span></p>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; font-size: 40px;">➡️</div>
+                <div class="card" style="text-align: center;">
+                    <div class="mono accent">Agent B</div>
+                    <p style="font-size: 18px;">Reads <span class="mono">api.ts</span> to write UI</p>
+                </div>
+            </div>
+            <p style="margin-top: 40px; text-align: center;" class="muted">Always ensure one agent is the "Producer" and the other is the "Consumer" for a specific file.</p>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">12 / 18</div></div>
+        </section>
+
+        <!-- 13: Case Study -->
+        <section class="slide" data-screen-label="13 Case Study">
+            <div class="uppercase mono accent">Case Study // 實戰案例</div>
+            <h2>Project: Database Migration</h2>
+            <div class="grid-2">
+                <div>
+                    <p><b>Task:</b> Move from SQLite to PostgreSQL across 5 services.</p>
+                    <ol style="font-size: 24px; margin-left: 40px; list-style: decimal;">
+                        <li><b>Plan Agent:</b> Analyzes SQL queries and writes a migration guide.</li>
+                        <li><b>Dev Agent 1:</b> Updates Service A & B.</li>
+                        <li><b>Dev Agent 2:</b> Updates Service C & D.</li>
+                        <li><b>Test Agent:</b> Runs integration tests in a Docker container.</li>
+                    </ol>
+                </div>
+                <div class="card" style="background: #f1f8ff;">
+                    <b class="accent">Result:</b>
+                    <p style="font-size: 24px;">Migration completed in 2 hours instead of 2 days. 100% test coverage ensured before merge.</p>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">13 / 18</div></div>
+        </section>
+
+        <!-- 14: Common Failures -->
+        <section class="slide" data-screen-label="14 Failures">
+            <div class="uppercase mono accent">Warnings // 避坑指南</div>
+            <h2>Why Multi-agent Workflows Fail</h2>
+            <div class="grid-2">
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <b style="color: #f85149;">1. Under-planning</b>
+                    <p style="font-size: 20px;">Starting execution before the dependencies are clear.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <b style="color: #f85149;">2. Context Overlap</b>
+                    <p style="font-size: 20px;">Two agents trying to refactor the same shared utility function.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <b style="color: #f85149;">3. Siloed Errors</b>
+                    <p style="font-size: 20px;">Agent A ignores a breaking change that Agent B introduced.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <b style="color: #f85149;">4. Analysis Paralysis</b>
+                    <p style="font-size: 20px;">Spending too much time in /plan mode for a simple bug fix.</p>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">14 / 18</div></div>
+        </section>
+
+        <!-- 15: Human-in-the-Loop -->
+        <section class="slide" data-screen-label="15 Human Loop">
+            <div class="uppercase mono accent">Review // 審查流程</div>
+            <h2>The Review Gate</h2>
+            <p>You are the <b>Quality Gate</b>. Never skip the review of an Agent's plan.</p>
+            <div class="code-block">
+                <span class="accent">➜</span> <span class="mono">"Review the plan in SPEC.md. Are you sure about the data types?"</span><br>
+                <span class="accent">➜</span> <span class="mono">"Wait, don't use library X, we are phasing it out."</span><br>
+                <span class="accent">➜</span> <span class="mono">"OK, this looks solid. Proceed to step 1."</span>
+            </div>
+            <p style="margin-top: 20px; text-align: center;" class="accent">Proactive redirection is 10x cheaper than fixing buggy code.</p>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">15 / 18</div></div>
+        </section>
+
+        <!-- 16: TDD with Agents -->
+        <section class="slide" data-screen-label="16 TDD">
+            <div class="uppercase mono accent">Testing // 測試驅動</div>
+            <h2>Planning for Testing (TDD)</h2>
+            <p>In the <span class="mono">/plan</span> phase, define how the change will be verified.</p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase accent">Reproduction First</div>
+                    <p style="font-size: 22px;">For bug fixes, the first item in the plan must be a <b>Reproduction Script</b>.</p>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase accent">Definition of Done</div>
+                    <p style="font-size: 22px;">State the exact test command that must pass to consider the task complete.</p>
+                </div>
+            </div>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">16 / 18</div></div>
+        </section>
+
+        <!-- 17: Summary -->
+        <section class="slide" data-screen-label="17 Summary">
+            <div class="uppercase mono accent">Conclusion // 總結</div>
+            <h2>Key Takeaways</h2>
+            <ul>
+                <li>Plan for complexity, act for simplicity.</li>
+                <li>SPEC.md is your contract with the agent.</li>
+                <li>Use Git Worktrees to scale your agency.</li>
+                <li>Stay in the loop — you are the architect, not just a watcher.</li>
+            </ul>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">17 / 18</div></div>
+        </section>
+
+        <!-- 18: Next Steps -->
+        <section class="slide" style="justify-content: center; align-items: center; text-align: center;" data-screen-label="18 Next">
+            <div class="uppercase mono accent" style="margin-bottom: 40px;">Coming up next...</div>
+            <h1 class="accent" style="font-size: 100px;">Subagents &<br>Delegation</h1>
+            <p style="font-size: 40px; margin-top: 40px;">Deep dive into specialized workers.</p>
+            <div class="footer"><div>PLANNING-WORKFLOWS // CHAPTER-06</div><div class="mono">18 / 18</div></div>
+        </section>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        function showSlide(index) {
+            slides.forEach((s, i) => s.classList.toggle('active', i === index));
+            localStorage.setItem('chapter6_slide', index);
+            updateScale();
+        }
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; showSlide(currentSlide); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; showSlide(currentSlide); } }
+        function updateScale() {
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            canvas.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+        window.addEventListener('resize', updateScale);
+        const saved = localStorage.getItem('chapter6_slide');
+        if (saved) currentSlide = parseInt(saved);
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>

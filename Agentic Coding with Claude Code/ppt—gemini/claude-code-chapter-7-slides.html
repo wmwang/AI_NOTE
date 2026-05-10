@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 7: Working with Subagents | Claude Code Training</title>
+    <style>
+        :root {
+            --bg:      oklch(98% 0.005 250);
+            --surface: oklch(100% 0 0);
+            --fg:      oklch(22% 0.02 240);
+            --muted:   oklch(50% 0.018 240);
+            --border:  oklch(90% 0.008 240);
+            --accent:  oklch(58% 0.16 145);
+
+            --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+            --slide-width: 1920px;
+            --slide-height: 1080px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #111; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: var(--font-body); color: var(--fg); }
+        #canvas { width: var(--slide-width); height: var(--slide-height); background: var(--bg); position: relative; transform-origin: center center; flex-shrink: 0; box-shadow: 0 40px 100px rgba(0,0,0,0.5); display: grid; grid-template-areas: "content"; }
+        .slide { grid-area: content; width: 100%; height: 100%; padding: 80px 120px; display: none; flex-direction: column; position: relative; border: 1px solid var(--border); }
+        .slide.active { display: flex; }
+        .mono { font-family: var(--font-mono); }
+        .accent { color: var(--accent); }
+        .muted { color: var(--muted); }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8em; }
+        h1 { font-size: 84px; font-weight: 800; line-height: 1.1; margin-bottom: 40px; }
+        h2 { font-size: 56px; font-weight: 700; line-height: 1.2; margin-bottom: 30px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 8px; }
+        p, li { font-size: 32px; line-height: 1.5; margin-bottom: 20px; }
+        ul { list-style: none; }
+        li { position: relative; padding-left: 40px; margin-bottom: 24px; }
+        li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 40px; border-radius: 4px; }
+        .code-block { background: #0d1117; color: #c9d1d9; padding: 30px; border-radius: 6px; font-family: var(--font-mono); font-size: 24px; border: 1px solid #30363d; position: relative; line-height: 1.4; }
+        .grid-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; pointer-events: none; }
+        .slide > * { z-index: 1; }
+        .footer { position: absolute; bottom: 40px; left: 80px; right: 80px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 18px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div id="canvas">
+        <div class="grid-bg"></div>
+
+        <!-- 01: Title -->
+        <section class="slide" data-screen-label="01 Title">
+            <div class="uppercase mono accent" style="margin-bottom: 20px;">Chapter 07 // 使用子代理</div>
+            <h1>Working with<br>Subagents</h1>
+            <div style="font-size: 40px; color: var(--muted); margin-bottom: 60px;">Orchestrating specialized experts to optimize your context.</div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono uppercase muted">Role</div>
+                    <div style="font-size: 32px; font-weight: bold;">Strategic Orchestrator</div>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Goal</div>
+                    <div style="font-size: 32px; font-weight: bold;">Context Efficiency</div>
+                </div>
+            </div>
+            <div class="footer"><div>CLAUDE-CODE-TRAINING-2026</div><div class="mono">01 / 18</div></div>
+        </section>
+
+        <!-- 02: Objectives -->
+        <section class="slide" data-screen-label="02 Objectives">
+            <div class="uppercase mono accent">Chapter Goals // 本章目標</div>
+            <h2>Specialized Delegation</h2>
+            <div class="grid-2">
+                <ul>
+                    <li>The concept of "Context Compression".<br><span class="muted">「上下文壓縮」的概念</span></li>
+                    <li>Built-in subagents: Investigator, Help, Generalist.<br><span class="muted">內建子代理：調查員、幫助、通用代理</span></li>
+                    <li>When and how to delegate tasks.<br><span class="muted">何時以及如何委派任務</span></li>
+                </ul>
+                <ul>
+                    <li>Orchestrating subagents with <span class="mono">invoke_agent</span>.<br><span class="muted">使用 invoke_agent 調度子代理</span></li>
+                    <li>Managing concurrency and safety.<br><span class="muted">管理併發與安全性</span></li>
+                    <li>Reviewing and integrating results.<br><span class="muted">審查與整合結果</span></li>
+                </ul>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">02 / 18</div></div>
+        </section>
+
+        <!-- 03: The Specialist Mindset -->
+        <section class="slide" data-screen-label="03 Specialist Mindset">
+            <div class="uppercase mono accent">Concept // 核心觀念</div>
+            <h2>The Specialist Mindset</h2>
+            <p>A senior engineer doesn't do everything manually. They delegate to experts.</p>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px;">👨‍💼</div>
+                    <b style="font-size: 28px;">Main Agent (PM)</b>
+                    <p class="muted">Maintains the big picture, manages the workspace.</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px;">🛠️</div>
+                    <b style="font-size: 28px;">Subagents (Specialists)</b>
+                    <p class="muted">Execute deep, narrow, or repetitive tasks.</p>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">03 / 18</div></div>
+        </section>
+
+        <!-- 04: Context Window as a Resource -->
+        <section class="slide" data-screen-label="04 Context Resource">
+            <div class="uppercase mono accent">Efficiency // 資源管理</div>
+            <h2>Your Context Window is Precious</h2>
+            <p>Every tool call and file read in the main thread consumes permanent history.</p>
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <div class="mono uppercase" style="color: #f85149;">The Danger</div>
+                    <p style="font-size: 24px;">"Context Drift" - The agent forgets the user's original goal because the history is full of search results.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--accent);">
+                    <div class="mono uppercase accent">The Fix</div>
+                    <p style="font-size: 24px;">Move high-volume noise (searches, logs, big files) to a subagent. They return only a <b>Summary</b>.</p>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">04 / 18</div></div>
+        </section>
+
+        <!-- 05: Context Compression -->
+        <section class="slide" data-screen-label="05 Compression">
+            <div class="uppercase mono accent">Mechanism // 運作機制</div>
+            <h2>Context Compression</h2>
+            <div style="display: flex; align-items: center; justify-content: center; height: 500px; position: relative;">
+                <svg width="1000" height="400" viewBox="0 0 1000 400">
+                    <rect x="50" y="50" width="300" height="300" rx="10" fill="var(--surface)" stroke="var(--border)" stroke-dasharray="5,5" />
+                    <text x="200" y="100" text-anchor="middle" font-family="var(--font-mono)" fill="var(--muted)">Subagent Context</text>
+                    <rect x="70" y="120" width="260" height="40" rx="4" fill="#eee" />
+                    <rect x="70" y="170" width="260" height="40" rx="4" fill="#eee" />
+                    <rect x="70" y="220" width="260" height="40" rx="4" fill="#eee" />
+                    <rect x="70" y="270" width="260" height="40" rx="4" fill="#eee" />
+                    
+                    <line x1="350" y1="200" x2="600" y2="200" stroke="var(--accent)" stroke-width="4" marker-end="url(#arrowhead)" />
+                    
+                    <rect x="650" y="50" width="300" height="300" rx="10" fill="var(--surface)" stroke="var(--border)" />
+                    <text x="800" y="100" text-anchor="middle" font-family="var(--font-mono)" fill="var(--fg)">Main Agent Context</text>
+                    <rect x="670" y="180" width="260" height="60" rx="4" fill="var(--accent)" opacity="0.2" />
+                    <text x="800" y="215" text-anchor="middle" font-size="18" font-weight="bold">100-line Summary Report</text>
+                </svg>
+            </div>
+            <p style="text-align: center;" class="muted">Subagents perform the "Trial and Error" so the Main Agent doesn't have to.</p>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">05 / 18</div></div>
+        </section>
+
+        <!-- 06: Meet the Investigator -->
+        <section class="slide" data-screen-label="06 Investigator">
+            <div class="uppercase mono accent">Subagents // 內建代理</div>
+            <h2>codebase_investigator</h2>
+            <div class="grid-2">
+                <div>
+                    <p>The <b>Architectural Scout</b>. Best for understanding deep dependencies.</p>
+                    <ul>
+                        <li>Vague requests (e.g., "How does auth work?")</li>
+                        <li>Root-cause analysis of bugs.</li>
+                        <li>System refactoring maps.</li>
+                    </ul>
+                </div>
+                <div class="code-block">
+                    <span class="accent">➜</span> <span class="mono">"Invoke investigator to map all usages of UserProfile entity."</span><br><br>
+                    <span class="muted">// Result: A structured report with file paths and symbol maps.</span>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">06 / 18</div></div>
+        </section>
+
+        <!-- 07: Meet the CLI Help -->
+        <section class="slide" data-screen-label="07 CLI Help">
+            <div class="uppercase mono accent">Subagents // 內建代理</div>
+            <h2>cli_help</h2>
+            <div class="grid-2">
+                <div>
+                    <p>The <b>Internal Documentation Expert</b>.</p>
+                    <ul>
+                        <li>Questions about CLI features.</li>
+                        <li>Configuration schemas (e.g., policies).</li>
+                        <li>Instructions on creating custom subagents.</li>
+                    </ul>
+                </div>
+                <div class="card" style="background: #f1f8ff;">
+                    <p class="mono" style="font-size: 20px;">Use this when you're unsure about the parameters of a specific command or tool.</p>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">07 / 18</div></div>
+        </section>
+
+        <!-- 08: Meet the Generalist -->
+        <section class="slide" data-screen-label="08 Generalist">
+            <div class="uppercase mono accent">Subagents // 內建代理</div>
+            <h2>generalist</h2>
+            <div class="grid-2">
+                <div>
+                    <p>The <b>Heavy Lifter</b>. Access to all tools.</p>
+                    <ul>
+                        <li>Batch refactoring across many files.</li>
+                        <li>Fixing lint errors project-wide.</li>
+                        <li>Running long-running build commands.</li>
+                        <li>Speculative "What if" research.</li>
+                    </ul>
+                </div>
+                <div class="code-block">
+                    <span class="accent">➜</span> <span class="mono">"Use generalist to add license headers to all files in src/"</span>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">08 / 18</div></div>
+        </section>
+
+        <!-- 09: Invoking Subagents -->
+        <section class="slide" data-screen-label="09 Tool usage">
+            <div class="uppercase mono accent">Command // 如何使用</div>
+            <h2>Tool: invoke_agent</h2>
+            <p>The Main Agent calls this tool automatically when it identifies a high-impact task.</p>
+            <div class="code-block">
+                <span class="accent">{</span><br>
+                &nbsp;&nbsp;<span class="mono">"agent_name": "generalist",</span><br>
+                &nbsp;&nbsp;<span class="mono">"prompt": "Find all instances where we use hardcoded URLs and move them to .env"</span><br>
+                <span class="accent">}</span>
+            </div>
+            <p style="margin-top: 20px;" class="muted">The prompt must be <b>Comprehensive</b> and <b>Detailed</b>. Subagents don't share the Main Agent's chat history.</p>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">09 / 18</div></div>
+        </section>
+
+        <!-- 10: Delegation: High-Volume Output -->
+        <section class="slide" data-screen-label="10 High Volume">
+            <div class="uppercase mono accent">Strategy // 委派策略 1</div>
+            <h2>Handling High-Volume Output</h2>
+            <div class="grid-2">
+                <div class="card" style="border-top: 4px solid #f85149;">
+                    <div class="mono uppercase" style="color: #f85149;">Anti-pattern</div>
+                    <p style="font-size: 20px;">Main agent runs <span class="mono">npm test</span> which outputs 5000 lines of failure logs directly into the history.</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--accent);">
+                    <div class="mono uppercase accent">Proactive Move</div>
+                    <p style="font-size: 20px;">Main agent asks a subagent to "Run the tests and summarize the top 3 unique failure patterns."</p>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">10 / 18</div></div>
+        </section>
+
+        <!-- 11: Delegation: Speculative Research -->
+        <section class="slide" data-screen-label="11 Speculative">
+            <div class="uppercase mono accent">Strategy // 委派策略 2</div>
+            <h2>Speculative Research</h2>
+            <p>Sometimes you don't know the path until you try a few things.</p>
+            <div class="card" style="margin-top: 20px;">
+                <p><b>Prompt:</b> "I suspect a race condition in the buffer. Try to reproduce it with different delays and report back if you find a reliable trigger."</p>
+            </div>
+            <p style="margin-top: 20px;" class="muted">The subagent can fail 5 times silently and only return the 1 successful reproduction, keeping the main thread clean.</p>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">11 / 18</div></div>
+        </section>
+
+        <!-- 12: Concurrency & Safety -->
+        <section class="slide" data-screen-label="12 Concurrency">
+            <div class="uppercase mono accent">Safety // 並發與安全</div>
+            <h2>The Concurrency Mandate</h2>
+            <p>Multiple subagents can run, but <b>Never on the same resource.</b></p>
+            <div class="grid-2">
+                <div class="card" style="background: #daffec; border: 1px solid #1a7f37;">
+                    <div class="mono accent">SAFE ✅</div>
+                    <p style="font-size: 20px;">Subagent A researches UI.<br>Subagent B researches API.</p>
+                </div>
+                <div class="card" style="background: #ffebe9; border: 1px solid #cf222e;">
+                    <div class="mono" style="color: #cf222e;">DANGEROUS ❌</div>
+                    <p style="font-size: 20px;">Subagent A edits `file.ts`.<br>Subagent B edits `file.ts` simultaneously.</p>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">12 / 18</div></div>
+        </section>
+
+        <!-- 13: Subagent Lifecycle -->
+        <section class="slide" data-screen-label="13 Lifecycle">
+            <div class="uppercase mono accent">Process // 運作流程</div>
+            <h2>The Subagent Lifecycle</h2>
+            <ol style="margin-top: 40px;">
+                <li><b>Invocation</b>: Main agent defines a clear goal.</li>
+                <li><b>Independent Run</b>: Subagent manages its own tools and turns.</li>
+                <li><b>Termination</b>: Subagent reaches a conclusion or error.</li>
+                <li><b>Reporting</b>: Subagent returns a structured summary to the Main Agent.</li>
+            </ol>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">13 / 18</div></div>
+        </section>
+
+        <!-- 14: Trust but Verify -->
+        <section class="slide" data-screen-label="14 Verification">
+            <div class="uppercase mono accent">Quality // 質量控制</div>
+            <h2>Trust but Verify</h2>
+            <div class="grid-2">
+                <div>
+                    <p>Don't assume the subagent's summary is 100% correct. (不要假設子代理的總結完全正確。)</p>
+                    <ul>
+                        <li>Cross-check key file paths.</li>
+                        <li>Ask the subagent to show excerpts.</li>
+                        <li>Main agent should perform a "Final Check" before committing code.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="mono uppercase muted">Pro Tip</div>
+                    <p style="font-size: 24px;">If a subagent fails, analyze its final report to see if the <b>Prompt</b> was too vague.</p>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">14 / 18</div></div>
+        </section>
+
+        <!-- 15: Anti-patterns: Over-delegation -->
+        <section class="slide" data-screen-label="15 Over-delegation">
+            <div class="uppercase mono accent">Avoid // 避免誤區</div>
+            <h2>Pitfall: Over-delegation</h2>
+            <p>Delegation has overhead. Don't use subagents for simple things.</p>
+            <ul style="margin-top: 40px;">
+                <li><b>Simple Reads</b>: Just use `read_file` in the main thread.</li>
+                <li><b>Single-line Edits</b>: `replace` is faster than invoking a subagent.</li>
+                <li><b>Quick Questions</b>: If you can answer it in 1 turn, don't delegate.</li>
+            </ul>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">15 / 18</div></div>
+        </section>
+
+        <!-- 16: Multi-subagent scenarios -->
+        <section class="slide" data-screen-label="16 Multi-subagent">
+            <div class="uppercase mono accent">Advanced // 進階情境</div>
+            <h2>Advanced: Swarm Orchestration</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="mono accent">The Investigation Swarm</div>
+                    <p style="font-size: 20px;">Main Agent spawns 3 investigators to map 3 different modules simultaneously. Gathers all reports into a unified SPEC.md.</p>
+                </div>
+                <div class="card">
+                    <div class="mono accent">The Cleanup Swarm</div>
+                    <p style="font-size: 20px;">Main Agent spawns a generalist to fix tests and another to fix linting in parallel folders.</p>
+                </div>
+            </div>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">16 / 18</div></div>
+        </section>
+
+        <!-- 17: Summary -->
+        <section class="slide" data-screen-label="17 Summary">
+            <div class="uppercase mono accent">Conclusion // 總結</div>
+            <h2>Chapter 07 Key Takeaways</h2>
+            <ul>
+                <li>Subagents are for **Complexity** and **Volume**.</li>
+                <li>Use them to keep your Main Agent's context lean and focused.</li>
+                <li>Comprehensive prompts are key for successful delegation.</li>
+                <li>Never run subagents that mutate the same files concurrently.</li>
+            </ul>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">17 / 18</div></div>
+        </section>
+
+        <!-- 18: Next Preview -->
+        <section class="slide" style="justify-content: center; align-items: center; text-align: center;" data-screen-label="18 Next">
+            <div class="uppercase mono accent" style="margin-bottom: 40px;">Coming up next...</div>
+            <h1 class="accent" style="font-size: 100px;">Output Styles &<br>Themes</h1>
+            <p style="font-size: 40px; margin-top: 40px;">Customizing the visual experience of Claude Code.</p>
+            <div class="footer"><div>SUBAGENTS-DELEGATION // CHAPTER-07</div><div class="mono">18 / 18</div></div>
+        </section>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        function showSlide(index) {
+            slides.forEach((s, i) => s.classList.toggle('active', i === index));
+            localStorage.setItem('chapter7_slide', index);
+            updateScale();
+        }
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; showSlide(currentSlide); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; showSlide(currentSlide); } }
+        function updateScale() {
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            canvas.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+        window.addEventListener('resize', updateScale);
+        const saved = localStorage.getItem('chapter7_slide');
+        if (saved) currentSlide = parseInt(saved);
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
