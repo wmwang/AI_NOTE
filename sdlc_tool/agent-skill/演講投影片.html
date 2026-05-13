@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Skills - 生產級 AI 編程代理技能庫</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', -apple-system, sans-serif; background: #0a0a0a; color: #fff; overflow: hidden; }
+        .slides { width: 100vw; height: 100vh; position: relative; }
+        .slide { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transform: translateX(100px); transition: all 0.5s ease; padding: 60px; }
+        .slide.active { opacity: 1; transform: translateX(0); }
+        .slide.prev { opacity: 0; transform: translateX(-100px); }
+        h1 { font-size: 4em; margin-bottom: 30px; text-align: center; }
+        h2 { font-size: 2.5em; margin-bottom: 40px; color: #61dafb; }
+        h3 { font-size: 1.8em; margin-bottom: 20px; color: #f5a623; }
+        p, li { font-size: 1.4em; line-height: 1.8; margin-bottom: 20px; }
+        ul { text-align: left; }
+        li { margin-bottom: 15px; }
+        .highlight { color: #61dafb; }
+        .warning { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .diagram { margin: 40px 0; font-size: 1.2em; line-height: 1.6; }
+        .code-block { background: #1e1e1e; padding: 30px; border-radius: 10px; margin: 30px 0; font-family: 'Courier New', monospace; font-size: 1.1em; text-align: left; max-width: 800px; }
+        .box { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 40px; border-radius: 20px; border: 2px solid #61dafb; max-width: 900px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 40px; }
+        .grid-item { background: #1e1e1e; padding: 25px; border-radius: 15px; text-align: center; }
+        .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
+        .nav button { padding: 15px 40px; font-size: 1.2em; background: #61dafb; border: none; border-radius: 10px; cursor: pointer; color: #000; }
+        .nav button:hover { background: #4fc3f7; }
+        .progress { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); color: #888; }
+        .emoji { font-size: 3em; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; max-width: 1200px; }
+        .stat { font-size: 5em; font-weight: bold; color: #61dafb; }
+        .phase-tag { display: inline-block; padding: 10px 20px; border-radius: 20px; font-size: 1em; margin: 5px; }
+        .phase-define { background: #e91e63; }
+        .phase-plan { background: #9c27b0; }
+        .phase-build { background: #2196f3; }
+        .phase-verify { background: #ff9800; }
+        .phase-review { background: #4caf50; }
+        .phase-ship { background: #00bcd4; }
+    </style>
+</head>
+<body>
+    <div class="slides">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>🚀 Agent Skills</h1>
+            <h2 style="font-size: 2em;">生產級 AI 編程代理技能庫</h2>
+            <p style="margin-top: 40px; color: #888;">讓 AI 遵循資深工程師的開發流程</p>
+            <div style="margin-top: 50px;">
+                <span class="emoji">🤖</span>
+                <span class="emoji">💻</span>
+                <span class="emoji">✅</span>
+            </div>
+        </div>
+
+        <!-- Slide 2: Problem -->
+        <div class="slide">
+            <h2>⚠️ AI 編程代理的問題</h2>
+            <div class="two-col">
+                <div>
+                    <h3 class="warning">常見問題</h3>
+                    <ul>
+                        <li>走捷徑</li>
+                        <li>跳過測試</li>
+                        <li>忽略審查</li>
+                        <li>「看起來沒問題」❌</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="warning">後果</h3>
+                    <ul>
+                        <li>程式碼品質低</li>
+                        <li>安全漏洞</li>
+                        <li>難以維護</li>
+                        <li>生產故障 🔥</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Solution -->
+        <div class="slide">
+            <h2>✨ Agent Skills 解決方案</h2>
+            <div class="box">
+                <h3 class="success">強制結構化工作流程</h3>
+                <ul style="text-align: center; margin-top: 30px;">
+                    <li>📋 清晰的步驟順序</li>
+                    <li>🔍 驗證檢查點</li>
+                    <li>🎯 退出標準</li>
+                    <li>🛡️ 對抗常見藉口</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 4: Lifecycle -->
+        <div class="slide">
+            <h2>🔄 開發生命週期</h2>
+            <div class="diagram">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+                    <span class="phase-tag phase-define">DEFINE</span>
+                    <span>→</span>
+                    <span class="phase-tag phase-plan">PLAN</span>
+                    <span>→</span>
+                    <span class="phase-tag phase-build">BUILD</span>
+                    <span>→</span>
+                    <span class="phase-tag phase-verify">VERIFY</span>
+                    <span>→</span>
+                    <span class="phase-tag phase-review">REVIEW</span>
+                    <span>→</span>
+                    <span class="phase-tag phase-ship">SHIP</span>
+                </div>
+            </div>
+            <div style="margin-top: 40px; font-size: 1.2em;">
+                <p><span class="highlight">/spec</span> → <span class="highlight">/plan</span> → <span class="highlight">/build</span> → <span class="highlight">/test</span> → <span class="highlight">/review</span> → <span class="highlight">/ship</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Stats -->
+        <div class="slide">
+            <h2>📊 Agent Skills 總覽</h2>
+            <div class="grid">
+                <div class="grid-item">
+                    <div class="stat">22</div>
+                    <p>生產級技能</p>
+                </div>
+                <div class="grid-item">
+                    <div class="stat">6</div>
+                    <p>開發階段</p>
+                </div>
+                <div class="grid-item">
+                    <div class="stat">7</div>
+                    <p>斜杠命令</p>
+                </div>
+            </div>
+            <p style="margin-top: 40px; color: #888;">3 個專業代理角色 + 4 個參考檢查清單</p>
+        </div>
+
+        <!-- Slide 6: Core Skills -->
+        <div class="slide">
+            <h2>🎯 三個核心技能</h2>
+            <div class="box">
+                <h3 class="success">最小配置，最大效果</h3>
+                <ul style="margin-top: 30px;">
+                    <li><span class="highlight">spec-driven-development</span> — 定義要建構什麼</li>
+                    <li><span class="highlight">test-driven-development</span> — 證明它有效</li>
+                    <li><span class="highlight">code-review-and-quality</span> — 合併前驗證</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 7: Skills by Phase -->
+        <div class="slide">
+            <h2>📚 技能分類</h2>
+            <div class="two-col">
+                <div>
+                    <h3><span class="phase-tag phase-define">DEFINE</span></h3>
+                    <ul>
+                        <li>idea-refine</li>
+                        <li>spec-driven-development</li>
+                    </ul>
+                    <h3><span class="phase-tag phase-plan">PLAN</span></h3>
+                    <ul>
+                        <li>planning-and-task-breakdown</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3><span class="phase-tag phase-build">BUILD</span></h3>
+                    <ul>
+                        <li>incremental-implementation</li>
+                        <li>test-driven-development</li>
+                        <li>context-engineering</li>
+                        <li>source-driven-development</li>
+                        <li>doubt-driven-development</li>
+                        <li>frontend-ui-engineering</li>
+                        <li>api-and-interface-design</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: More Skills -->
+        <div class="slide">
+            <h2>📚 技能分類（續）</h2>
+            <div class="two-col">
+                <div>
+                    <h3><span class="phase-tag phase-verify">VERIFY</span></h3>
+                    <ul>
+                        <li>test-driven-development</li>
+                        <li>browser-testing-with-devtools</li>
+                        <li>debugging-and-error-recovery</li>
+                    </ul>
+                    <h3><span class="phase-tag phase-review">REVIEW</span></h3>
+                    <ul>
+                        <li>code-review-and-quality</li>
+                        <li>code-simplification</li>
+                        <li>security-and-hardening</li>
+                        <li>performance-optimization</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3><span class="phase-tag phase-ship">SHIP</span></h3>
+                    <ul>
+                        <li>git-workflow-and-versioning</li>
+                        <li>ci-cd-and-automation</li>
+                        <li>deprecation-and-migration</li>
+                        <li>documentation-and-adrs</li>
+                        <li>shipping-and-launch</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Key Concepts -->
+        <div class="slide">
+            <h2>💡 核心概念</h2>
+            <div class="grid">
+                <div class="grid-item">
+                    <h3>🔄 工作流程</h3>
+                    <p>不是參考文件</p>
+                </div>
+                <div class="grid-item">
+                    <h3>🛡️ 反合理化</h3>
+                    <p>對抗 AI 藉口</p>
+                </div>
+                <div class="grid-item">
+                    <h3>✅ 驗證優先</h3>
+                    <p>證據不可協商</p>
+                </div>
+            </div>
+            <p style="margin-top: 40px; color: #888;">漸進式揭露 → 需要時才載入</p>
+        </div>
+
+        <!-- Slide 10: Anti-Rationalization -->
+        <div class="slide">
+            <h2>🛡️ 反合理化範例</h2>
+            <div class="code-block">
+                <div style="color: #ff6b6b;">❌「這很簡單，不需要規格」</div>
+                <div style="color: #51cf66;">→ 簡單任務不需要長規格，但仍需驗收標準</div>
+                <br>
+                <div style="color: #ff6b6b;">❌「我會後來寫測試」</div>
+                <div style="color: #51cf66;">→ 後來永不來。現在寫。</div>
+                <br>
+                <div style="color: #ff6b6b;">❌「規格會拖慢我們」</div>
+                <div style="color: #51cf66;">→ 15 分鐘規格防止數小時的重新設計</div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Commands -->
+        <div class="slide">
+            <h2>⌨️ 斜杠命令</h2>
+            <div class="code-block">
+                <div><span class="highlight">/spec</span>    → 規格優先開發</div>
+                <div><span class="highlight">/plan</span>    → 任務分解</div>
+                <div><span class="highlight">/build</span>   → 漸進式實作</div>
+                <div><span class="highlight">/test</span>    → 測試優先</div>
+                <div><span class="highlight">/review</span>  → 五軸審查</div>
+                <div><span class="highlight">/code-simplify</span> → 程式碼簡化</div>
+                <div><span class="highlight">/ship</span>    → 安全部署</div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Agent Personas -->
+        <div class="slide">
+            <h2>👤 代理角色</h2>
+            <div class="grid">
+                <div class="grid-item">
+                    <div class="emoji">👨‍💻</div>
+                    <h3>code-reviewer</h3>
+                    <p>資深工程師視角</p>
+                </div>
+                <div class="grid-item">
+                    <div class="emoji">🧪</div>
+                    <h3>test-engineer</h3>
+                    <p>QA 專家</p>
+                </div>
+                <div class="grid-item">
+                    <div class="emoji">🔒</div>
+                    <h3>security-auditor</h3>
+                    <p>安全工程師</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Best Practices -->
+        <div class="slide">
+            <h2>✨ 最佳實踐</h2>
+            <div class="two-col">
+                <div>
+                    <ul>
+                        <li>📋 從規格開始</li>
+                        <li>🍰 漸進式實作</li>
+                        <li>✅ 測試優先</li>
+                        <li>👀 審查每個變更</li>
+                    </ul>
+                </div>
+                <div>
+                    <ul>
+                        <li>📏 保持變更小 (~100 行)</li>
+                        <li>💬 明確假設</li>
+                        <li>🎯 驗證優先</li>
+                        <li>🛠️ 範圍紀律</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Google Engineering -->
+        <div class="slide">
+            <h2>🏢 谷歌工程文化</h2>
+            <p style="color: #888; margin-bottom: 30px;">嵌入在工作流程中的最佳實踐</p>
+            <div class="code-block" style="font-size: 1em;">
+                <div>• Hyrum's Law <span style="color: #888;">— API 設計</span></div>
+                <div>• Beyonce Rule <span style="color: #888;">— 測試</span></div>
+                <div>• 測試金字塔 (80/15/5) <span style="color: #888;">— 測試</span></div>
+                <div>• 變更大小 ~100 行 <span style="color: #888;">— 程式碼審查</span></div>
+                <div>• Chesterton's Fence <span style="color: #888;">— 簡化</span></div>
+                <div>• 主幹開發 <span style="color: #888;">— Git</span></div>
+                <div>• Shift Left <span style="color: #888;">— CI/CD</span></div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Installation -->
+        <div class="slide">
+            <h2>📥 安裝</h2>
+            <div class="code-block">
+                <div style="color: #61dafb;">Claude Code (推薦)</div>
+                <div>/plugin marketplace add addyosmani/agent-skills</div>
+                <br>
+                <div style="color: #61dafb;">Cursor</div>
+                <div>cp skills/*/SKILL.md .cursor/rules/</div>
+                <br>
+                <div style="color: #61dafb;">Gemini CLI</div>
+                <div>gemini skills install https://github.com/addyosmani/agent-skills.git --path skills</div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Quick Start -->
+        <div class="slide">
+            <h2>🚀 快速開始</h2>
+            <div class="box">
+                <h3>三分鐘入門</h3>
+                <ol style="text-align: left; margin-top: 30px; line-height: 2;">
+                    <li>安裝 Agent Skills</li>
+                    <li>載入 3 個核心技能到規則文件</li>
+                    <li>開始使用 /spec /plan /build /test /review /ship</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 17: Summary -->
+        <div class="slide">
+            <h2>📝 總結</h2>
+            <div class="box">
+                <h3>Agent Skills 本質</h3>
+                <ul style="margin-top: 20px;">
+                    <li>✅ 結構化工作流程 > 自由輸出</li>
+                    <li>✅ 驗證 > 「看起來沒問題」</li>
+                    <li>✅ 小變更 > 大爆炸</li>
+                    <li>✅ 簡單 > 聰明</li>
+                    <li>✅ 對抗合理化 > 接受藉口</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 18: Resources -->
+        <div class="slide">
+            <h2>🔗 資源</h2>
+            <div class="box" style="text-align: center;">
+                <p>GitHub: github.com/addyosmani/agent-skills</p>
+                <p style="margin: 20px 0;">MIT License — 開源使用</p>
+                <div style="margin-top: 30px; font-size: 3em;">
+                    <span class="emoji">🤖</span>
+                    <span class="emoji">💻</span>
+                    <span class="emoji">🚀</span>
+                </div>
+                <p style="margin-top: 30px; color: #61dafb;">讓 AI 遵循資深工程師的開發流程</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="progress" id="progress">1 / 18</div>
+    <div class="nav">
+        <button onclick="prevSlide()">← 上一頁</button>
+        <button onclick="nextSlide()">下一頁 →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'prev');
+                if (i === index) {
+                    slide.classList.add('active');
+                } else if (i < index) {
+                    slide.classList.add('prev');
+                }
+            });
+            document.getElementById('progress').textContent = `${index + 1} / ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'Home') { currentSlide = 0; showSlide(0); }
+            if (e.key === 'End') { currentSlide = totalSlides - 1; showSlide(currentSlide - 1); }
+        });
+
+        document.addEventListener('swipeleft', () => nextSlide());
+        document.addEventListener('swiperight', () => prevSlide());
+    </script>
+</body>
+</html>
