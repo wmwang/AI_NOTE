@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 250" style="font-family: 'Nunito', sans-serif; background: #fefaf6; border-radius: 10px;">
+  <!-- Title -->
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#333">知識庫閉環：讓 AI 越來越聰明</text>
+
+  <!-- Four nodes in a cycle -->
+  <!-- Node 1: 開發新功能 -->
+  <rect x="60" y="90" width="110" height="70" rx="10" fill="#E3F2FD" stroke="#1565C0" stroke-width="2" filter="url(#shadow)"/>
+  <text x="115" y="118" text-anchor="middle" font-size="12" font-weight="800" fill="#1565C0">💻 開發</text>
+  <text x="115" y="138" text-anchor="middle" font-size="10" fill="#555">新功能</text>
+  <text x="115" y="152" text-anchor="middle" font-size="10" fill="#888">Agentic TDD</text>
+
+  <!-- Arrow 1→2 -->
+  <path d="M175,125 L210,125" stroke="#1565C0" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- Node 2: 產出程式碼和文件 -->
+  <rect x="215" y="90" width="110" height="70" rx="10" fill="#FFF8E1" stroke="#F57C00" stroke-width="2" filter="url(#shadow)"/>
+  <text x="270" y="118" text-anchor="middle" font-size="12" font-weight="800" fill="#E65100">📝 產出</text>
+  <text x="270" y="138" text-anchor="middle" font-size="10" fill="#555">程式碼</text>
+  <text x="270" y="152" text-anchor="middle" font-size="10" fill="#888">+ 文件</text>
+
+  <!-- Arrow 2→3 -->
+  <path d="M330,125 L365,125" stroke="#F57C00" stroke-width="2" fill="none" marker-end="url(#arrowOrange)"/>
+
+  <!-- Node 3: 更新 Wiki -->
+  <rect x="370" y="90" width="110" height="70" rx="10" fill="#E0F2F1" stroke="#00695C" stroke-width="2" filter="url(#shadow)"/>
+  <text x="425" y="118" text-anchor="middle" font-size="12" font-weight="800" fill="#004D40">📚 Wiki</text>
+  <text x="425" y="138" text-anchor="middle" font-size="10" fill="#555">更新文件</text>
+  <text x="425" y="152" text-anchor="middle" font-size="10" fill="#888">知識積累</text>
+
+  <!-- Arrow 3→4 (down) -->
+  <path d="M425,165 L425,195" stroke="#00695C" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Node 4: 下次開發讀取 -->
+  <rect x="290" y="200" width="110" height="40" rx="10" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="2" filter="url(#shadow)"/>
+  <text x="345" y="225" text-anchor="middle" font-size="11" font-weight="700" fill="#7B1FA2">🔄 下次開發讀取</text>
+
+  <!-- Arrow 4→1 (loop back) -->
+  <path d="M285,220 L150,220 L90,160" stroke="#7B1FA2" stroke-width="2" stroke-dasharray="5,3" fill="none" marker-end="url(#arrowPurple)"/>
+  <text x="80" y="235" font-size="9" fill="#7B1FA2" font-weight="600">知識回饋</text>
+
+  <!-- Caption -->
+  <text x="300" y="270" text-anchor="middle" font-size="11" fill="#888">每次開發都會讓 AI 下次變得更聰明 — 正向循環</text>
+
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#1565C0"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#F57C00"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#00695C"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#7B1FA2"/>
+    </marker>
+  </defs>
+</svg>

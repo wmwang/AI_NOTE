@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" style="font-family: 'Nunito', sans-serif; background: #f5f5f5; border-radius: 10px;">
+  <!-- Browser chrome -->
+  <rect x="0" y="0" width="600" height="30" rx="10" fill="#e0e0e0"/>
+  <circle cx="20" cy="15" r="6" fill="#FF5F56"/><circle cx="38" cy="15" r="6" fill="#FFBD2E"/><circle cx="56" cy="15" r="6" fill="#27C93F"/>
+  <rect x="80" y="8" width="300" height="14" rx="7" fill="white"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="30" width="600" height="40" fill="#7B1FA2"/>
+  <text x="20" y="55" font-size="14" font-weight="700" fill="white">🔍 AI Code Review Report — PR #678</text>
+
+  <!-- ✅ PASS section -->
+  <rect x="15" y="80" width="570" height="90" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="15" y="80" width="570" height="35" rx="8" fill="#E8F5E9"/>
+  <rect x="15" y="103" width="570" height="12" fill="#E8F5E9"/>
+  <text x="30" y="100" font-size="12" font-weight="800" fill="#2E7D32">✅ 通過項目（4 項）</text>
+
+  <text x="30" y="125" font-size="10" fill="#333">✓ 架構分層正確（Controller → Service → Repository）</text>
+  <text x="30" y="142" font-size="10" fill="#333">✓ 測試覆蓋率 92%</text>
+  <text x="30" y="159" font-size="10" fill="#333">✓ DTO 轉換完整</text>
+
+  <!-- ⚠️ WARN section -->
+  <rect x="15" y="178" width="570" height="60" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="15" y="178" width="570" height="30" rx="8" fill="#FFF8E1"/>
+  <rect x="15" y="196" width="570" height="12" fill="#FFF8E1"/>
+  <text x="30" y="198" font-size="12" font-weight="800" fill="#E65100">⚠️ 建議改善（2 項）</text>
+  <text x="30" y="222" font-size="10" fill="#333">⚠️ OrderService.createOrder() 方法過長（45 行），建議拆分</text>
+  <text x="30" y="238" font-size="10" fill="#333">⚠️ HikariCP 設定值建議移至 Configuration Properties</text>
+
+  <!-- ❌ FAIL section -->
+  <rect x="15" y="246" width="570" height="68" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="15" y="246" width="570" height="30" rx="8" fill="#FFEBEE"/>
+  <rect x="15" y="264" width="570" height="12" fill="#FFEBEE"/>
+  <text x="30" y="266" font-size="12" font-weight="800" fill="#C62828">❌ 必須修正（2 項）</text>
+  <text x="30" y="290" font-size="10" fill="#C62828">❌ 發現 TODO comment 未處理（第 87 行）</text>
+  <text x="30" y="308" font-size="10" fill="#C62828">❌ 缺少 @Transactional 註解（建立補貨單需要事務保護）</text>
+
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+</svg>

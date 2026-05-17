@@ -1,0 +1,3 @@
+# YouTube 字幕產生器依賴
+openai-whisper
+yt-dlp

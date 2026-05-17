@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>全自動化 AI SDLC — Workflow 與知識庫閉環</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+/* ===================== tokens ===================== */
+:root {
+  --bg:           oklch(99% 0.002 240);
+  --surface:      oklch(100% 0 0);
+  --surface-2:    oklch(97.5% 0.004 250);
+  --fg:           oklch(18% 0.012 250);
+  --muted:        oklch(54% 0.012 250);
+  --muted-2:      oklch(72% 0.01 250);
+  --border:       oklch(92% 0.005 250);
+  --border-strong: oklch(82% 0.008 250);
+  --accent:       oklch(58% 0.18 255);
+  --accent-soft:  oklch(95% 0.04 255);
+  --accent-deep:  oklch(45% 0.18 255);
+  --accent-2:      oklch(66% 0.14 65);
+  --accent-2-soft: oklch(94% 0.045 65);
+  --accent-2-deep: oklch(48% 0.14 60);
+  --success:       oklch(58% 0.16 145);
+  --success-soft:  oklch(95% 0.04 145);
+  --danger:        oklch(60% 0.18 25);
+  --danger-soft:   oklch(95% 0.05 25);
+  --warning:       oklch(70% 0.13 75);
+  --warning-soft:  oklch(95% 0.05 75);
+  --dot-color: oklch(80% 0.005 250 / 0.6);
+  --dot-bg: radial-gradient(circle at 1px 1px, var(--dot-color) 1px, transparent 0);
+  --font-display: "Nunito", "jf-openhuninn-1.1", "Gen Jyuu Gothic", "Taipei Sans TC Beta", "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+  --font-body:    var(--font-display);
+  --font-mono:    var(--font-display);
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --sidebar-w:   268px;
+  --header-h:    56px;
+  --content-max: 880px;
+  --shadow-lift: 0 6px 18px -10px oklch(20% 0.02 250 / 0.18), 0 2px 4px -2px oklch(20% 0.02 250 / 0.06);
+}
+[data-theme="dark"] {
+  --bg:           oklch(16% 0.014 250);
+  --surface:      oklch(19.5% 0.014 250);
+  --surface-2:    oklch(22.5% 0.014 250);
+  --fg:           oklch(96% 0.005 250);
+  --muted:        oklch(68% 0.012 250);
+  --muted-2:      oklch(50% 0.012 250);
+  --border:       oklch(28% 0.014 250);
+  --border-strong: oklch(38% 0.014 250);
+  --accent:       oklch(70% 0.17 255);
+  --accent-soft:  oklch(30% 0.08 255);
+  --accent-deep:  oklch(82% 0.13 255);
+  --accent-2:      oklch(78% 0.13 65);
+  --accent-2-soft: oklch(30% 0.075 65);
+  --accent-2-deep: oklch(86% 0.12 65);
+  --success:       oklch(70% 0.16 145);
+  --success-soft:  oklch(28% 0.07 145);
+  --danger:        oklch(70% 0.18 25);
+  --danger-soft:   oklch(28% 0.08 25);
+  --warning:       oklch(78% 0.13 75);
+  --warning-soft:  oklch(28% 0.08 75);
+  --shadow-lift: 0 8px 22px -10px oklch(0% 0 0 / 0.55), 0 2px 6px -2px oklch(0% 0 0 / 0.3);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.005em;
+  transition: background-color 220ms ease, color 220ms ease;
+}
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0;
+  color: var(--fg);
+}
+h1 { font-size: 32px; font-weight: 660; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 18px; font-weight: 600; }
+h4 { font-size: 15px; font-weight: 600; }
+p  { margin: 0 0 12px; text-wrap: pretty; }
+a  { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+::selection { background: var(--accent-soft); color: var(--accent-deep); }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* ===================== layout ===================== */
+.app { min-height: 100vh; }
+.app.sidebar-closed .sidebar { transform: translateX(-100%); }
+.sidebar {
+  position: fixed; left: 0; top: 0;
+  width: var(--sidebar-w); height: 100vh;
+  z-index: 10;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.main { margin-left: var(--sidebar-w); transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.app.sidebar-closed .main { margin-left: 0; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 5;
+  height: var(--header-h);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .app.sidebar-open .sidebar { transform: translateX(0); }
+  .main { margin-left: 0; }
+}
+
+/* ===================== brand / sidebar ===================== */
+.brand { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.brand-eyebrow { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.brand-title { font-size: 15px; font-weight: 800; color: var(--fg); }
+
+.nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+.nav-section { padding: 0 12px; margin-bottom: 4px; }
+.nav-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 8px 8px 4px; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--r-sm); cursor: pointer; transition: background 120ms; color: var(--fg); text-decoration: none; font-size: 13px; }
+.nav-item:hover { background: var(--surface-2); text-decoration: none; }
+.nav-item.active { background: var(--accent-soft); color: var(--accent-deep); font-weight: 700; }
+.nav-item.done { opacity: 0.6; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); flex-shrink: 0; }
+.nav-item.done .nav-dot { background: var(--success); }
+
+.nav-progress { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin: 8px 0; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); transition: width 300ms ease; border-radius: 2px; }
+
+/* ===================== topbar ===================== */
+.topbar-trail { font-size: 13px; color: var(--muted); }
+.topbar-quick { display: flex; gap: 8px; margin-left: auto; }
+.theme-toggle {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 12px; font-size: 12px;
+}
+.hamburger {
+  background: none; border: none; padding: 8px;
+  display: none;
+}
+@media (max-width: 768px) {
+  .hamburger { display: block; }
+}
+
+.content { max-width: var(--content-max); margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ===================== chapter / section ===================== */
+.chapter { margin-bottom: 56px; }
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.lead { font-size: 16px; color: var(--muted); margin: 12px 0 24px; text-wrap: pretty; }
+
+/* ===================== day hero ===================== */
+.day-hero {
+  position: relative;
+  padding: 48px 32px;
+  border-radius: var(--r-lg);
+  background: var(--dot-bg) 0 0 / 24px 24px, var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 32px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 32px;
+  align-items: center;
+}
+.day-hero-numeral {
+  font-family: var(--font-serif);
+  font-size: clamp(120px, 16vw, 200px);
+  font-weight: 500;
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+  color: var(--accent-2);
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--accent-2) 18%, transparent);
+}
+.day-hero:hover .day-hero-numeral {
+  color: var(--accent-2-deep);
+  text-shadow: 0 2px 0 color-mix(in oklab, var(--accent-2) 22%, transparent), 0 18px 40px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+.day-hero-meta .lead { margin: 8px 0 0; color: var(--muted); }
+
+/* ===================== unit accordion ===================== */
+.unit {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin: 16px 0;
+}
+.unit > summary {
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  list-style: none;
+}
+.unit > summary::-webkit-details-marker { display: none; }
+.unit-title { font-weight: 700; font-size: 16px; }
+.unit-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.unit-body { padding: 0 20px 20px; }
+.unit-progress-pill {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 2px 8px; background: var(--accent-soft); color: var(--accent-deep);
+  border-radius: 999px; white-space: nowrap;
+}
+
+/* ===================== concept ===================== */
+.concept {
+  margin: 20px 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.concept-heading { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: var(--fg); }
+.concept-body { margin-bottom: 12px; }
+.kv { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: 8px 16px; margin: 12px 0; }
+.kv-key { font-weight: 600; color: var(--muted); }
+.note { margin-top: 12px; padding: 10px 14px; background: var(--accent-2-soft); border-left: 3px solid var(--accent-2); border-radius: var(--r-sm); font-size: 14px; }
+
+/* ===================== table ===================== */
+.t { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+.t th, .t td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.t th { background: var(--surface-2); font-weight: 700; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ===================== task list ===================== */
+.task-list { list-style: none; padding: 0; margin: 0; }
+.task-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: var(--r-sm); cursor: pointer; transition: background 120ms ease;
+}
+.task-item:hover { background: var(--surface-2); }
+.task-checkbox {
+  width: 18px; height: 18px; border: 1.5px solid var(--border-strong); border-radius: var(--r-sm);
+  display: grid; place-items: center; transition: all 120ms ease; flex-shrink: 0;
+}
+.task-item:hover .task-checkbox { border-color: var(--accent); }
+.task-item.done .task-checkbox { background: var(--success); border-color: var(--success); color: white; }
+.task-item.done .task-label { text-decoration: line-through; color: var(--muted); }
+.task-label { font-size: 14px; }
+
+/* ===================== prompt card ===================== */
+.prompt-card {
+  background: oklch(15% 0.02 250); color: oklch(92% 0.005 250);
+  border-left: 4px solid var(--accent-2); padding: 14px 16px; border-radius: var(--r-md); margin: 16px 0;
+}
+.prompt-card-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+.prompt-card-title { font-weight: 700; }
+.prompt-card-note { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+.prompt-text { background: oklch(10% 0.015 250); padding: 12px; border-radius: var(--r-sm); font-size: 13px; white-space: pre-wrap; margin: 0; overflow-x: auto; }
+.prompt-copy-btn {
+  background: var(--accent-2); color: white; border: 0; padding: 4px 10px;
+  border-radius: 999px; font-size: 11px; letter-spacing: 0.08em;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.prompt-copy-btn.ok { background: var(--success); }
+
+/* ===================== illustration ===================== */
+.illustration { margin: 16px 0; text-align: center; }
+.illustration img, .illustration svg { max-width: 100%; height: auto; border-radius: var(--r-md); filter: drop-shadow(0 4px 12px oklch(20% 0.02 250 / 0.08)); }
+.illustration.error img { display: none; }
+
+/* ===================== material list ===================== */
+.materials { display: flex; flex-direction: column; gap: 8px; }
+.material-row {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+  padding: 10px 12px; background: var(--surface-2); border-radius: var(--r-sm); align-items: center;
+}
+.material-tag { font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; background: var(--accent-soft); color: var(--accent-deep); border-radius: 999px; }
+.material-name { font-weight: 600; }
+.material-desc { font-size: 13px; color: var(--muted); }
+.material-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted-2); }
+
+/* ===================== faq ===================== */
+.faq { margin-top: 12px; }
+.faq-q { font-weight: 700; color: var(--accent-deep); margin-top: 12px; }
+.faq-a { color: var(--muted); margin-top: 4px; }
+
+/* ===================== quiz ===================== */
+.quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; margin-bottom: 16px; }
+.quiz-q-text { font-weight: 700; margin-bottom: 12px; font-size: 15px; }
+.quiz-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--r-sm); cursor: pointer; transition: background 120ms; margin-bottom: 4px; }
+.quiz-option:hover { background: var(--surface-2); }
+.quiz-option.selected { background: var(--accent-soft); }
+.quiz-submit { margin-top: 16px; background: var(--accent); color: white; border: 0; padding: 10px 24px; border-radius: var(--r-sm); font-size: 14px; font-weight: 700; }
+.quiz-result { margin-top: 16px; padding: 16px; border-radius: var(--r-md); font-weight: 700; }
+.quiz-result.correct { background: var(--success-soft); color: var(--success); }
+.quiz-result.wrong { background: var(--danger-soft); color: var(--danger); }
+
+/* ===================== toast ===================== */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--fg); color: var(--bg); padding: 10px 20px; border-radius: var(--r-md);
+  font-size: 14px; font-weight: 700; z-index: 1000;
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ===================== sidebar backdrop ===================== */
+.sidebar-backdrop {
+  display: none; position: fixed; inset: 0; background: oklch(0% 0 0 / 0.4);
+  z-index: 9;
+}
+@media (max-width: 768px) {
+  .sidebar-backdrop.visible { display: block; }
+}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-eyebrow">AI SDLC</div>
+        <div class="brand-title">全自動化 AI SDLC</div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="nav-progress" id="navProgress"></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="hamburger" id="hamburger" aria-label="選單">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="topbar-trail" id="topbarTrail"></div>
+        <div class="topbar-quick">
+          <button class="theme-toggle" id="themeToggle" type="button">切換主題</button>
+        </div>
+      </header>
+
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+
+  <script src="course-data.js"></script>
+  <script>
+  /* ===================== store ===================== */
+  const STORE_KEY = 'aisdlc-progress-v1';
+  const store = {
+    load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { tasks: {}, quiz: {}, lastSection: '' }; } catch { return { tasks: {}, quiz: {}, lastSection: '' }; } },
+    save(s) { localStorage.setItem(STORE_KEY, JSON.stringify(s)); },
+    reset() { localStorage.removeItem(STORE_KEY); }
+  };
+  let state = store.load();
+
+  /* ===================== DOM helper ===================== */
+  const el = (tag, attrs = {}, ...children) => {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') node.className = v;
+      else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
+      else if (v !== false && v != null) node.setAttribute(k, v);
+    }
+    for (const c of children.flat()) { if (c == null || c === false) continue; node.append(c instanceof Node ? c : document.createTextNode(String(c))); }
+    return node;
+  };
+  const clear = (node) => { while (node.firstChild) node.removeChild(node.firstChild); };
+
+  /* ===================== toast ===================== */
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 1800);
+  }
+
+  /* ===================== markdown (bold + link only) ===================== */
+  function inlineMarkdown(str) {
+    const frag = document.createDocumentFragment();
+    const parts = str.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
+    for (const p of parts) {
+      if (p.startsWith('**') && p.endsWith('**')) {
+        frag.append(el('strong', {}, p.slice(2, -2)));
+      } else if (p.startsWith('[') && p.includes('](')) {
+        const m = p.match(/\[([^\]]+)\]\(([^)]+)\)/);
+        if (m) frag.append(el('a', { href: m[2], target: '_blank', rel: 'noopener' }, m[1]));
+        else frag.append(document.createTextNode(p));
+      } else {
+        frag.append(document.createTextNode(p));
+      }
+    }
+    return frag;
+  }
+
+  /* ===================== render: illustration (PNG-first / SVG-fallback) ===================== */
+  function renderIllustration(name) {
+    const wrap = el('div', { class: 'illustration' });
+    const img = el('img', { src: `assets/illustrations/${name}.png`, alt: name });
+    img.onerror = () => {
+      img.src = `assets/illustrations/${name}.svg`;
+      img.onerror = () => { wrap.classList.add('error'); wrap.append(el('div', { class: 'illustration-placeholder' }, `📷 ${name}`)); };
+    };
+    wrap.append(img);
+    return wrap;
+  }
+
+  /* ===================== render: concept block ===================== */
+  function renderConcept(c) {
+    const w = el('div', { class: 'concept' });
+    if (c.heading) w.append(el('div', { class: 'concept-heading' }, c.heading));
+    if (c.body) w.append(el('div', { class: 'concept-body' }, inlineMarkdown(c.body)));
+    if (c.illustration) w.append(renderIllustration(c.illustration));
+    if (c.list && c.list.length) {
+      const ul = el('ul', { class: 'list' });
+      c.list.forEach(([k, v]) => {
+        const li = el('li', {});
+        if (k.includes('🔴') || k.includes('🟡') || k.includes('🟢') || k.includes('✅') || k.includes('❌')) {
+          li.append(inlineMarkdown(k));
+        } else {
+          li.append(el('strong', {}, k));
+        }
+        if (v) li.append(document.createTextNode(' — '), inlineMarkdown(v));
+        ul.append(li);
+      });
+      w.append(ul);
+    }
+    if (c.table) {
+      const t = el('table', { class: 't' });
+      const thead = el('thead');
+      thead.append(el('tr', {}, ...c.table.head.map(h => el('th', {}, h))));
+      t.append(thead);
+      const tb = el('tbody');
+      c.table.rows.forEach(r => tb.append(el('tr', {}, ...r.map(cell => el('td', {}, inlineMarkdown(String(cell)))))));
+      t.append(tb);
+      w.append(t);
+    }
+    if (c.note) w.append(el('div', { class: 'note' }, inlineMarkdown(c.note)));
+    return w;
+  }
+
+  /* ===================== render: task list ===================== */
+  function renderTaskList(tasks) {
+    const list = el('ul', { class: 'task-list' });
+    tasks.forEach(t => {
+      const li = el('li', { class: 'task-item' + (state.tasks[t.id] ? ' done' : ''), 'data-task-id': t.id });
+      li.append(el('div', { class: 'task-checkbox' }, state.tasks[t.id] ? '✓' : ''));
+      li.append(el('div', { class: 'task-label' }, t.label));
+      li.addEventListener('click', () => toggleTask(t.id, li));
+      list.append(li);
+    });
+    return list;
+  }
+  function toggleTask(id, li) {
+    if (state.tasks[id]) delete state.tasks[id];
+    else state.tasks[id] = true;
+    li.classList.toggle('done');
+    li.querySelector('.task-checkbox').textContent = state.tasks[id] ? '✓' : '';
+    store.save(state);
+    updateProgressUI();
+  }
+
+  /* ===================== render: material list ===================== */
+  function renderMaterialList(items) {
+    const w = el('div', { class: 'materials' });
+    items.forEach(m => {
+      const row = el('div', { class: 'material-row' });
+      row.append(el('div', { class: 'material-tag' }, m.type));
+      const center = el('div', {});
+      center.append(el('div', { class: 'material-name' }, m.name));
+      if (m.desc) center.append(el('div', { class: 'material-desc' }, m.desc));
+      row.append(center);
+      w.append(row);
+    });
+    return w;
+  }
+
+  /* ===================== render: prompt card ===================== */
+  function renderPromptCard(p) {
+    const w = el('div', { class: 'prompt-card', id: p.id });
+    const head = el('div', { class: 'prompt-card-head' });
+    const left = el('div', {});
+    left.append(el('div', { class: 'prompt-card-title' }, p.title));
+    if (p.note) left.append(el('div', { class: 'prompt-card-note' }, p.note));
+    head.append(left);
+    const btn = el('button', { class: 'prompt-copy-btn', type: 'button' }, 'Copy');
+    btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(p.text); } catch {
+        const ta = document.createElement('textarea'); ta.value = p.text;
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      btn.classList.add('ok'); btn.textContent = 'Copied';
+      showToast('已複製');
+      setTimeout(() => { btn.classList.remove('ok'); btn.textContent = 'Copy'; }, 1800);
+    });
+    head.append(btn);
+    w.append(head);
+    w.append(el('pre', { class: 'prompt-text' }, p.text));
+    return w;
+  }
+
+  /* ===================== render: unit ===================== */
+  function renderUnit(dayId, u) {
+    const det = el('details', { class: 'unit', id: `${dayId}-${u.id}` });
+    if (dayId === 'day1' && u.id === 'u-1') det.open = true;
+
+    const sum = el('summary', {});
+    const titleWrap = el('div', {});
+    titleWrap.append(el('div', { class: 'unit-title' }, u.title));
+    if (u.subtitle) titleWrap.append(el('div', { class: 'unit-meta' }, u.subtitle));
+    titleWrap.append(el('div', { class: 'unit-meta' }, u.time));
+    sum.append(titleWrap);
+
+    const taskCount = u.tasks ? u.tasks.length : 0;
+    const doneCount = u.tasks ? u.tasks.filter(t => state.tasks[t.id]).length : 0;
+    sum.append(el('span', { class: 'unit-progress-pill' }, `${doneCount} / ${taskCount}`));
+    det.append(sum);
+
+    const body = el('div', { class: 'unit-body' });
+
+    if (u.goals?.length) {
+      body.append(el('h4', {}, '學習目標'));
+      const ul = el('ul', { class: 'list' });
+      u.goals.forEach(g => ul.append(el('li', {}, inlineMarkdown(g))));
+      body.append(ul);
+    }
+
+    if (u.illustrations?.length) {
+      const hero = u.illustrations.find(i => i.kind === 'hero');
+      if (hero) body.append(renderIllustration(hero.name));
+    }
+
+    if (u.concepts?.length) {
+      body.append(el('h4', {}, '核心觀念'));
+      u.concepts.forEach(c => body.append(renderConcept(c)));
+    }
+
+    if (u.prompts?.length) {
+      body.append(el('h4', {}, 'RTFC 提示詞範例（一鍵複製）'));
+      u.prompts.forEach(p => body.append(renderPromptCard(p)));
+    }
+
+    if (u.tasks?.length) {
+      body.append(el('h4', {}, '任務清單'));
+      body.append(renderTaskList(u.tasks));
+    }
+
+    if (u.materials?.length) {
+      body.append(el('h4', {}, '本單元教學素材'));
+      body.append(renderMaterialList(u.materials));
+    }
+
+    if (u.faq?.length) {
+      body.append(el('h4', {}, '常見學員疑問'));
+      const faqEl = el('div', { class: 'faq' });
+      u.faq.forEach(([q, a]) => {
+        faqEl.append(el('div', { class: 'faq-q' }, q));
+        faqEl.append(el('div', { class: 'faq-a' }, a));
+      });
+      body.append(faqEl);
+    }
+
+    det.append(body);
+    return det;
+  }
+
+  /* ===================== render: day ===================== */
+  function renderDay(dayId) {
+    const d = window.COURSE[dayId];
+    if (!d) return null;
+    const meta = window.COURSE.meta.days.find(x => x.id === dayId);
+
+    const root = el('section', { class: 'chapter', id: dayId });
+    const hero = el('div', { class: 'day-hero' });
+    hero.append(el('div', { class: 'day-hero-numeral' }, `D${meta?.n || '1'}`));
+    const heroMeta = el('div', { class: 'day-hero-meta' });
+    heroMeta.append(el('div', { class: 'eyebrow' }, 'Day ' + (meta?.n || '1')));
+    heroMeta.append(el('h2', {}, d.title));
+    if (d.learningGoal) heroMeta.append(el('div', { class: 'lead' }, d.learningGoal));
+    hero.append(heroMeta);
+    root.append(hero);
+
+    d.units?.forEach(u => root.append(renderUnit(dayId, u)));
+    return root;
+  }
+
+  /* ===================== render: overview ===================== */
+  function renderOverview() {
+    const root = el('section', { class: 'chapter', id: 'overview' });
+    root.append(el('span', { class: 'eyebrow' }, '課程總覽'));
+    root.append(el('h1', {}, window.COURSE.meta.title));
+    if (window.COURSE.meta.subtitle) root.append(el('div', { class: 'lead' }, window.COURSE.meta.subtitle));
+    return root;
+  }
+
+  /* ===================== render: quiz ===================== */
+  function renderQuiz() {
+    const items = window.COURSE.quiz || [];
+    if (!items.length) return null;
+
+    const root = el('section', { class: 'chapter', id: 'quiz' });
+    root.append(el('span', { class: 'eyebrow' }, '結訓測驗'));
+    root.append(el('h2', {}, `結訓測驗（${items.length} 題）`));
+
+    items.forEach(q => {
+      const qEl = el('div', { class: 'quiz-question', 'data-quiz-id': q.id });
+      qEl.append(el('div', { class: 'quiz-q-text' }, `${q.id.replace('q', '')}. ${q.q}`));
+      const optionsEl = el('div', {});
+      q.options.forEach((opt, idx) => {
+        const optEl = el('div', { class: 'quiz-option' + (state.quiz[q.id] === idx ? ' selected' : ''), 'data-opt': idx });
+        optEl.append(document.createTextNode(opt));
+        optEl.addEventListener('click', () => selectOption(q.id, idx, qEl));
+        optionsEl.append(optEl);
+      });
+      qEl.append(optionsEl);
+
+      if (state.quiz[q.id] !== undefined) {
+        const result = el('div', { class: 'quiz-result ' + (state.quiz[q.id] === q.answer ? 'correct' : 'wrong') });
+        result.append(document.createTextNode(state.quiz[q.id] === q.answer ? `✅ 正確！` : `❌ 錯誤，正確答案是：${q.options[q.answer]}`));
+        qEl.append(result);
+      }
+
+      root.append(qEl);
+    });
+
+    return root;
+  }
+  function selectOption(qId, idx, qEl) {
+    state.quiz[qId] = idx;
+    store.save(state);
+    const opts = qEl.querySelectorAll('.quiz-option');
+    opts.forEach((o, i) => o.classList.toggle('selected', i === idx));
+    const existing = qEl.querySelector('.quiz-result');
+    if (existing) existing.remove();
+    const q = window.COURSE.quiz.find(x => x.id === qId);
+    const isCorrect = idx === q.answer;
+    const result = el('div', { class: 'quiz-result ' + (isCorrect ? 'correct' : 'wrong') });
+    if (isCorrect) {
+      result.append(document.createTextNode('✅ 正確！'));
+    } else {
+      const linkText = document.createTextNode(`❌ 錯誤，正確答案是：${q.options[q.answer]} `);
+      result.append(linkText);
+      if (q.sourceUnit) {
+        const [dayId, uId] = q.sourceUnit.split('.');
+        const unitEl = document.getElementById(`${dayId}-${uId}`);
+        if (unitEl) {
+          const reviewLink = el('a', { href: `#${dayId}-${uId}`, style: 'color: inherit; font-weight: 700;' }, '→ 去複習');
+          reviewLink.addEventListener('click', (e) => { e.preventDefault(); unitEl.open = true; unitEl.scrollIntoView({ behavior: 'smooth' }); });
+          result.append(reviewLink);
+        }
+      }
+    }
+    qEl.append(result);
+  }
+
+  /* ===================== sidebar ===================== */
+  function renderSidebar() {
+    const nav = document.getElementById('nav');
+    clear(nav);
+
+    window.COURSE.meta.days.forEach(day => {
+      const section = el('div', { class: 'nav-section' });
+      section.append(el('div', { class: 'nav-label' }, day.title));
+      const dayData = window.COURSE[day.id];
+      if (dayData?.units) {
+        dayData.units.forEach(u => {
+          const item = el('a', { class: 'nav-item', href: `#${day.id}-${u.id}` });
+          const taskCount = u.tasks ? u.tasks.length : 0;
+          const doneCount = u.tasks ? u.tasks.filter(t => state.tasks[t.id]).length : 0;
+          item.append(el('span', { class: 'nav-dot' }));
+          item.append(document.createTextNode(u.title));
+          if (taskCount > 0 && doneCount === taskCount) item.classList.add('done');
+          item.addEventListener('click', e => {
+            document.getElementById(`${day.id}-${u.id}`).open = true;
+          });
+          section.append(item);
+        });
+      }
+      nav.append(section);
+    });
+
+    // Shared case link
+    if (window.COURSE.sharedCase) {
+      const scLink = el('a', { class: 'nav-item', href: '#shared-case' });
+      scLink.append(el('span', { class: 'nav-dot' }));
+      scLink.append(document.createTextNode('共用案例'));
+      nav.append(scLink);
+    }
+
+    // Materials & quiz links
+    const matLink = el('a', { class: 'nav-item', href: '#materials-overview' });
+    matLink.append(el('span', { class: 'nav-dot' }));
+    matLink.append(document.createTextNode('教學素材'));
+    nav.append(matLink);
+
+    if (window.COURSE.quiz?.length) {
+      const qLink = el('a', { class: 'nav-item', href: '#quiz' });
+      qLink.append(el('span', { class: 'nav-dot' }));
+      qLink.append(document.createTextNode('結訓測驗'));
+      nav.append(qLink);
+    }
+  }
+
+  function updateProgressUI() {
+    const allTasks = [];
+    window.COURSE.meta.days.forEach(day => {
+      const d = window.COURSE[day.id];
+      d?.units?.forEach(u => u.tasks?.forEach(t => allTasks.push(t)));
+    });
+    const done = allTasks.filter(t => state.tasks[t.id]).length;
+    const total = allTasks.length;
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    const prog = document.getElementById('navProgress');
+    if (prog) {
+      clear(prog);
+      prog.append(document.createTextNode(`${done}/${total} 任務完成`));
+      prog.append(el('div', { class: 'progress-bar' }));
+      prog.querySelector('.progress-bar').append(el('div', { class: 'progress-fill', style: `width: ${pct}%` }));
+    }
+  }
+
+  /* ===================== theme ===================== */
+  function initTheme() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  }
+
+  /* ===================== hamburger + backdrop ===================== */
+  const mql = matchMedia('(max-width: 768px)');
+  const backdrop = document.getElementById('sidebarBackdrop');
+
+  function syncSidebar() {
+    const app = document.getElementById('app');
+    if (mql.matches) {
+      app.classList.remove('sidebar-closed');
+      backdrop.classList.remove('visible');
+    } else {
+      app.classList.remove('sidebar-open');
+    }
+  }
+
+  document.getElementById('hamburger').addEventListener('click', () => {
+    const app = document.getElementById('app');
+    if (mql.matches) {
+      app.classList.toggle('sidebar-open');
+      backdrop.classList.toggle('visible', app.classList.contains('sidebar-open'));
+    } else {
+      app.classList.toggle('sidebar-closed');
+    }
+  });
+
+  backdrop.addEventListener('click', () => {
+    document.getElementById('app').classList.remove('sidebar-open');
+    backdrop.classList.remove('visible');
+  });
+
+  mql.addEventListener('change', syncSidebar);
+
+  /* ===================== fade-in entrance ===================== */
+  function setupFadeIn() {
+    const els = document.querySelectorAll('.chapter, .unit');
+    els.forEach(el => el.classList.add('fade-in'));
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    els.forEach(el => observer.observe(el));
+  }
+  function setupScrollSpy() {
+    const trail = document.getElementById('topbarTrail');
+    const sections = document.querySelectorAll('.unit');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          trail.textContent = id.replace('day1-', '').replace('day2-', '');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(s => observer.observe(s));
+  }
+
+  /* ===================== init ===================== */
+  function init() {
+    const content = document.getElementById('content');
+    const sections = [
+      renderOverview(),
+      ...window.COURSE.meta.days.map(d => renderDay(d.id)),
+      renderQuiz()
+    ].filter(Boolean);
+    sections.forEach(s => content.append(s));
+
+    renderSidebar();
+    updateProgressUI();
+    initTheme();
+    setupFadeIn();
+    setupScrollSpy();
+  }
+  document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

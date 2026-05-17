@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 260" style="font-family: 'Nunito', sans-serif; background: #fafafa; border-radius: 10px;">
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#333">七堂課總回顧</text>
+
+  <!-- Header -->
+  <rect x="30" y="45" width="640" height="32" rx="6" fill="#1565C0"/>
+  <text x="60" y="66" font-size="11" font-weight="800" fill="white">堂數</text>
+  <text x="130" y="66" font-size="11" font-weight="800" fill="white">主題</text>
+  <text x="380" y="66" font-size="11" font-weight="800" fill="white">核心技能</text>
+
+  <!-- Day 1 -->
+  <rect x="30" y="82" width="640" height="30" rx="4" fill="white" stroke="#e0e0e0"/>
+  <rect x="38" y="87" width="24" height="20" rx="4" fill="#E3F2FD"/>
+  <text x="50" y="102" text-anchor="middle" font-size="10" font-weight="800" fill="#1565C0">1</text>
+  <text x="90" y="102" font-size="10" font-weight="700" fill="#333">企業級 AI 基礎建設</text>
+  <text x="380" y="102" font-size="10" fill="#555">CLAUDE.md、架構邊界</text>
+
+  <!-- Day 2 -->
+  <rect x="30" y="117" width="640" height="30" rx="4" fill="#FAFAFA" stroke="#e0e0e0"/>
+  <rect x="38" y="122" width="24" height="20" rx="4" fill="#E8F5E9"/>
+  <text x="50" y="137" text-anchor="middle" font-size="10" font-weight="800" fill="#2E7D32">2</text>
+  <text x="90" y="137" font-size="10" font-weight="700" fill="#333">解構大廠 Agent 底層</text>
+  <text x="380" y="137" font-size="10" fill="#555">Agentic Loop、Error Recovery</text>
+
+  <!-- Day 3 -->
+  <rect x="30" y="152" width="640" height="30" rx="4" fill="white" stroke="#e0e0e0"/>
+  <rect x="38" y="157" width="24" height="20" rx="4" fill="#FFF3E0"/>
+  <text x="50" y="172" text-anchor="middle" font-size="10" font-weight="800" fill="#E65100">3</text>
+  <text x="90" y="172" font-size="10" font-weight="700" fill="#333">專屬 SRE 兵器庫</text>
+  <text x="380" y="172" font-size="10" fill="#555">MCP Server、AI-Friendly 腳本</text>
+
+  <!-- Day 4 -->
+  <rect x="30" y="187" width="640" height="30" rx="4" fill="#FAFAFA" stroke="#e0e0e0"/>
+  <rect x="38" y="192" width="24" height="20" rx="4" fill="#F3E5F5"/>
+  <text x="50" y="207" text-anchor="middle" font-size="10" font-weight="800" fill="#7B1FA2">4</text>
+  <text x="90" y="207" font-size="10" font-weight="700" fill="#333">擴充 GitAgent 生態</text>
+  <text x="380" y="207" font-size="10" fill="#555">Skill 開發、防呆 Schema</text>
+
+  <!-- Day 7 (highlight) -->
+  <rect x="30" y="222" width="640" height="30" rx="4" fill="#FFF8E1" stroke="#FFC107" stroke-width="2"/>
+  <rect x="38" y="227" width="24" height="20" rx="4" fill="#FFC107"/>
+  <text x="50" y="242" text-anchor="middle" font-size="10" font-weight="800" fill="#E65100">7</text>
+  <text x="90" y="242" font-size="10" font-weight="800" fill="#333">★ 全自動化 AI SDLC</text>
+  <text x="380" y="242" font-size="10" font-weight="700" fill="#E65100">端到端 Workflow、知識庫閉環</text>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 260" style="font-family: 'Nunito', sans-serif; background: #f5f5f5; border-radius: 10px;">
+  <!-- Browser chrome -->
+  <rect x="0" y="0" width="600" height="30" rx="10" fill="#e0e0e0"/>
+  <circle cx="20" cy="15" r="6" fill="#FF5F56"/><circle cx="38" cy="15" r="6" fill="#FFBD2E"/><circle cx="56" cy="15" r="6" fill="#27C93F"/>
+  <rect x="80" y="8" width="300" height="14" rx="7" fill="white"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="30" width="600" height="40" fill="#00695C"/>
+  <text x="20" y="55" font-size="14" font-weight="700" fill="white">📚 Wiki — AI 自動更新完成</text>
+
+  <!-- AI agent banner -->
+  <rect x="15" y="80" width="570" height="35" rx="8" fill="#E3F2FD"/>
+  <text x="30" y="100" font-size="11" font-weight="700" fill="#1565C0">🤖 AI Agent 已自動完成以下更新：</text>
+
+  <!-- Update 1 -->
+  <rect x="15" y="125" width="570" height="38" rx="6" fill="white" filter="url(#shadow)"/>
+  <rect x="25" y="133" width="26" height="22" rx="13" fill="#4CAF50"/>
+  <text x="38" y="149" text-anchor="middle" font-size="14">✓</text>
+  <text x="60" y="145" font-size="11" font-weight="700" fill="#333">✅ 更新「訂單服務架構文件」</text>
+  <text x="60" y="158" font-size="10" fill="#666">→ 連線池設定段落已調整（maxPoolSize: 10 → 5）</text>
+
+  <!-- Update 2 -->
+  <rect x="15" y="170" width="570" height="38" rx="6" fill="white" filter="url(#shadow)"/>
+  <rect x="25" y="178" width="26" height="22" rx="13" fill="#4CAF50"/>
+  <text x="38" y="194" text-anchor="middle" font-size="14">✓</text>
+  <text x="60" y="190" font-size="11" font-weight="700" fill="#333">✅ 新增「連線池調校紀錄」</text>
+  <text x="60" y="203" font-size="10" fill="#666">→ 變更日誌（Change Log）章節已新增</text>
+
+  <!-- Update 3 -->
+  <rect x="15" y="215" width="570" height="38" rx="6" fill="white" filter="url(#shadow)"/>
+  <rect x="25" y="223" width="26" height="22" rx="13" fill="#4CAF50"/>
+  <text x="38" y="239" text-anchor="middle" font-size="14">✓</text>
+  <text x="60" y="235" font-size="11" font-weight="700" fill="#333">✅ 更新 API 文件</text>
+  <text x="60" y="248" font-size="10" fill="#666">→ POST /api/v1/orders 說明已更新（timeout 設定）</text>
+
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+</svg>

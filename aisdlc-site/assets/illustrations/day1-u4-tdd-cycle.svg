@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" style="font-family: 'Nunito', sans-serif; background: #fafafa; border-radius: 10px;">
+  <!-- Title -->
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#333">🔴 TDD 三色循環</text>
+
+  <!-- Circle arrow background -->
+  <path d="M300,160 m-100,0 a100,100 0 1,1 200,0 a100,100 0 1,1 -200,0" fill="none" stroke="#e0e0e0" stroke-width="20"/>
+
+  <!-- RED circle: 失敗測試 -->
+  <circle cx="200" cy="160" r="50" fill="#FFEBEE" stroke="#F44336" stroke-width="3"/>
+  <text x="200" y="150" text-anchor="middle" font-size="28">🔴</text>
+  <text x="200" y="175" text-anchor="middle" font-size="11" font-weight="700" fill="#C62828">失敗測試</text>
+
+  <!-- GREEN circle: 實作 -->
+  <circle cx="400" cy="160" r="50" fill="#E8F5E9" stroke="#4CAF50" stroke-width="3"/>
+  <text x="400" y="150" text-anchor="middle" font-size="28">🟢</text>
+  <text x="400" y="175" text-anchor="middle" font-size="11" font-weight="700" fill="#2E7D32">實作</text>
+
+  <!-- YELLOW circle: 重構 -->
+  <circle cx="300" cy="65" r="50" fill="#FFF8E1" stroke="#FFC107" stroke-width="3"/>
+  <text x="300" y="55" text-anchor="middle" font-size="28">♻️</text>
+  <text x="300" y="80" text-anchor="middle" font-size="11" font-weight="700" fill="#F57F17">重構</text>
+
+  <!-- Arrow RED→GREEN -->
+  <path d="M245,140 L255,135" stroke="#F44336" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <!-- Arrow GREEN→YELLOW -->
+  <path d="M365,115 L355,105" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrowGreen)"/>
+  <!-- Arrow YELLOW→RED -->
+  <path d="M270,80 L245,110" stroke="#FFC107" stroke-width="3" fill="none" marker-end="url(#arrowYellow)"/>
+
+  <!-- Description -->
+  <rect x="175" y="240" width="250" height="48" rx="8" fill="#F5F5F5" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="300" y="262" text-anchor="middle" font-size="11" font-weight="700" fill="#333">循環直到所有測試通過</text>
+  <text x="300" y="280" text-anchor="middle" font-size="10" fill="#666">每次只做一件事：讓測試從紅變綠，然後重構</text>
+
+  <defs>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#F44336"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4CAF50"/>
+    </marker>
+    <marker id="arrowYellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#FFC107"/>
+    </marker>
+  </defs>
+</svg>

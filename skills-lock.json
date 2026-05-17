@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "skills": {
+    "course-content-authoring": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "bd432fa1013b1cf102d055405ad93c31d0a4ec24cc81583360099690a6bd00e4"
+    },
+    "course-corporate-edition": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "2586a23bfebfb96b270960206e1660823c2ffa1e0d53a1f8d2367bcdb10bbc69"
+    },
+    "course-ebook-publishing": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "7747c0fff59a938a832962ee6f00a26cda69e4ac235026fe3fcc2c091b5e3611"
+    },
+    "course-outline-design": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "afca22644b68bc80d09dea57221f2635ae087509fb2a2e9477a9a67d017b8e6c"
+    },
+    "prd-writer": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/agent-skills/skills/write-prd",
+      "sourceType": "local",
+      "computedHash": "e1acd1b52da3835535c9ab6963423ffceb92e862316fe9d81bbfa417b175e9b7"
+    },
+    "static-spa-conversion": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "7f52be153de439e944e41678a0ad11465d40ef16ac5a57b177b3dfde84e20117"
+    },
+    "static-spa-interactions": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "ac49a7be9f1a78e9d55b19494b56c11188551916b36c6ba28292e8ab953c3187"
+    },
+    "teaching-site": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "e9655764c5a563178ea2e8667976aee30c05889ea5403fba275e87ebb74e37d6"
+    },
+    "teaching-site-design-system": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "05b157f7bdb19f3157a5edbcc28de6c7234cb5dde92994b18aa2b4b641c700cc"
+    },
+    "web-content-audit": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "4f20f86b75681375f483041c7f8c0b223296afe666a814487a4bc501b7e53780"
+    },
+    "web-visual-assets": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "cc9f0379a21509d011b8a9a98f4b42f061eb0a9c5c923f54131029f7ffa9f3c8"
+    },
+    "web-visual-verification": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/teaching-site-skills",
+      "sourceType": "local",
+      "computedHash": "802a4306a3f648cb55ad8009fa157e2b375b06b21b4cdf880e44b9f4523ca537"
+    }
+  }
+}
